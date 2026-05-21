@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Vantage · by MEGA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Fira+Sans+Extra+Condensed:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="data.jsx"></script>
+<script type="text/babel" src="shell.jsx"></script>
+<script type="text/babel" src="calendar.jsx"></script>
+<script type="text/babel" src="tour.jsx"></script>
+<script type="text/babel" src="modals.jsx"></script>
+<script type="text/babel" src="eisenhower.jsx"></script>
+<script type="text/babel" src="milestone.jsx"></script>
+<script type="text/babel" src="dashboard.jsx"></script>
+<script type="text/babel" src="tasks.jsx"></script>
+<script type="text/babel" src="sessions.jsx"></script>
+<script type="text/babel" src="wins.jsx"></script>
+<script type="text/babel" src="resources.jsx"></script>
+<script type="text/babel" src="chat.jsx"></script>
+<script type="text/babel" src="profile.jsx"></script>
+<script type="text/babel" src="admin.jsx"></script>
+<script type="text/babel" src="adminplus.jsx"></script>
+<script type="text/babel" src="adminchat.jsx"></script>
+<script type="text/babel" src="analytics.jsx"></script>
+
+<script type="text/babel">
+
+const { useState, useEffect } = React;
+
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "theme": "light",
+  "accent": "sapphire",
+  "gameMode": "subtle"
+}/*EDITMODE-END*/;
+
+const ACCENT_MAP = {
+  sapphire: { c: '#0F52BA', soft: '#E6EEFB', dark: '#4F86E6', softDark: 'rgba(79,134,230,0.14)' },
+  coral: { c: '#E05757', soft: '#FFE4E4', dark: '#FF8989', softDark: 'rgba(255,107,107,0.14)' },
+  teal: { c: '#2E8A7B', soft: '#D9F1EC', dark: '#6ED1BF', softDark: 'rgba(79,183,166,0.16)' },
+  violet: { c: '#6B4FD0', soft: '#EAE4FA', dark: '#9E87E8', softDark: 'rgba(124,92,214,0.2)' },
+  forest: { c: '#2F7D4A', soft: '#DDF0E2', dark: '#6CB98A', softDark: 'rgba(47,125,74,0.18)' },
+  ink: { c: '#0A0A0A', soft: '#E6E6E6', dark: '#E6E6E6', softDark: 'rgba(255,255,255,0.1)' }
+};
+
+// Determine if today is Friday (for reflection prompt)
+const isFriday = () => new Date().getDay() === 5;
+
+function RemoteBanner({ member, onExit }) {
+  return (
+    <div className="remote-banner">
+      <Icon name="admin" size={16} />
+      <span>Viewing as <strong>{member.name}</strong> — Admin Read-Only Mode</span>
+      <span style={{ opacity: 0.75, fontSize: 11, marginLeft: 4 }}>({member.plan})</span>
+      <button className="exit-btn" onClick={onExit}>✕ Exit member view</button>
+    </div>);
+
+}
+
+// Updated sidebar with Wins Board + Admin Messaging
+function SidebarWithWins({ route, setRoute, admin, unread, member, onOpenProfile, viewingAs }) {
+  const memberItems = [
+  { k: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
+  { k: 'tasks', label: 'Tasks & Goals', icon: 'tasks' },
+  { k: 'sessions', label: 'Sessions', icon: 'sessions' },
+  { k: 'wins', label: 'Wins Board', icon: 'trophy' },
+  { k: 'resources', label: 'Resources', icon: 'resources' },
+  { k: 'chat', label: 'Chat', icon: 'chat', badge: unread },
+  { k: 'profile', label: 'Profile', icon: 'profile' }];
+
+  const adminItems = [
+  { k: 'admin-overview', label: 'Overview', icon: 'dashboard' },
+  { k: 'admin-members', label: 'Members', icon: 'users' },
+  { k: 'admin-tasks', label: 'Tasks & Goals', icon: 'tasks' },
+  { k: 'admin-sessions', label: 'Sessions', icon: 'sessions' },
+  { k: 'admin-messaging', label: 'Chat', icon: 'send' },
+  { k: 'admin-resources', label: 'Resources   ', icon: 'resources' },
+  { k: 'admin-chat', label: 'Channels', icon: 'chat' },
+  { k: 'admin-analytics', label: 'Analytics', icon: 'chart' }];
+
+  const items = admin ? adminItems : memberItems;
+
+  return (
+    <aside className={"sidebar" + (admin ? " admin" : "")}>
+      <div className="brand">
+        <div className="brand-logo" style={admin ? { background: 'var(--coral)', color: '#fff' } : undefined}>V</div>
+        <div>
+          <div className="brand-mark">VANTAGE</div>
+          <div className="brand-sub">{admin ? "Admin · MEGA" : "by MEGA"}</div>
+        </div>
+      </div>
+
+      <div className="sb-section">{admin ? "Control" : "Workspace"}</div>
+      {items.map((it) =>
+      <button key={it.k} className={"sb-item" + (route === it.k ? " active" : "")} onClick={() => setRoute(it.k)}>
+          <span className="sb-icon"><Icon name={it.icon} size={18} /></span>
+          <span>{it.label}</span>
+          {it.badge ? <span className="sb-badge">{it.badge}</span> : null}
+        </button>
+      )}
+
+      <div className="sb-spacer" />
+      <div className="sb-divider" />
+      <button className="sb-item" onClick={() => setRoute(admin ? 'dashboard' : 'admin-overview')}>
+        <span className="sb-icon"><Icon name={admin ? 'logout' : 'admin'} size={18} /></span>
+        <span>{admin ? "Back to member view" : "Admin view"}</span>
+      </button>
+
+      {!admin &&
+      <button className="user-card" onClick={onOpenProfile} style={{ cursor: 'pointer', textAlign: 'left' }}>
+          <Avatar initials={member.initials} color={member.avatarColor} size={36} />
+          <div className="user-card-meta">
+            <div className="user-name">{member.firstName} {member.lastName}</div>
+            <div className="user-sub"><span>{member.product}</span><span style={{ opacity: 0.5 }}>·</span><span>{member.plan}</span></div>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <div className="user-points">{(member.points / 1000).toFixed(1)}k</div>
+            <div className="user-sub" style={{ fontSize: 10 }}>PTS</div>
+          </div>
+        </button>
+      }
+      {admin &&
+      <div className="user-card" style={{ cursor: 'default' }}>
+          <Avatar initials="RE" color="#FF6B6B" size={36} />
+          <div className="user-card-meta">
+            <div className="user-name" style={{ color: '#fff' }}>Zachariah Rampa</div>
+            <div className="user-sub">Founder · MEGA</div>
+          </div>
+        </div>
+      }
+    </aside>);
+
+}
+
+function App() {
+  const [tw, setTw] = useState(() => {
+    try {return { ...TWEAK_DEFAULTS, ...JSON.parse(localStorage.getItem('vantage-tweaks') || '{}') };}
+    catch {return TWEAK_DEFAULTS;}
+  });
+  const [route, setRoute] = useState(() => localStorage.getItem('vantage-route') || 'dashboard');
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [tweaksOpen, setTweaksOpen] = useState(false);
+  const [rewards, setRewards] = useState([]);
+  const [viewingAs, setViewingAs] = useState(null);
+  const [selectedAdminMember, setSelectedAdminMember] = useState(null);
+
+  // Modals state
+  const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem('vantage-onboarded'));
+  const [tourActive, setTourActive] = useState(false);
+  const [tourBubble, setTourBubble] = useState(() => !localStorage.getItem('vantage-tour-seen'));
+  const [tourCompleted, setTourCompleted] = useState(() => !!localStorage.getItem('vantage-tour-done'));
+  const [showIntention, setShowIntention] = useState(() => {
+    const today = new Date().toDateString();
+    return !localStorage.getItem('vantage-intention-' + today);
+  });
+  const [showReflection, setShowReflection] = useState(() => {
+    const today = new Date().toDateString();
+    return isFriday() && !localStorage.getItem('vantage-reflection-' + today);
+  });
+  const [intention, setIntention] = useState(() => {
+    const today = new Date().toDateString();
+    const saved = localStorage.getItem('vantage-intention-data-' + today);
+    return saved ? JSON.parse(saved) : null;
+  });
+
+  // Tasks state (shared between dashboard and tasks screen)
+  const [tasks, setTasks] = useState(() => TASKS.map((t) => ({
+    ...t,
+    priority: ['Critical', 'Important', 'Important', 'Routine', 'Routine'][TASKS.findIndex((tt) => tt.id === t.id)] || 'Routine',
+    subtasks: t.subtasks.map((s) => ({ ...s }))
+  })));
+
+  useEffect(() => {localStorage.setItem('vantage-tweaks', JSON.stringify(tw));}, [tw]);
+  useEffect(() => {localStorage.setItem('vantage-route', route);}, [route]);
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', tw.theme);
+    document.body.setAttribute('data-game', tw.gameMode);
+    const a = ACCENT_MAP[tw.accent] || ACCENT_MAP.sapphire;
+    const root = document.documentElement;
+    root.style.setProperty('--accent', tw.theme === 'dark' ? a.dark : a.c);
+    root.style.setProperty('--accent-soft', tw.theme === 'dark' ? a.softDark : a.soft);
+  }, [tw]);
+
+  useEffect(() => {
+    const handle = (e) => {
+      if (!e.data?.type) return;
+      if (e.data.type === '__activate_edit_mode') setTweaksOpen(true);
+      if (e.data.type === '__deactivate_edit_mode') setTweaksOpen(false);
+    };
+    window.addEventListener('message', handle);
+    try {window.parent.postMessage({ type: '__edit_mode_available' }, '*');} catch {}
+    return () => window.removeEventListener('message', handle);
+  }, []);
+
+  const updateTweak = (patch) => {
+    setTw((t) => {
+      const next = { ...t, ...patch };
+      try {window.parent.postMessage({ type: '__edit_mode_set_keys', edits: patch }, '*');} catch {}
+      return next;
+    });
+  };
+
+  const onReward = (points) => {
+    const id = Date.now() + Math.random();
+    setRewards((r) => [...r, { id, points }]);
+    setTimeout(() => setRewards((r) => r.filter((x) => x.id !== id)), 1700);
+  };
+
+  const onJoin = () => alert('Opening meeting link…');
+
+  const onViewAs = (member) => {setViewingAs(member);setRoute('dashboard');};
+  const exitViewAs = () => {setViewingAs(null);setRoute('admin-members');};
+
+  const setIntentionHandler = (item) => {
+    setIntention(item);
+    setShowIntention(false);
+    const today = new Date().toDateString();
+    localStorage.setItem('vantage-intention-' + today, '1');
+    localStorage.setItem('vantage-intention-data-' + today, JSON.stringify(item));
+  };
+  const skipIntention = () => {
+    setShowIntention(false);
+    localStorage.setItem('vantage-intention-' + new Date().toDateString(), 'skipped');
+  };
+  const submitReflection = (data) => {
+    setShowReflection(false);
+    localStorage.setItem('vantage-reflection-' + new Date().toDateString(), JSON.stringify(data));
+  };
+
+  const isAdmin = !viewingAs && route.startsWith('admin-');
+  const member = MEMBER;
+
+  // Modal priority: onboarding > reflection (Friday) > intention
+  const showingModal = showOnboarding || showReflection && !showOnboarding || showIntention && !showOnboarding && !showReflection;
+
+  let screen;
+  switch (route) {
+    case 'dashboard':
+      screen = <DashboardScreen member={member} onJoin={onJoin} onGoto={setRoute} gameMode={tw.gameMode}
+      intention={intention} onClearIntention={() => setIntention(null)}
+      tasks={tasks} goals={GOALS} />;
+      break;
+    case 'tasks':screen = <TasksScreen onReward={onReward} />;break;
+    case 'sessions':screen = <SessionsScreen onJoin={onJoin} isAdmin={false} />;break;
+    case 'wins':screen = <WinsScreen />;break;
+    case 'resources':screen = <ResourcesScreen onStartTour={() => { setTourBubble(false); setTourActive(true); }} tourCompleted={tourCompleted} />;break;
+    case 'chat':screen = <ChatScreen />;break;
+    case 'profile':screen = <ProfileScreen member={member} theme={tw.theme} setTheme={(t) => updateTweak({ theme: t })} />;break;
+    case 'admin-overview':screen = <AdminOverview onPick={setRoute} />;break;
+    case 'admin-members':
+      screen = selectedAdminMember ?
+      <AdminMemberDetail member={selectedAdminMember} onBack={() => setSelectedAdminMember(null)} /> :
+      <AdminMembers onViewAs={onViewAs} onOpenDetail={(m) => setSelectedAdminMember(m)} />;
+      break;
+    case 'admin-tasks':screen = <AdminTasks />;break;
+    case 'admin-sessions':screen = <AdminSessions />;break;
+    case 'admin-messaging':screen = <BulkMessaging />;break;
+    case 'admin-resources':screen = <AdminResources />;break;
+    case 'admin-chat':screen = <AdminChat />;break;
+    case 'admin-analytics':screen = <AdminAnalytics />;break;
+    default:screen = <DashboardScreen member={member} onJoin={onJoin} onGoto={setRoute} gameMode={tw.gameMode}
+      intention={intention} onClearIntention={() => setIntention(null)} tasks={tasks} goals={GOALS} />;
+  }
+
+  return (
+    <div className="app" data-screen-label={isAdmin ? "Admin" : "Member"}>
+      <SidebarWithWins
+        route={route} setRoute={(r) => {if (!viewingAs || !r.startsWith('admin-')) setRoute(r);}}
+        admin={isAdmin} unread={3}
+        member={viewingAs ? { ...member, firstName: viewingAs.name.split(' ')[0], initials: viewingAs.initials, avatarColor: viewingAs.color } : member}
+        onOpenProfile={() => setRoute('profile')}
+        viewingAs={viewingAs} />
+      
+      <main className="main">
+        <div className="main-inner">
+          {viewingAs && <RemoteBanner member={viewingAs} onExit={exitViewAs} />}
+          <Topbar
+            theme={tw.theme} setTheme={(t) => updateTweak({ theme: t })}
+            onOpenTweaks={() => setTweaksOpen(true)}
+            notifCount={2} onOpenNotifs={() => setNotifOpen(true)} />
+          
+          {screen}
+        </div>
+      </main>
+
+      <NotifPanel open={notifOpen} onClose={() => setNotifOpen(false)} />
+      <TweaksPanel
+        open={tweaksOpen} onClose={() => setTweaksOpen(false)}
+        theme={tw.theme} setTheme={(t) => updateTweak({ theme: t })}
+        accent={tw.accent} setAccent={(a) => updateTweak({ accent: a })}
+        gameMode={tw.gameMode} setGameMode={(g) => updateTweak({ gameMode: g })} />
+      
+
+      {/* Tour bubble — first login only */}
+      {tourBubble && !showOnboarding && (
+        <TourBubble
+          onStart={() => { setTourBubble(false); localStorage.setItem('vantage-tour-seen','1'); setTourActive(true); }}
+          onDismiss={() => { setTourBubble(false); localStorage.setItem('vantage-tour-seen','1'); }}
+        />
+      )}
+
+      {/* Tour overlay */}
+      {tourActive && (
+        <TourController
+          onNavigate={r => setRoute(r)}
+          onClose={() => { setTourActive(false); setTourCompleted(true); localStorage.setItem('vantage-tour-done','1'); }}
+        />
+      )}
+
+      {/* Layered modals: onboarding → reflection → intention */}
+      {showOnboarding &&
+      <OnboardingWizard onComplete={() => {
+        setShowOnboarding(false);
+        localStorage.setItem('vantage-onboarded', '1');
+      }} />
+      }
+      {!showOnboarding && showReflection &&
+      <ReflectionModal onSubmit={submitReflection} onLater={() => setShowReflection(false)} />
+      }
+      {!showOnboarding && !showReflection && showIntention &&
+      <IntentionModal tasks={tasks} goals={GOALS} onSet={setIntentionHandler} onSkip={skipIntention} />
+      }
+
+      {rewards.map((r) =>
+      <div key={r.id} className="point-pop">
+          <Icon name="star" size={14} /><span>+{r.points}</span><span className="val">XP</span>
+        </div>
+      )}
+    </div>);
+
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
