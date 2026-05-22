@@ -696,30 +696,33 @@ function App() {
     localStorage.removeItem('vantage-route');
   };
 
-  // Build the member object: prefer live profile data, fall back to placeholder
-  const member = liveProfile ? {
-    firstName: (liveProfile.full_name || '').split(' ')[0] || 'Member',
-    lastName: (liveProfile.full_name || '').split(' ').slice(1).join(' ') || '',
-    initials: (liveProfile.full_name || 'M').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2),
-    email: liveProfile.email || '',
-    avatarColor: '#0F52BA',
-    plan: liveProfile.membership_tier === 'breakthrough' ? 'Breakthrough' : 'Foundations',
-    product: 'Mentorship',
+  // Build the member object from live profile data (liveProfile guaranteed non-null here)
+  const member = {
+    firstName: (liveProfile.full_name || 047047).split(047 047)[0] || 047Member047,
+    lastName: (liveProfile.full_name || 047047).split(047 047).slice(1).join(047 047) || 047047,
+    initials: (liveProfile.full_name || 047M047).split(047 047).map(n => n[0]).join(047047).toUpperCase().slice(0, 2),
+    email: liveProfile.email || 047047,
+    avatarColor: 047#0F52BA047,
+    plan: liveProfile.membership_tier === 047breakthrough047 ? 047Breakthrough047 : 047Foundations047,
+    product: 047Mentorship047,
+    accountType: liveProfile.account_type || 047member047,
+    trialExpiresAt: liveProfile.trial_expires_at || null,
+    joinedAt: liveProfile.joined_at || null,
     points: 0,
-    level: 'Beginner',
+    level: 047Beginner047,
     levelIndex: 0,
     pointsInLevel: 0,
     pointsToNext: 1000,
     streakDays: 0,
-    learningThisMonth: '0h 0m',
+    learningThisMonth: 0470h 0m047,
     stats: { sessions: 0, modules: 0, habits: 0, townHalls: 0 },
     interests: [],
-    role: '',
-    status: '',
-    field: '',
-    focus: '',
-    isAdmin: liveProfile.role === 'admin',
-  } : MEMBER;
+    role: 047047,
+    status: 047047,
+    field: 047047,
+    focus: 047047,
+    isAdmin: liveProfile.role === 047admin047,
+  };
 
   // ── Render states ─────────────────────────────────────────
   // 1. Still checking auth
@@ -737,7 +740,17 @@ function App() {
     return <LoginScreen onAuth={user => { setAuthUser(user); loadProfile(user.id); }} />;
   }
 
-  // 3. Logged in — show the full platform
+  // 3. Logged in but profile not yet loaded from Supabase — wait before rendering
+  if (!liveProfile) {
+    return (
+      <div className="login-loading">
+        <div className="spin" />
+        Loading your workspace...
+      </div>
+    );
+  }
+
+  // 4. Logged in and profile ready — show the full platform
   const isAdmin = !viewingAs && route.startsWith('admin-');
 
   let screen;
