@@ -82,9 +82,17 @@ function AdminOverview({ onPick }) {
 
 }
 
-function MembersTable({ compact, onViewAs }) {
-  const rows = compact ? ADMIN_MEMBERS.slice(0, 6) : ADMIN_MEMBERS;
-  const statusColor = (s) => s === 'At risk' ? 'var(--coral)' : s === 'Idle' ? '#E8B24C' : s === 'Top performer' ? 'var(--accent)' : 'var(--teal-600)';
+function MembersTable({ compact, onViewAs, members = [], loading = false }) {
+  if (loading) {
+    return (
+      <div style={{ padding: '40px 0', textAlign: 'center', fontSize: 13, color: 'var(--text-3)' }}>
+        Loading members…
+      </div>
+    );
+  }
+
+  const rows = compact ? members.slice(0, 6) : members;
+  const statusColor = (s) => s === 'At risk' ? 'var(--coral)' : s === 'Trial' ? '#E8B24C' : s === 'Top performer' ? 'var(--accent)' : 'var(--teal-600)';
 
   return (
     <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
@@ -96,42 +104,67 @@ function MembersTable({ compact, onViewAs }) {
         </tr>
       </thead>
       <tbody>
-        {rows.map((m) =>
-        <tr key={m.name} style={{ borderTop: '1px solid var(--border)' }}>
-            <td style={{ padding: '12px 16px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <Avatar initials={m.initials} color={m.color} size={28} />
-                <span style={{ fontWeight: 600 }}>{m.name}</span>
-              </div>
-            </td>
-            <td style={{ padding: '12px 16px', color: 'var(--text-2)' }}>{m.plan}</td>
-            <td style={{ padding: '12px 16px', color: 'var(--text-3)' }}>{m.lastActive}</td>
-            <td style={{ padding: '12px 16px', fontWeight: 700 }}>{m.points.toLocaleString()}</td>
-            <td style={{ padding: '12px 16px' }}>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: m.streak > 0 ? 'var(--coral)' : 'var(--text-3)' }}>
-                <Icon name="flame" size={12} />{m.streak}
-              </span>
-            </td>
-            <td style={{ padding: '12px 16px' }}>
-              <span className="chip" style={{ color: statusColor(m.status), borderColor: statusColor(m.status) + '55', background: statusColor(m.status) + '15' }}>
-                <span className="dot" style={{ background: statusColor(m.status) }} />{m.status}
-              </span>
-            </td>
-            <td style={{ padding: '12px 16px' }}>
-              <div style={{ display: 'flex', gap: 6 }}>
-                <button className="btn ghost sm" onClick={() => onViewAs && onViewAs(m)}>
-                  View as <Icon name="arrow-right" size={11} />
-                </button>
-              </div>
-            </td>
-          </tr>
-        )}
+        {rows.map((m) => {
+          const name      = m.full_name || 'Unnamed';
+          const initials  = (m.full_name || 'U').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+          const color     = '#0F52BA';
+          const plan      = m.membership_tier ? m.membership_tier.charAt(0).toUpperCase() + m.membership_tier.slice(1) : '—';
+          const lastActive = 'recently';
+          const points    = 0;
+          const streak    = 0;
+          const status    = m.account_type === 'trial' ? 'Trial' : 'Active';
+          return (
+            <tr key={m.id || name} style={{ borderTop: '1px solid var(--border)' }}>
+              <td style={{ padding: '12px 16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <Avatar initials={initials} color={color} size={28} />
+                  <span style={{ fontWeight: 600 }}>{name}</span>
+                </div>
+              </td>
+              <td style={{ padding: '12px 16px', color: 'var(--text-2)' }}>{plan}</td>
+              <td style={{ padding: '12px 16px', color: 'var(--text-3)' }}>{lastActive}</td>
+              <td style={{ padding: '12px 16px', fontWeight: 700 }}>{points.toLocaleString()}</td>
+              <td style={{ padding: '12px 16px' }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: streak > 0 ? 'var(--coral)' : 'var(--text-3)' }}>
+                  <Icon name="flame" size={12} />{streak}
+                </span>
+              </td>
+              <td style={{ padding: '12px 16px' }}>
+                <span className="chip" style={{ color: statusColor(status), borderColor: statusColor(status) + '55', background: statusColor(status) + '15' }}>
+                  <span className="dot" style={{ background: statusColor(status) }} />{status}
+                </span>
+              </td>
+              <td style={{ padding: '12px 16px' }}>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <button className="btn ghost sm" onClick={() => onViewAs && onViewAs(m)}>
+                    View as <Icon name="arrow-right" size={11} />
+                  </button>
+                </div>
+              </td>
+            </tr>
+          );
+        })}
       </tbody>
     </table>);
 
 }
 
 function AdminMembers({ onViewAs }) {
+  const [members, setMembers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      const { data, error } = await window._supabase
+        .from('profiles')
+        .select('*')
+        .neq('role', 'admin')
+        .order('joined_at', { ascending: false });
+      if (!error && data) setMembers(data);
+      setLoading(false);
+    })();
+  }, []);
+
   return (
     <>
       <div className="page-header">
@@ -149,7 +182,7 @@ function AdminMembers({ onViewAs }) {
         </div>
       </div>
       <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-        <MembersTable onViewAs={onViewAs} />
+        <MembersTable onViewAs={onViewAs} members={members} loading={loading} />
       </div>
     </>);
 
