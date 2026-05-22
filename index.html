@@ -8,14 +8,281 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Fira+Sans+Extra+Condensed:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css" />
+
+<style>
+/* ── Login screen styles ───────────────────────────────────── */
+.login-root {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg, #f5f6fa);
+  padding: 24px;
+}
+
+.login-card {
+  background: var(--bg-elev, #fff);
+  border: 1px solid var(--border, #e8eaed);
+  border-radius: 20px;
+  padding: 48px 44px 40px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 4px 32px rgba(0,0,0,0.07);
+}
+
+.login-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 36px;
+}
+
+.login-brand-logo {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: #0F52BA;
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 24px;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+}
+
+.login-brand-text .brand-mark {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px;
+  letter-spacing: 0.12em;
+  color: var(--text, #0a0a0a);
+  line-height: 1;
+}
+
+.login-brand-text .brand-sub {
+  font-size: 11px;
+  font-family: 'Fira Sans Extra Condensed', sans-serif;
+  color: var(--text-3, #aaa);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+.login-heading {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 32px;
+  letter-spacing: 0.06em;
+  color: var(--text, #0a0a0a);
+  line-height: 1;
+  margin-bottom: 6px;
+}
+
+.login-sub {
+  font-size: 13px;
+  color: var(--text-3, #999);
+  margin-bottom: 28px;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.login-field {
+  margin-bottom: 14px;
+}
+
+.login-field label {
+  display: block;
+  font-size: 11px;
+  font-family: 'Fira Sans Extra Condensed', sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-2, #555);
+  margin-bottom: 6px;
+}
+
+.login-field input {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1.5px solid var(--border, #e0e2e8);
+  border-radius: 10px;
+  font-size: 14px;
+  font-family: 'Montserrat', sans-serif;
+  background: var(--bg, #f5f6fa);
+  color: var(--text, #0a0a0a);
+  outline: none;
+  transition: border-color 0.15s;
+  box-sizing: border-box;
+}
+
+.login-field input:focus {
+  border-color: #0F52BA;
+  background: var(--bg-elev, #fff);
+}
+
+.login-btn-primary {
+  width: 100%;
+  padding: 13px;
+  background: #0F52BA;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 6px;
+  transition: background 0.15s, opacity 0.15s;
+  letter-spacing: 0.02em;
+}
+
+.login-btn-primary:hover { background: #0d47a0; }
+.login-btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.login-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0;
+}
+
+.login-divider::before,
+.login-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border, #e0e2e8);
+}
+
+.login-divider span {
+  font-size: 11px;
+  color: var(--text-3, #aaa);
+  font-family: 'Fira Sans Extra Condensed', sans-serif;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.login-btn-google {
+  width: 100%;
+  padding: 12px;
+  background: var(--bg-elev, #fff);
+  color: var(--text, #0a0a0a);
+  border: 1.5px solid var(--border, #e0e2e8);
+  border-radius: 10px;
+  font-size: 14px;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.login-btn-google:hover {
+  border-color: #0F52BA;
+  background: var(--bg, #f5f6fa);
+}
+
+.login-btn-magic {
+  width: 100%;
+  padding: 12px;
+  background: none;
+  color: #0F52BA;
+  border: 1.5px solid transparent;
+  border-radius: 10px;
+  font-size: 13px;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: background 0.15s;
+}
+
+.login-btn-magic:hover { background: rgba(15,82,186,0.06); }
+
+.login-toggle {
+  text-align: center;
+  margin-top: 20px;
+  font-size: 12px;
+  color: var(--text-3, #999);
+  font-family: 'Montserrat', sans-serif;
+}
+
+.login-toggle button {
+  background: none;
+  border: none;
+  color: #0F52BA;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: 'Montserrat', sans-serif;
+  padding: 0;
+  margin-left: 4px;
+}
+
+.login-error {
+  background: rgba(255,107,107,0.1);
+  border: 1px solid rgba(255,107,107,0.3);
+  color: #c0392b;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 12px;
+  font-family: 'Montserrat', sans-serif;
+  margin-bottom: 14px;
+  line-height: 1.5;
+}
+
+.login-success {
+  background: rgba(163,228,219,0.2);
+  border: 1px solid rgba(163,228,219,0.5);
+  color: #2E8A7B;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 12px;
+  font-family: 'Montserrat', sans-serif;
+  margin-bottom: 14px;
+  line-height: 1.5;
+}
+
+.login-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: var(--bg, #f5f6fa);
+  font-family: 'Montserrat', sans-serif;
+  font-size: 14px;
+  color: var(--text-3, #999);
+  gap: 10px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.spin {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--border, #e0e2e8);
+  border-top-color: #0F52BA;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+</style>
 </head>
 <body>
 <div id="root"></div>
 
+<!-- React -->
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 
+<!-- Supabase SDK — must load before supabase.jsx -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+
+<!-- App files — supabase.jsx must be first -->
+<script type="text/babel" src="supabase.jsx"></script>
 <script type="text/babel" src="data.jsx"></script>
 <script type="text/babel" src="shell.jsx"></script>
 <script type="text/babel" src="calendar.jsx"></script>
@@ -54,9 +321,155 @@ const ACCENT_MAP = {
   ink: { c: '#0A0A0A', soft: '#E6E6E6', dark: '#E6E6E6', softDark: 'rgba(255,255,255,0.1)' }
 };
 
-// Determine if today is Friday (for reflection prompt)
 const isFriday = () => new Date().getDay() === 5;
 
+// ── Login Screen ─────────────────────────────────────────────
+function LoginScreen({ onAuth }) {
+  const [mode, setMode] = useState('signin'); // 'signin' | 'signup' | 'magic'
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  const clearMessages = () => { setError(''); setSuccess(''); };
+
+  const handleSignIn = async () => {
+    if (!email || !password) { setError('Please enter your email and password.'); return; }
+    setLoading(true); clearMessages();
+    const { data, error } = await authSignIn(email, password);
+    setLoading(false);
+    if (error) { setError(error.message); return; }
+    onAuth(data.user);
+  };
+
+  const handleSignUp = async () => {
+    if (!email || !password || !fullName) { setError('Please fill in all fields.'); return; }
+    setLoading(true); clearMessages();
+    const { data, error } = await authSignUp(email, password, fullName);
+    setLoading(false);
+    if (error) { setError(error.message); return; }
+    setSuccess('Account created! Check your email to confirm before signing in.');
+    setMode('signin');
+  };
+
+  const handleMagicLink = async () => {
+    if (!email) { setError('Please enter your email address.'); return; }
+    setLoading(true); clearMessages();
+    const { error } = await authMagicLink(email);
+    setLoading(false);
+    if (error) { setError(error.message); return; }
+    setSuccess('Magic link sent! Check your inbox and click the link to sign in.');
+  };
+
+  const handleGoogle = async () => {
+    clearMessages();
+    const { error } = await authGoogle();
+    if (error) setError(error.message);
+  };
+
+  return (
+    <div className="login-root">
+      <div className="login-card">
+        <div className="login-brand">
+          <div className="login-brand-logo">V</div>
+          <div className="login-brand-text">
+            <div className="brand-mark">VANTAGE</div>
+            <div className="brand-sub">by MEGA</div>
+          </div>
+        </div>
+
+        <div className="login-heading">
+          {mode === 'signup' ? 'Create account' : mode === 'magic' ? 'Magic link' : 'Welcome back'}
+        </div>
+        <div className="login-sub">
+          {mode === 'signup'
+            ? 'Join MEGA and start your growth journey.'
+            : mode === 'magic'
+            ? 'Enter your email and we\'ll send you a sign-in link.'
+            : 'Sign in to your Vantage workspace.'}
+        </div>
+
+        {error && <div className="login-error">{error}</div>}
+        {success && <div className="login-success">{success}</div>}
+
+        {mode === 'signup' && (
+          <div className="login-field">
+            <label>Full name</label>
+            <input
+              type="text"
+              placeholder="Your full name"
+              value={fullName}
+              onChange={e => setFullName(e.target.value)}
+            />
+          </div>
+        )}
+
+        <div className="login-field">
+          <label>Email</label>
+          <input
+            type="email"
+            placeholder="you@example.com"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter' && mode === 'signin') handleSignIn(); }}
+          />
+        </div>
+
+        {mode !== 'magic' && (
+          <div className="login-field">
+            <label>Password</label>
+            <input
+              type="password"
+              placeholder="••••••••"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter' && mode === 'signin') handleSignIn(); }}
+            />
+          </div>
+        )}
+
+        <button
+          className="login-btn-primary"
+          onClick={mode === 'signup' ? handleSignUp : mode === 'magic' ? handleMagicLink : handleSignIn}
+          disabled={loading}
+        >
+          {loading ? 'Please wait...' : mode === 'signup' ? 'Create account' : mode === 'magic' ? 'Send magic link' : 'Sign in'}
+        </button>
+
+        {mode === 'signin' && (
+          <button className="login-btn-magic" onClick={() => { setMode('magic'); clearMessages(); }}>
+            Sign in without a password
+          </button>
+        )}
+
+        <div className="login-divider"><span>or</span></div>
+
+        <button className="login-btn-google" onClick={handleGoogle}>
+          <svg width="18" height="18" viewBox="0 0 18 18">
+            <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/>
+            <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/>
+            <path fill="#FBBC05" d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957C.347 6.175 0 7.55 0 9s.348 2.825.957 4.039l3.007-2.332z"/>
+            <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z"/>
+          </svg>
+          Continue with Google
+        </button>
+
+        <div className="login-toggle">
+          {mode === 'signup'
+            ? <span>Already have an account? <button onClick={() => { setMode('signin'); clearMessages(); }}>Sign in</button></span>
+            : mode === 'magic'
+            ? <span>Back to <button onClick={() => { setMode('signin'); clearMessages(); }}>email sign in</button></span>
+            : <span>Don't have an account? <button onClick={() => { setMode('signup'); clearMessages(); }}>Create one</button></span>
+          }
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Remote Banner ────────────────────────────────────────────
 function RemoteBanner({ member, onExit }) {
   return (
     <div className="remote-banner">
@@ -64,30 +477,32 @@ function RemoteBanner({ member, onExit }) {
       <span>Viewing as <strong>{member.name}</strong> — Admin Read-Only Mode</span>
       <span style={{ opacity: 0.75, fontSize: 11, marginLeft: 4 }}>({member.plan})</span>
       <button className="exit-btn" onClick={onExit}>✕ Exit member view</button>
-    </div>);
-
+    </div>
+  );
 }
 
-// Updated sidebar with Wins Board + Admin Messaging
+// ── Sidebar with Wins ────────────────────────────────────────
 function SidebarWithWins({ route, setRoute, admin, unread, member, onOpenProfile, viewingAs }) {
   const memberItems = [
-  { k: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
-  { k: 'tasks', label: 'Tasks & Goals', icon: 'tasks' },
-  { k: 'sessions', label: 'Sessions', icon: 'sessions' },
-  { k: 'wins', label: 'Wins Board', icon: 'trophy' },
-  { k: 'resources', label: 'Resources', icon: 'resources' },
-  { k: 'chat', label: 'Chat', icon: 'chat', badge: unread },
-  { k: 'profile', label: 'Profile', icon: 'profile' }];
+    { k: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
+    { k: 'tasks', label: 'Tasks & Goals', icon: 'tasks' },
+    { k: 'sessions', label: 'Sessions', icon: 'sessions' },
+    { k: 'wins', label: 'Wins Board', icon: 'trophy' },
+    { k: 'resources', label: 'Resources', icon: 'resources' },
+    { k: 'chat', label: 'Chat', icon: 'chat', badge: unread },
+    { k: 'profile', label: 'Profile', icon: 'profile' }
+  ];
 
   const adminItems = [
-  { k: 'admin-overview', label: 'Overview', icon: 'dashboard' },
-  { k: 'admin-members', label: 'Members', icon: 'users' },
-  { k: 'admin-tasks', label: 'Tasks & Goals', icon: 'tasks' },
-  { k: 'admin-sessions', label: 'Sessions', icon: 'sessions' },
-  { k: 'admin-messaging', label: 'Chat', icon: 'send' },
-  { k: 'admin-resources', label: 'Resources   ', icon: 'resources' },
-  { k: 'admin-chat', label: 'Channels', icon: 'chat' },
-  { k: 'admin-analytics', label: 'Analytics', icon: 'chart' }];
+    { k: 'admin-overview', label: 'Overview', icon: 'dashboard' },
+    { k: 'admin-members', label: 'Members', icon: 'users' },
+    { k: 'admin-tasks', label: 'Tasks & Goals', icon: 'tasks' },
+    { k: 'admin-sessions', label: 'Sessions', icon: 'sessions' },
+    { k: 'admin-messaging', label: 'Chat', icon: 'send' },
+    { k: 'admin-resources', label: 'Resources', icon: 'resources' },
+    { k: 'admin-chat', label: 'Channels', icon: 'chat' },
+    { k: 'admin-analytics', label: 'Analytics', icon: 'chart' }
+  ];
 
   const items = admin ? adminItems : memberItems;
 
@@ -102,8 +517,8 @@ function SidebarWithWins({ route, setRoute, admin, unread, member, onOpenProfile
       </div>
 
       <div className="sb-section">{admin ? "Control" : "Workspace"}</div>
-      {items.map((it) =>
-      <button key={it.k} className={"sb-item" + (route === it.k ? " active" : "")} onClick={() => setRoute(it.k)}>
+      {items.map(it =>
+        <button key={it.k} className={"sb-item" + (route === it.k ? " active" : "")} onClick={() => setRoute(it.k)}>
           <span className="sb-icon"><Icon name={it.icon} size={18} /></span>
           <span>{it.label}</span>
           {it.badge ? <span className="sb-badge">{it.badge}</span> : null}
@@ -112,41 +527,53 @@ function SidebarWithWins({ route, setRoute, admin, unread, member, onOpenProfile
 
       <div className="sb-spacer" />
       <div className="sb-divider" />
+
       <button className="sb-item" onClick={() => setRoute(admin ? 'dashboard' : 'admin-overview')}>
         <span className="sb-icon"><Icon name={admin ? 'logout' : 'admin'} size={18} /></span>
         <span>{admin ? "Back to member view" : "Admin view"}</span>
       </button>
 
-      {!admin &&
-      <button className="user-card" onClick={onOpenProfile} style={{ cursor: 'pointer', textAlign: 'left' }}>
+      {!admin && (
+        <button className="user-card" onClick={onOpenProfile} style={{ cursor: 'pointer', textAlign: 'left' }}>
           <Avatar initials={member.initials} color={member.avatarColor} size={36} />
           <div className="user-card-meta">
             <div className="user-name">{member.firstName} {member.lastName}</div>
-            <div className="user-sub"><span>{member.product}</span><span style={{ opacity: 0.5 }}>·</span><span>{member.plan}</span></div>
+            <div className="user-sub">
+              <span>{member.product}</span>
+              <span style={{ opacity: 0.5 }}>·</span>
+              <span>{member.plan}</span>
+            </div>
           </div>
           <div style={{ textAlign: 'right' }}>
             <div className="user-points">{(member.points / 1000).toFixed(1)}k</div>
             <div className="user-sub" style={{ fontSize: 10 }}>PTS</div>
           </div>
         </button>
-      }
-      {admin &&
-      <div className="user-card" style={{ cursor: 'default' }}>
-          <Avatar initials="RE" color="#FF6B6B" size={36} />
+      )}
+
+      {admin && (
+        <div className="user-card" style={{ cursor: 'default' }}>
+          <Avatar initials={member.initials || 'ZR'} color="#FF6B6B" size={36} />
           <div className="user-card-meta">
-            <div className="user-name" style={{ color: '#fff' }}>Zachariah Rampa</div>
+            <div className="user-name" style={{ color: '#fff' }}>{member.firstName} {member.lastName}</div>
             <div className="user-sub">Founder · MEGA</div>
           </div>
         </div>
-      }
-    </aside>);
-
+      )}
+    </aside>
+  );
 }
 
+// ── Main App ─────────────────────────────────────────────────
 function App() {
+  // Auth state: null = loading, false = not logged in, object = user
+  const [authUser, setAuthUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [liveProfile, setLiveProfile] = useState(null);
+
   const [tw, setTw] = useState(() => {
-    try {return { ...TWEAK_DEFAULTS, ...JSON.parse(localStorage.getItem('vantage-tweaks') || '{}') };}
-    catch {return TWEAK_DEFAULTS;}
+    try { return { ...TWEAK_DEFAULTS, ...JSON.parse(localStorage.getItem('vantage-tweaks') || '{}') }; }
+    catch { return TWEAK_DEFAULTS; }
   });
   const [route, setRoute] = useState(() => localStorage.getItem('vantage-route') || 'dashboard');
   const [notifOpen, setNotifOpen] = useState(false);
@@ -155,7 +582,6 @@ function App() {
   const [viewingAs, setViewingAs] = useState(null);
   const [selectedAdminMember, setSelectedAdminMember] = useState(null);
 
-  // Modals state
   const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem('vantage-onboarded'));
   const [tourActive, setTourActive] = useState(false);
   const [tourBubble, setTourBubble] = useState(() => !localStorage.getItem('vantage-tour-seen'));
@@ -174,15 +600,40 @@ function App() {
     return saved ? JSON.parse(saved) : null;
   });
 
-  // Tasks state (shared between dashboard and tasks screen)
-  const [tasks, setTasks] = useState(() => TASKS.map((t) => ({
+  const [tasks, setTasks] = useState(() => TASKS.map(t => ({
     ...t,
-    priority: ['Critical', 'Important', 'Important', 'Routine', 'Routine'][TASKS.findIndex((tt) => tt.id === t.id)] || 'Routine',
-    subtasks: t.subtasks.map((s) => ({ ...s }))
+    priority: ['Critical', 'Important', 'Important', 'Routine', 'Routine'][TASKS.findIndex(tt => tt.id === t.id)] || 'Routine',
+    subtasks: t.subtasks.map(s => ({ ...s }))
   })));
 
-  useEffect(() => {localStorage.setItem('vantage-tweaks', JSON.stringify(tw));}, [tw]);
-  useEffect(() => {localStorage.setItem('vantage-route', route);}, [route]);
+  // ── Check auth state on mount and listen for changes
+  useEffect(() => {
+    // Check if a user is already logged in
+    getCurrentUser().then(user => {
+      setAuthUser(user || false);
+      setAuthLoading(false);
+      if (user) loadProfile(user.id);
+    });
+
+    // Listen for auth state changes (login, logout, magic link click)
+    const { data: { subscription } } = window._supabase.auth.onAuthStateChange((_event, session) => {
+      const user = session?.user || false;
+      setAuthUser(user);
+      if (user) loadProfile(user.id);
+      else setLiveProfile(null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Load the user's profile from the database
+  const loadProfile = async (userId) => {
+    const { data } = await getProfile(userId);
+    if (data) setLiveProfile(data);
+  };
+
+  useEffect(() => { localStorage.setItem('vantage-tweaks', JSON.stringify(tw)); }, [tw]);
+  useEffect(() => { localStorage.setItem('vantage-route', route); }, [route]);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', tw.theme);
@@ -194,36 +645,35 @@ function App() {
   }, [tw]);
 
   useEffect(() => {
-    const handle = (e) => {
+    const handle = e => {
       if (!e.data?.type) return;
       if (e.data.type === '__activate_edit_mode') setTweaksOpen(true);
       if (e.data.type === '__deactivate_edit_mode') setTweaksOpen(false);
     };
     window.addEventListener('message', handle);
-    try {window.parent.postMessage({ type: '__edit_mode_available' }, '*');} catch {}
+    try { window.parent.postMessage({ type: '__edit_mode_available' }, '*'); } catch {}
     return () => window.removeEventListener('message', handle);
   }, []);
 
-  const updateTweak = (patch) => {
-    setTw((t) => {
+  const updateTweak = patch => {
+    setTw(t => {
       const next = { ...t, ...patch };
-      try {window.parent.postMessage({ type: '__edit_mode_set_keys', edits: patch }, '*');} catch {}
+      try { window.parent.postMessage({ type: '__edit_mode_set_keys', edits: patch }, '*'); } catch {}
       return next;
     });
   };
 
-  const onReward = (points) => {
+  const onReward = points => {
     const id = Date.now() + Math.random();
-    setRewards((r) => [...r, { id, points }]);
-    setTimeout(() => setRewards((r) => r.filter((x) => x.id !== id)), 1700);
+    setRewards(r => [...r, { id, points }]);
+    setTimeout(() => setRewards(r => r.filter(x => x.id !== id)), 1700);
   };
 
   const onJoin = () => alert('Opening meeting link…');
+  const onViewAs = member => { setViewingAs(member); setRoute('dashboard'); };
+  const exitViewAs = () => { setViewingAs(null); setRoute('admin-members'); };
 
-  const onViewAs = (member) => {setViewingAs(member);setRoute('dashboard');};
-  const exitViewAs = () => {setViewingAs(null);setRoute('admin-members');};
-
-  const setIntentionHandler = (item) => {
+  const setIntentionHandler = item => {
     setIntention(item);
     setShowIntention(false);
     const today = new Date().toDateString();
@@ -234,63 +684,114 @@ function App() {
     setShowIntention(false);
     localStorage.setItem('vantage-intention-' + new Date().toDateString(), 'skipped');
   };
-  const submitReflection = (data) => {
+  const submitReflection = data => {
     setShowReflection(false);
     localStorage.setItem('vantage-reflection-' + new Date().toDateString(), JSON.stringify(data));
   };
 
-  const isAdmin = !viewingAs && route.startsWith('admin-');
-  const member = MEMBER;
+  const handleSignOut = async () => {
+    await authSignOut();
+    setAuthUser(false);
+    setLiveProfile(null);
+    localStorage.removeItem('vantage-route');
+  };
 
-  // Modal priority: onboarding > reflection (Friday) > intention
-  const showingModal = showOnboarding || showReflection && !showOnboarding || showIntention && !showOnboarding && !showReflection;
+  // Build the member object: prefer live profile data, fall back to placeholder
+  const member = liveProfile ? {
+    firstName: (liveProfile.full_name || '').split(' ')[0] || 'Member',
+    lastName: (liveProfile.full_name || '').split(' ').slice(1).join(' ') || '',
+    initials: (liveProfile.full_name || 'M').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2),
+    email: liveProfile.email || '',
+    avatarColor: '#0F52BA',
+    plan: liveProfile.membership_tier === 'breakthrough' ? 'Breakthrough' : 'Foundations',
+    product: 'Mentorship',
+    points: 0,
+    level: 'Beginner',
+    levelIndex: 0,
+    pointsInLevel: 0,
+    pointsToNext: 1000,
+    streakDays: 0,
+    learningThisMonth: '0h 0m',
+    stats: { sessions: 0, modules: 0, habits: 0, townHalls: 0 },
+    interests: [],
+    role: '',
+    status: '',
+    field: '',
+    focus: '',
+    isAdmin: liveProfile.role === 'admin',
+  } : MEMBER;
+
+  // ── Render states ─────────────────────────────────────────
+  // 1. Still checking auth
+  if (authLoading) {
+    return (
+      <div className="login-loading">
+        <div className="spin" />
+        Loading Vantage...
+      </div>
+    );
+  }
+
+  // 2. Not logged in — show login screen
+  if (!authUser) {
+    return <LoginScreen onAuth={user => { setAuthUser(user); loadProfile(user.id); }} />;
+  }
+
+  // 3. Logged in — show the full platform
+  const isAdmin = !viewingAs && route.startsWith('admin-');
 
   let screen;
   switch (route) {
     case 'dashboard':
       screen = <DashboardScreen member={member} onJoin={onJoin} onGoto={setRoute} gameMode={tw.gameMode}
-      intention={intention} onClearIntention={() => setIntention(null)}
-      tasks={tasks} goals={GOALS} />;
+        intention={intention} onClearIntention={() => setIntention(null)}
+        tasks={tasks} goals={GOALS} />;
       break;
-    case 'tasks':screen = <TasksScreen onReward={onReward} />;break;
-    case 'sessions':screen = <SessionsScreen onJoin={onJoin} isAdmin={false} />;break;
-    case 'wins':screen = <WinsScreen />;break;
-    case 'resources':screen = <ResourcesScreen onStartTour={() => { setTourBubble(false); setTourActive(true); }} tourCompleted={tourCompleted} />;break;
-    case 'chat':screen = <ChatScreen />;break;
-    case 'profile':screen = <ProfileScreen member={member} theme={tw.theme} setTheme={(t) => updateTweak({ theme: t })} />;break;
-    case 'admin-overview':screen = <AdminOverview onPick={setRoute} />;break;
+    case 'tasks': screen = <TasksScreen onReward={onReward} />; break;
+    case 'sessions': screen = <SessionsScreen onJoin={onJoin} isAdmin={false} />; break;
+    case 'wins': screen = <WinsScreen />; break;
+    case 'resources': screen = <ResourcesScreen onStartTour={() => { setTourBubble(false); setTourActive(true); }} tourCompleted={tourCompleted} />; break;
+    case 'chat': screen = <ChatScreen />; break;
+    case 'profile': screen = <ProfileScreen member={member} theme={tw.theme} setTheme={t => updateTweak({ theme: t })} onSignOut={handleSignOut} />; break;
+    case 'admin-overview': screen = <AdminOverview onPick={setRoute} />; break;
     case 'admin-members':
-      screen = selectedAdminMember ?
-      <AdminMemberDetail member={selectedAdminMember} onBack={() => setSelectedAdminMember(null)} /> :
-      <AdminMembers onViewAs={onViewAs} onOpenDetail={(m) => setSelectedAdminMember(m)} />;
+      screen = selectedAdminMember
+        ? <AdminMemberDetail member={selectedAdminMember} onBack={() => setSelectedAdminMember(null)} />
+        : <AdminMembers onViewAs={onViewAs} onOpenDetail={m => setSelectedAdminMember(m)} />;
       break;
-    case 'admin-tasks':screen = <AdminTasks />;break;
-    case 'admin-sessions':screen = <AdminSessions />;break;
-    case 'admin-messaging':screen = <BulkMessaging />;break;
-    case 'admin-resources':screen = <AdminResources />;break;
-    case 'admin-chat':screen = <AdminChat />;break;
-    case 'admin-analytics':screen = <AdminAnalytics />;break;
-    default:screen = <DashboardScreen member={member} onJoin={onJoin} onGoto={setRoute} gameMode={tw.gameMode}
-      intention={intention} onClearIntention={() => setIntention(null)} tasks={tasks} goals={GOALS} />;
+    case 'admin-tasks': screen = <AdminTasks />; break;
+    case 'admin-sessions': screen = <AdminSessions />; break;
+    case 'admin-messaging': screen = <BulkMessaging />; break;
+    case 'admin-resources': screen = <AdminResources />; break;
+    case 'admin-chat': screen = <AdminChat />; break;
+    case 'admin-analytics': screen = <AdminAnalytics />; break;
+    default:
+      screen = <DashboardScreen member={member} onJoin={onJoin} onGoto={setRoute} gameMode={tw.gameMode}
+        intention={intention} onClearIntention={() => setIntention(null)} tasks={tasks} goals={GOALS} />;
   }
 
   return (
     <div className="app" data-screen-label={isAdmin ? "Admin" : "Member"}>
       <SidebarWithWins
-        route={route} setRoute={(r) => {if (!viewingAs || !r.startsWith('admin-')) setRoute(r);}}
-        admin={isAdmin} unread={3}
-        member={viewingAs ? { ...member, firstName: viewingAs.name.split(' ')[0], initials: viewingAs.initials, avatarColor: viewingAs.color } : member}
+        route={route}
+        setRoute={r => { if (!viewingAs || !r.startsWith('admin-')) setRoute(r); }}
+        admin={isAdmin}
+        unread={3}
+        member={viewingAs
+          ? { ...member, firstName: viewingAs.name.split(' ')[0], initials: viewingAs.initials, avatarColor: viewingAs.color }
+          : member}
         onOpenProfile={() => setRoute('profile')}
-        viewingAs={viewingAs} />
-      
+        viewingAs={viewingAs}
+      />
+
       <main className="main">
         <div className="main-inner">
           {viewingAs && <RemoteBanner member={viewingAs} onExit={exitViewAs} />}
           <Topbar
-            theme={tw.theme} setTheme={(t) => updateTweak({ theme: t })}
+            theme={tw.theme} setTheme={t => updateTweak({ theme: t })}
             onOpenTweaks={() => setTweaksOpen(true)}
             notifCount={2} onOpenNotifs={() => setNotifOpen(true)} />
-          
+
           {screen}
         </div>
       </main>
@@ -298,48 +799,44 @@ function App() {
       <NotifPanel open={notifOpen} onClose={() => setNotifOpen(false)} />
       <TweaksPanel
         open={tweaksOpen} onClose={() => setTweaksOpen(false)}
-        theme={tw.theme} setTheme={(t) => updateTweak({ theme: t })}
-        accent={tw.accent} setAccent={(a) => updateTweak({ accent: a })}
-        gameMode={tw.gameMode} setGameMode={(g) => updateTweak({ gameMode: g })} />
-      
+        theme={tw.theme} setTheme={t => updateTweak({ theme: t })}
+        accent={tw.accent} setAccent={a => updateTweak({ accent: a })}
+        gameMode={tw.gameMode} setGameMode={g => updateTweak({ gameMode: g })} />
 
-      {/* Tour bubble — first login only */}
       {tourBubble && !showOnboarding && (
         <TourBubble
-          onStart={() => { setTourBubble(false); localStorage.setItem('vantage-tour-seen','1'); setTourActive(true); }}
-          onDismiss={() => { setTourBubble(false); localStorage.setItem('vantage-tour-seen','1'); }}
+          onStart={() => { setTourBubble(false); localStorage.setItem('vantage-tour-seen', '1'); setTourActive(true); }}
+          onDismiss={() => { setTourBubble(false); localStorage.setItem('vantage-tour-seen', '1'); }}
         />
       )}
 
-      {/* Tour overlay */}
       {tourActive && (
         <TourController
           onNavigate={r => setRoute(r)}
-          onClose={() => { setTourActive(false); setTourCompleted(true); localStorage.setItem('vantage-tour-done','1'); }}
+          onClose={() => { setTourActive(false); setTourCompleted(true); localStorage.setItem('vantage-tour-done', '1'); }}
         />
       )}
 
-      {/* Layered modals: onboarding → reflection → intention */}
-      {showOnboarding &&
-      <OnboardingWizard onComplete={() => {
-        setShowOnboarding(false);
-        localStorage.setItem('vantage-onboarded', '1');
-      }} />
-      }
-      {!showOnboarding && showReflection &&
-      <ReflectionModal onSubmit={submitReflection} onLater={() => setShowReflection(false)} />
-      }
-      {!showOnboarding && !showReflection && showIntention &&
-      <IntentionModal tasks={tasks} goals={GOALS} onSet={setIntentionHandler} onSkip={skipIntention} />
-      }
+      {showOnboarding && (
+        <OnboardingWizard onComplete={() => {
+          setShowOnboarding(false);
+          localStorage.setItem('vantage-onboarded', '1');
+        }} />
+      )}
+      {!showOnboarding && showReflection && (
+        <ReflectionModal onSubmit={submitReflection} onLater={() => setShowReflection(false)} />
+      )}
+      {!showOnboarding && !showReflection && showIntention && (
+        <IntentionModal tasks={tasks} goals={GOALS} onSet={setIntentionHandler} onSkip={skipIntention} />
+      )}
 
-      {rewards.map((r) =>
-      <div key={r.id} className="point-pop">
+      {rewards.map(r =>
+        <div key={r.id} className="point-pop">
           <Icon name="star" size={14} /><span>+{r.points}</span><span className="val">XP</span>
         </div>
       )}
-    </div>);
-
+    </div>
+  );
 }
 
 ReactDOM.createRoot(document.getElementById('root')).render(<App />);
