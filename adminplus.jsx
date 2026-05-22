@@ -352,7 +352,7 @@ function AdminMemberDetail({ member, onBack }) {
             <div>
               <div className="eyebrow" style={{ marginBottom:8, fontSize:10 }}>Membership tier</div>
               <div className="seg">
-                {['foundations','breakthrough'].map(v => (
+                {['foundations','breakthrough','management'].map(v => (
                   <button key={v} className={editTier===v?'on':''} onClick={() => setEditTier(v)}>
                     {v.charAt(0).toUpperCase()+v.slice(1)}
                   </button>

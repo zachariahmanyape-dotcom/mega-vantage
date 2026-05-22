@@ -83,6 +83,16 @@ function AdminOverview({ onPick }) {
 }
 
 function MembersTable({ compact, onViewAs, onOpenDetail, members = [], loading = false }) {
+  const [blockedMember, setBlockedMember] = useState(null);
+
+  const handleViewAs = (m) => {
+    if (m.member_status === 'pending' || m.member_status === 'inactive') {
+      setBlockedMember(m);
+      return;
+    }
+    if (onViewAs) onViewAs(m);
+  };
+
   if (loading) {
     return (
       <div style={{ padding: '40px 0', textAlign: 'center', fontSize: 13, color: 'var(--text-3)' }}>
@@ -92,9 +102,16 @@ function MembersTable({ compact, onViewAs, onOpenDetail, members = [], loading =
   }
 
   const rows = compact ? members.slice(0, 6) : members;
-  const statusColor = (s) => s === 'At risk' ? 'var(--coral)' : s === 'Trial' ? '#E8B24C' : s === 'Top performer' ? 'var(--accent)' : 'var(--teal-600)';
+  const statusColor = (s) =>
+    s === 'Pending'  ? '#C88A1A' :
+    s === 'Inactive' ? 'var(--text-3)' :
+    s === 'Trial'    ? '#E8B24C' :
+    s === 'At risk'  ? 'var(--coral)' :
+    s === 'Top performer' ? 'var(--accent)' :
+    'var(--teal-600)';
 
   return (
+    <>
     <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
       <thead>
         <tr style={{ background: 'var(--bg-sunken)' }}>
@@ -112,7 +129,11 @@ function MembersTable({ compact, onViewAs, onOpenDetail, members = [], loading =
           const lastActive = 'recently';
           const points    = 0;
           const streak    = 0;
-          const status    = m.account_type === 'trial' ? 'Trial' : 'Active';
+          const memberStatus = m.member_status || 'active';
+          const status =
+            memberStatus === 'pending'  ? 'Pending'  :
+            memberStatus === 'inactive' ? 'Inactive' :
+            m.account_type === 'trial'  ? 'Trial'    : 'Active';
           return (
             <tr key={m.id || name} style={{ borderTop: '1px solid var(--border)' }}>
               <td style={{ padding: '12px 16px' }}>
@@ -136,7 +157,7 @@ function MembersTable({ compact, onViewAs, onOpenDetail, members = [], loading =
               </td>
               <td style={{ padding: '12px 16px' }}>
                 <div style={{ display: 'flex', gap: 6 }}>
-                  <button className="btn ghost sm" onClick={() => onViewAs && onViewAs(m)}>
+                  <button className="btn ghost sm" onClick={() => handleViewAs(m)}>
                     View as <Icon name="arrow-right" size={11} />
                   </button>
                   {onOpenDetail && (
@@ -150,8 +171,28 @@ function MembersTable({ compact, onViewAs, onOpenDetail, members = [], loading =
           );
         })}
       </tbody>
-    </table>);
+    </table>
 
+    {blockedMember && (
+      <>
+        <div onClick={() => setBlockedMember(null)} style={{ position:'fixed', inset:0, background:'rgba(10,10,10,0.45)', zIndex:200, backdropFilter:'blur(3px)' }} />
+        <div className="card" style={{ position:'fixed', top:'50%', left:'50%', transform:'translate(-50%,-50%)', width:400, zIndex:201, padding:0, boxShadow:'var(--shadow-3)' }}>
+          <div style={{ padding:'24px 24px 20px' }}>
+            <div className="display" style={{ fontSize:22, marginBottom:10 }}>Member not yet active</div>
+            <div style={{ fontSize:13, color:'var(--text-2)', lineHeight:1.65 }}>
+              This member has not yet verified their account or logged in for the first time.
+            </div>
+          </div>
+          <div style={{ padding:'0 24px 20px' }}>
+            <button className="btn" onClick={() => setBlockedMember(null)} style={{ width:'100%', justifyContent:'center' }}>
+              Back
+            </button>
+          </div>
+        </div>
+      </>
+    )}
+    </>
+  );
 }
 
 // ─── Invite Member Modal ──────────────────────────────────────────────────────
@@ -193,6 +234,7 @@ function InviteMemberModal({ onClose, onInvited }) {
           membership_tier: tier,
           account_type: accountType,
           trial_expires_at: accountType === 'trial' && trialExpiresAt ? trialExpiresAt : null,
+          member_status: 'pending',
         }, { onConflict: 'email' });
       if (upsertError) throw upsertError;
 
@@ -226,7 +268,7 @@ function InviteMemberModal({ onClose, onInvited }) {
             <div>
               <div className="eyebrow" style={{ marginBottom:6, fontSize:10 }}>Membership tier</div>
               <div className="seg">
-                {['foundations','breakthrough'].map(v => (
+                {['foundations','breakthrough','management'].map(v => (
                   <button key={v} className={tier===v?'on':''} onClick={() => setTier(v)}>
                     {v.charAt(0).toUpperCase()+v.slice(1)}
                   </button>
