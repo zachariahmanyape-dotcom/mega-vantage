@@ -115,47 +115,89 @@ function TaskRow({ task, expanded, onToggle, onCheck, onSubCheck }) {
 }
 
 function GoalCard({ goal, tasks }) {
-  const linked = goal.taskIds.map((id) => tasks.find((t) => t.id === id)).filter(Boolean);
-  const totalSub = linked.reduce((a, t) => a + t.subtasks.length, 0);
-  const doneSub = linked.reduce((a, t) => a + t.subtasks.filter((s) => s.done).length, 0);
-  const pct = totalSub ? Math.round(doneSub / totalSub * 100) : 0;
-  const totalTime = linked.reduce((a, t) => a + (window.FOCUS_LOG?.[t.id] || 0), 0);
+  // ── Legacy hardcoded shape (taskIds present) ──────────────────────────────
+  if (goal.taskIds) {
+    const linked = goal.taskIds.map((id) => tasks.find((t) => t.id === id)).filter(Boolean);
+    const totalSub = linked.reduce((a, t) => a + t.subtasks.length, 0);
+    const doneSub = linked.reduce((a, t) => a + t.subtasks.filter((s) => s.done).length, 0);
+    const pct = totalSub ? Math.round(doneSub / totalSub * 100) : 0;
+    const totalTime = linked.reduce((a, t) => a + (window.FOCUS_LOG?.[t.id] || 0), 0);
+    return (
+      <div className="card" style={{ padding: 22 }}>
+        <div className="row-between">
+          <div style={{ flex: 1 }}>
+            <div className="eyebrow">Goal</div>
+            <div className="display" style={{ fontSize: 28, marginTop: 4, lineHeight: 1.1 }}>{goal.title}</div>
+            <div style={{ fontSize: 13, color: 'var(--text-2)', marginTop: 8, maxWidth: 560, lineHeight: 1.5 }}>{goal.description}</div>
+          </div>
+          <div style={{ textAlign: 'right', minWidth: 120 }}>
+            <div className="display" style={{ fontSize: 48, color: 'var(--accent)', lineHeight: 1 }}>{pct}<span style={{ fontSize: 20, color: 'var(--text-3)' }}>%</span></div>
+            <div className="eyebrow" style={{ marginTop: 4 }}>{doneSub} of {totalSub} steps</div>
+            {totalTime > 0 && <div style={{ fontSize: 11, color: 'var(--teal-600)', marginTop: 4 }}>⏱ {totalTime}m total focus</div>}
+          </div>
+        </div>
+        <div className="progress" style={{ marginTop: 14, height: 5 }}><span style={{ width: pct + '%' }} /></div>
+        <div className="stack" style={{ gap: 8, marginTop: 18 }}>
+          {linked.map((t) => {
+            const d = t.subtasks.filter((s) => s.done).length;
+            const p = Math.round(d / t.subtasks.length * 100);
+            return (
+              <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 10, background: 'var(--bg-sunken)', border: '1px solid var(--border)' }}>
+                <div style={{ width: 3, alignSelf: 'stretch', background: SUBJECTS[t.subject], borderRadius: 2 }} />
+                {t.priority && <PriorityBadge priority={t.priority} />}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 500 }}>{t.title}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 3 }}>{t.subject}</div>
+                </div>
+                <DueDateBadge due={t.due} dueSort={t.dueSort} />
+                <div style={{ fontSize: 12, color: 'var(--text-2)', fontWeight: 600, minWidth: 36, textAlign: 'right' }}>{p}%</div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  // ── Supabase shape (id, title, description, target_date, status) ──────────
+  const statusCfg = {
+    completed: { label: 'Completed', color: 'var(--teal-600)',  bg: 'var(--teal-50)' },
+    active:    { label: 'Active',    color: 'var(--accent)',    bg: 'var(--accent-soft)' },
+    paused:    { label: 'Paused',    color: '#C88A1A',          bg: 'rgba(232,178,76,0.12)' },
+    archived:  { label: 'Archived',  color: 'var(--text-3)',    bg: 'var(--bg-sunken)' },
+  };
+  const sc = statusCfg[goal.status] || statusCfg.active;
+  const targetDate = goal.target_date
+    ? new Date(goal.target_date + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+    : null;
 
   return (
     <div className="card" style={{ padding: 22 }}>
-      <div className="row-between">
+      <div className="row-between" style={{ alignItems: 'flex-start' }}>
         <div style={{ flex: 1 }}>
-          <div className="eyebrow">Goal</div>
-          <div className="display" style={{ fontSize: 28, marginTop: 4, lineHeight: 1.1 }}>{goal.title}</div>
-          <div style={{ fontSize: 13, color: 'var(--text-2)', marginTop: 8, maxWidth: 560, lineHeight: 1.5 }}>{goal.description}</div>
-        </div>
-        <div style={{ textAlign: 'right', minWidth: 120 }}>
-          <div className="display" style={{ fontSize: 48, color: 'var(--accent)', lineHeight: 1 }}>{pct}<span style={{ fontSize: 20, color: 'var(--text-3)' }}>%</span></div>
-          <div className="eyebrow" style={{ marginTop: 4 }}>{doneSub} of {totalSub} steps</div>
-          {totalTime > 0 && <div style={{ fontSize: 11, color: 'var(--teal-600)', marginTop: 4 }}>⏱ {totalTime}m total focus</div>}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+            <div className="eyebrow" style={{ margin: 0 }}>Goal</div>
+            <span style={{
+              fontSize: 10, padding: '2px 8px', borderRadius: 999,
+              background: sc.bg, color: sc.color,
+              border: '1px solid ' + sc.color + '44',
+              fontFamily: 'var(--ff-sub)', fontWeight: 700, letterSpacing: '0.08em'
+            }}>{sc.label}</span>
+          </div>
+          <div className="display" style={{ fontSize: 28, lineHeight: 1.1 }}>{goal.title}</div>
+          {goal.description && (
+            <div style={{ fontSize: 13, color: 'var(--text-2)', marginTop: 8, maxWidth: 560, lineHeight: 1.5 }}>{goal.description}</div>
+          )}
+          {targetDate && (
+            <div style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 10, display: 'flex', alignItems: 'center', gap: 5 }}>
+              <Icon name="sessions" size={12} style={{ color: 'var(--text-3)' }} />
+              Target: {targetDate}
+            </div>
+          )}
         </div>
       </div>
-      <div className="progress" style={{ marginTop: 14, height: 5 }}><span style={{ width: pct + '%' }} /></div>
-      <div className="stack" style={{ gap: 8, marginTop: 18 }}>
-        {linked.map((t) => {
-          const d = t.subtasks.filter((s) => s.done).length;
-          const p = Math.round(d / t.subtasks.length * 100);
-          return (
-            <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 10, background: 'var(--bg-sunken)', border: '1px solid var(--border)' }}>
-              <div style={{ width: 3, alignSelf: 'stretch', background: SUBJECTS[t.subject], borderRadius: 2 }} />
-              {t.priority && <PriorityBadge priority={t.priority} />}
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 13, fontWeight: 500 }}>{t.title}</div>
-                <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 3 }}>{t.subject}</div>
-              </div>
-              <DueDateBadge due={t.due} dueSort={t.dueSort} />
-              <div style={{ fontSize: 12, color: 'var(--text-2)', fontWeight: 600, minWidth: 36, textAlign: 'right' }}>{p}%</div>
-            </div>);
-
-        })}
-      </div>
-    </div>);
-
+    </div>
+  );
 }
 
 function TasksScreen({ onReward }) {
@@ -166,6 +208,21 @@ function TasksScreen({ onReward }) {
     subtasks: t.subtasks.map((s) => ({ ...s }))
   })));
   const [expanded, setExpanded] = useState('t1');
+
+  const [goals, setGoals] = useState([]);
+  const [goalsLoading, setGoalsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadGoals = async () => {
+      const { data, error } = await window._supabase
+        .from('goals')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (!error && data) setGoals(data);
+      setGoalsLoading(false);
+    };
+    loadGoals();
+  }, []);
 
   const completeTask = (id) => {
     setTasks((ts) => ts.map((t) => {
@@ -199,7 +256,7 @@ function TasksScreen({ onReward }) {
         </div>
         <div className="tabs">
           <button className={tab === 'tasks' ? 'on' : ''} onClick={() => setTab('tasks')}>Tasks ({tasks.length})</button>
-          <button className={tab === 'goals' ? 'on' : ''} onClick={() => setTab('goals')}>Goals ({GOALS.length})</button>
+          <button className={tab === 'goals' ? 'on' : ''} onClick={() => setTab('goals')}>Goals ({goals.length})</button>
         </div>
       </div>
 
@@ -227,7 +284,16 @@ function TasksScreen({ onReward }) {
 
       {tab === 'goals' &&
       <div className="stack" style={{ gap: 16 }}>
-          {GOALS.map((g) => <GoalCard key={g.id} goal={g} tasks={tasks} />)}
+          {goalsLoading
+            ? <div style={{ color: 'var(--text-3)', fontSize: 14, padding: 20 }}>Loading goals...</div>
+            : goals.length === 0
+            ? <div className="card" style={{ padding: 32, textAlign: 'center', color: 'var(--text-3)' }}>
+                <div style={{ fontSize: 32, marginBottom: 12 }}>🎯</div>
+                <div style={{ fontFamily: 'var(--ff-display)', fontSize: 22, marginBottom: 8 }}>No goals yet</div>
+                <div style={{ fontSize: 14 }}>Your growth roadmap goals will appear here.</div>
+              </div>
+            : goals.map((g) => <GoalCard key={g.id} goal={g} tasks={tasks} />)
+          }
         </div>
       }
     </>);
