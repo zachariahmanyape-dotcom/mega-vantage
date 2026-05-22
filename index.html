@@ -582,11 +582,36 @@ function App() {
     return saved ? JSON.parse(saved) : null;
   });
 
-  const [tasks, setTasks] = useState(() => TASKS.map(t => ({
-    ...t,
-    priority: ['Critical', 'Important', 'Important', 'Routine', 'Routine'][TASKS.findIndex(tt => tt.id === t.id)] || 'Routine',
-    subtasks: t.subtasks.map(s => ({ ...s }))
-  })));
+  const [liveTasks, setLiveTasks] = useState([]);
+  const [liveGoals, setLiveGoals] = useState([]);
+  const [dataLoading, setDataLoading] = useState(true);
+
+  const loadUserData = async (userId) => {
+    const [tasksRes, goalsRes] = await Promise.all([
+      window._supabase
+        .from('tasks')
+        .select('*, roadmap_step:roadmap_steps(title, goal_id)')
+        .eq('user_id', userId)
+        .order('order_index', { ascending: true }),
+      window._supabase
+        .from('goals')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+    ]);
+    setLiveTasks(tasksRes.data ? tasksRes.data.map(t => ({
+      ...t,
+      subtasks: [],
+      points: 50,
+      subject: 'General',
+      impact: [2.5, 2.5],
+      due: t.due_date ? new Date(t.due_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : null,
+      dueSort: t.due_date ? Math.ceil((new Date(t.due_date) - new Date()) / 86400000) : 999,
+      priority: 'Routine',
+    })) : []);
+    setLiveGoals(goalsRes.data || []);
+    setDataLoading(false);
+  };
 
   useEffect(() => {
     getCurrentUser().then(user => {
@@ -607,7 +632,10 @@ function App() {
 
   const loadProfile = async (userId) => {
     const { data } = await getProfile(userId);
-    if (data) setLiveProfile(data);
+    if (data) {
+      setLiveProfile(data);
+      loadUserData(userId);
+    }
   };
 
   useEffect(() => { localStorage.setItem('vantage-tweaks', JSON.stringify(tw)); }, [tw]);
@@ -771,9 +799,15 @@ function App() {
     case 'dashboard':
       screen = <DashboardScreen member={member} onJoin={onJoin} onGoto={setRoute} gameMode={tw.gameMode}
         intention={intention} onClearIntention={() => setIntention(null)}
-        tasks={tasks} goals={GOALS} />;
+        tasks={liveTasks} goals={liveGoals} />;
       break;
-    case 'tasks': screen = <TasksScreen onReward={onReward} />; break;
+    case 'tasks':
+      screen = <TasksScreen
+        tasks={liveTasks} setTasks={setLiveTasks}
+        goals={liveGoals} setGoals={setLiveGoals}
+        dataLoading={dataLoading}
+        onReward={onReward} />;
+      break;
     case 'sessions': screen = <SessionsScreen onJoin={onJoin} isAdmin={false} />; break;
     case 'wins': screen = <WinsScreen />; break;
     case 'resources': screen = <ResourcesScreen onStartTour={() => { setTourBubble(false); setTourActive(true); }} tourCompleted={tourCompleted} />; break;

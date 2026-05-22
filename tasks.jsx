@@ -233,52 +233,12 @@ function GoalCard({ goal, tasks }) {
   );
 }
 
-function TasksScreen({ onReward }) {
+function TasksScreen({ tasks, setTasks, goals, setGoals, dataLoading, onReward }) {
   const [tab, setTab] = useState('tasks');
-  const [tasks, setTasks] = useState([]);
-  const [tasksLoading, setTasksLoading] = useState(true);
   const [expanded, setExpanded] = useState(null);
 
-  const [goals, setGoals] = useState([]);
-  const [goalsLoading, setGoalsLoading] = useState(true);
-
-  useEffect(() => {
-    const loadTasks = async () => {
-      const { data, error } = await window._supabase
-        .from('tasks')
-        .select(`
-          *,
-          roadmap_step:roadmap_steps(title, goal_id)
-        `)
-        .order('order_index', { ascending: true });
-      if (!error && data) {
-        setTasks(data.map(t => ({
-          ...t,
-          subtasks: [],
-          points: 50,
-          subject: 'General',
-          impact: [2.5, 2.5],
-          due: t.due_date ? new Date(t.due_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : null,
-          dueSort: t.due_date ? Math.ceil((new Date(t.due_date) - new Date()) / 86400000) : 999,
-          priority: 'Routine',
-        })));
-      }
-      setTasksLoading(false);
-    };
-    loadTasks();
-  }, []);
-
-  useEffect(() => {
-    const loadGoals = async () => {
-      const { data, error } = await window._supabase
-        .from('goals')
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (!error && data) setGoals(data);
-      setGoalsLoading(false);
-    };
-    loadGoals();
-  }, []);
+  const tasksLoading = dataLoading;
+  const goalsLoading = dataLoading;
 
   const completeTask = async (id) => {
     const task = tasks.find(t => t.id === id);
