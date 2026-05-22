@@ -762,6 +762,7 @@ function App() {
     focus: '',
     isAdmin: liveProfile.role === 'admin',
   };
+  window._currentMember = member;
 
   const isAdmin = !viewingAs && route.startsWith('admin-');
 

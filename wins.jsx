@@ -102,7 +102,7 @@ function WinsComposer({ onClose, onPost }) {
         </div>
         <div style={{ padding: '20px 22px' }}>
           <div style={{ display: 'flex', gap: 12, marginBottom: 14 }}>
-            <Avatar initials={MEMBER.initials} color={MEMBER.avatarColor} size={36} />
+            <Avatar initials={window._currentMember?.initials} color={window._currentMember?.avatarColor} size={36} />
             <textarea
               value={text}
               onChange={(e) => e.target.value.length <= MAX && setText(e.target.value)}

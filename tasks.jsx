@@ -160,6 +160,11 @@ function GoalCard({ goal, tasks }) {
   }
 
   // ── Supabase shape (id, title, description, target_date, status) ──────────
+  const linked = tasks.filter(t => t.roadmap_step?.goal_id === goal.id);
+  const totalLinked = linked.length;
+  const doneLinked  = linked.filter(t => t.is_completed).length;
+  const pct = totalLinked ? Math.round(doneLinked / totalLinked * 100) : 0;
+
   const statusCfg = {
     completed: { label: 'Completed', color: 'var(--teal-600)',  bg: 'var(--teal-50)' },
     active:    { label: 'Active',    color: 'var(--accent)',    bg: 'var(--accent-soft)' },
@@ -195,22 +200,73 @@ function GoalCard({ goal, tasks }) {
             </div>
           )}
         </div>
+        {totalLinked > 0 && (
+          <div style={{ textAlign: 'right', minWidth: 110, paddingLeft: 16 }}>
+            <div className="display" style={{ fontSize: 48, color: 'var(--accent)', lineHeight: 1 }}>
+              {pct}<span style={{ fontSize: 20, color: 'var(--text-3)' }}>%</span>
+            </div>
+            <div className="eyebrow" style={{ marginTop: 4 }}>{doneLinked} of {totalLinked} tasks</div>
+          </div>
+        )}
       </div>
+      {totalLinked > 0 && (
+        <>
+          <div className="progress" style={{ marginTop: 14, height: 5 }}><span style={{ width: pct + '%' }} /></div>
+          <div className="stack" style={{ gap: 8, marginTop: 18 }}>
+            {linked.map(t => (
+              <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 10, background: 'var(--bg-sunken)', border: '1px solid var(--border)' }}>
+                <div style={{ width: 3, alignSelf: 'stretch', background: 'var(--accent)', borderRadius: 2, opacity: t.is_completed ? 0.3 : 1 }} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 500, textDecoration: t.is_completed ? 'line-through' : 'none', color: t.is_completed ? 'var(--text-3)' : 'var(--text)' }}>{t.title}</div>
+                  {t.roadmap_step?.title && <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 3 }}>{t.roadmap_step.title}</div>}
+                </div>
+                {t.due && <DueDateBadge due={t.due} dueSort={t.dueSort} />}
+                <div style={{ fontSize: 11, color: t.is_completed ? 'var(--teal-600)' : 'var(--text-3)', fontWeight: 600 }}>
+                  {t.is_completed ? '✓' : '—'}
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }
 
 function TasksScreen({ onReward }) {
   const [tab, setTab] = useState('tasks');
-  const [tasks, setTasks] = useState(() => TASKS.map((t) => ({
-    ...t,
-    priority: ['Critical', 'Important', 'Important', 'Routine', 'Routine'][TASKS.indexOf(t)] || 'Routine',
-    subtasks: t.subtasks.map((s) => ({ ...s }))
-  })));
-  const [expanded, setExpanded] = useState('t1');
+  const [tasks, setTasks] = useState([]);
+  const [tasksLoading, setTasksLoading] = useState(true);
+  const [expanded, setExpanded] = useState(null);
 
   const [goals, setGoals] = useState([]);
   const [goalsLoading, setGoalsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadTasks = async () => {
+      const { data, error } = await window._supabase
+        .from('tasks')
+        .select(`
+          *,
+          roadmap_step:roadmap_steps(title, goal_id)
+        `)
+        .order('order_index', { ascending: true });
+      if (!error && data) {
+        setTasks(data.map(t => ({
+          ...t,
+          subtasks: [],
+          points: 50,
+          subject: 'General',
+          impact: [2.5, 2.5],
+          due: t.due_date ? new Date(t.due_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : null,
+          dueSort: t.due_date ? Math.ceil((new Date(t.due_date) - new Date()) / 86400000) : 999,
+          priority: 'Routine',
+        })));
+      }
+      setTasksLoading(false);
+    };
+    loadTasks();
+  }, []);
 
   useEffect(() => {
     const loadGoals = async () => {
@@ -224,14 +280,18 @@ function TasksScreen({ onReward }) {
     loadGoals();
   }, []);
 
-  const completeTask = (id) => {
-    setTasks((ts) => ts.map((t) => {
-      if (t.id !== id) return t;
-      const allDone = t.subtasks.every((s) => s.done);
-      if (allDone) return { ...t, subtasks: t.subtasks.map((s) => ({ ...s, done: false })) };
-      onReward(t.points);
-      return { ...t, subtasks: t.subtasks.map((s) => ({ ...s, done: true })) };
-    }));
+  const completeTask = async (id) => {
+    const task = tasks.find(t => t.id === id);
+    if (!task) return;
+    const newCompleted = !task.is_completed;
+    await window._supabase
+      .from('tasks')
+      .update({
+        is_completed: newCompleted,
+        completed_at: newCompleted ? new Date().toISOString() : null
+      })
+      .eq('id', id);
+    setTasks(ts => ts.map(t => t.id === id ? { ...t, is_completed: newCompleted } : t));
   };
 
   const toggleSub = (id, idx) => {
@@ -269,16 +329,24 @@ function TasksScreen({ onReward }) {
           )}
             <span style={{ fontSize: 11, color: 'var(--text-3)', alignSelf: 'center', marginLeft: 4 }}>· Drag tasks in the matrix to reprioritize</span>
           </div>
-          <div className="stack" style={{ gap: 12 }}>
-            {tasks.map((t) =>
-          <TaskRow key={t.id} task={t}
-          expanded={expanded === t.id}
-          onToggle={() => setExpanded(expanded === t.id ? null : t.id)}
-          onCheck={() => completeTask(t.id)}
-          onSubCheck={(i) => toggleSub(t.id, i)} />
-
-          )}
-          </div>
+          {tasksLoading
+            ? <div style={{ color: 'var(--text-3)', fontSize: 14, padding: 20 }}>Loading tasks...</div>
+            : tasks.length === 0
+            ? <div className="card" style={{ padding: 32, textAlign: 'center', color: 'var(--text-3)' }}>
+                <div style={{ fontSize: 32, marginBottom: 12 }}>✅</div>
+                <div style={{ fontFamily: 'var(--ff-display)', fontSize: 22, marginBottom: 8 }}>No tasks yet</div>
+                <div style={{ fontSize: 14 }}>Tasks from your growth roadmap will appear here.</div>
+              </div>
+            : <div className="stack" style={{ gap: 12 }}>
+                {tasks.map((t) =>
+                  <TaskRow key={t.id} task={t}
+                    expanded={expanded === t.id}
+                    onToggle={() => setExpanded(expanded === t.id ? null : t.id)}
+                    onCheck={() => completeTask(t.id)}
+                    onSubCheck={(i) => toggleSub(t.id, i)} />
+                )}
+              </div>
+          }
         </div>
       }
 
