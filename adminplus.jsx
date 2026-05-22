@@ -260,9 +260,15 @@ function AdminMemberDetail({ member, onBack }) {
   const plan       = planRaw ? (planRaw.charAt(0).toUpperCase() + planRaw.slice(1)) : (member.plan || '—');
   const points     = member.points || 0;
   const streak     = member.streak || 0;
-  const status     = member.account_type
-    ? (member.account_type === 'trial' ? 'Trial' : 'Active')
-    : (member.status || '—');
+  const memberStatus = member.member_status || 'active';
+  const status =
+    memberStatus === 'pending'  ? 'Pending'  :
+    memberStatus === 'inactive' ? 'Inactive' :
+    member.account_type === 'trial' ? 'Trial' : 'Active';
+  const statusColor =
+    memberStatus === 'pending'  ? '#C88A1A' :
+    memberStatus === 'inactive' ? 'var(--text-3)' :
+    member.account_type === 'trial' ? '#E8B24C' : 'var(--teal-600)';
   const lastActive = member.lastActive || 'recently';
   const memberId   = member.id || null;
 
@@ -272,6 +278,21 @@ function AdminMemberDetail({ member, onBack }) {
   const [editTrialExpiry,   setEditTrialExpiry]   = useState(member.trial_expires_at ? member.trial_expires_at.slice(0,10) : '');
   const [saving,            setSaving]            = useState(false);
   const [saveResult,        setSaveResult]        = useState(null);
+  const [resending,         setResending]         = useState(false);
+  const [resendResult,      setResendResult]      = useState(null);
+
+  const handleResendInvite = async () => {
+    if (!member.email) { setResendResult({ type:'error', msg:'No email address on record.' }); return; }
+    setResending(true); setResendResult(null);
+    const { error } = await window._supabase.auth.signInWithOtp({
+      email: member.email,
+      options: { shouldCreateUser: false },
+    });
+    setResending(false);
+    setResendResult(error
+      ? { type:'error', msg: error.message || 'Failed to resend.' }
+      : { type:'success', msg: `Invitation resent to ${member.email}` });
+  };
 
   const addDays = (days) => {
     const d = new Date();
@@ -312,9 +333,28 @@ function AdminMemberDetail({ member, onBack }) {
           <h1 className="page-title">{name}</h1>
           <div className="page-sub" style={{ marginTop:4, color:'var(--text-2)' }}>{plan} · Last active {lastActive}</div>
         </div>
-        <div style={{ display:'flex', gap:8 }}>
-          <button className="btn"><Icon name="tasks" size={13} /> Assign task</button>
-          <button className="btn primary"><Icon name="sessions" size={13} /> Schedule 1:1</button>
+        <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:8 }}>
+          <div style={{ display:'flex', gap:8 }}>
+            {memberStatus === 'pending' && (
+              <button className="btn" disabled={resending} onClick={handleResendInvite}
+                style={{ color:'var(--text-2)', borderColor:'var(--border)', gap:7 }}>
+                <Icon name="send" size={13} style={{ color:'var(--text-3)' }} />
+                {resending ? 'Sending…' : 'Resend invitation'}
+              </button>
+            )}
+            <button className="btn"><Icon name="tasks" size={13} /> Assign task</button>
+            <button className="btn primary"><Icon name="sessions" size={13} /> Schedule 1:1</button>
+          </div>
+          {resendResult && (
+            <div style={{
+              fontSize:12, padding:'6px 12px', borderRadius:8, lineHeight:1.4,
+              background: resendResult.type==='success' ? 'rgba(163,228,219,0.2)' : 'rgba(255,107,107,0.1)',
+              border: '1px solid '+(resendResult.type==='success' ? 'rgba(163,228,219,0.5)' : 'rgba(255,107,107,0.3)'),
+              color: resendResult.type==='success' ? '#2E8A7B' : '#c0392b',
+            }}>
+              {resendResult.msg}
+            </div>
+          )}
         </div>
       </div>
 
@@ -322,14 +362,14 @@ function AdminMemberDetail({ member, onBack }) {
       <div className="card" style={{ padding:0, marginBottom:20 }}>
         <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)' }}>
           {[
-            ['Points', points.toLocaleString()],
-            ['Streak', streak + ' days'],
-            ['Status', status],
-            ['Plan', plan],
-          ].map(([l,v],i) => (
+            ['Points', points.toLocaleString(), null],
+            ['Streak', streak + ' days', null],
+            ['Status', status, statusColor],
+            ['Plan', plan, null],
+          ].map(([l,v,color],i) => (
             <div key={l} style={{ padding:'20px', borderRight:i<3?'1px solid var(--border)':'none' }}>
               <div className="eyebrow" style={{ fontSize:10 }}>{l}</div>
-              <div style={{ fontSize:20, fontWeight:700, marginTop:4 }}>{v}</div>
+              <div style={{ fontSize:20, fontWeight:700, marginTop:4, color: color || 'var(--text)' }}>{v}</div>
             </div>
           ))}
         </div>
