@@ -36,7 +36,11 @@ function ProfileScreen({ member, theme, setTheme, onSignOut }) {
               <span className="chip"><span className="dot" style={{ background:'var(--coral)' }}/>{member.level} · Tier {member.levelIndex+1}</span>
             </div>
             <div className="display" style={{ fontSize:36, marginTop:10, lineHeight:1 }}>{member.firstName} {member.lastName}</div>
-            <div style={{ fontSize:13, color:'var(--text-2)', marginTop:6 }}>{member.email} · Joined Feb 2026</div>
+            <div style={{ fontSize:13, color:'var(--text-2)', marginTop:6 }}>
+              {member.email} · Joined {member.joinedAt
+                ? new Date(member.joinedAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+                : 'Recently joined'}
+            </div>
           </div>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:20, textAlign:'right' }}>
             <div>
