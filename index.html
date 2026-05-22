@@ -325,7 +325,7 @@ const isFriday = () => new Date().getDay() === 5;
 
 // ── Login Screen ─────────────────────────────────────────────
 function LoginScreen({ onAuth }) {
-  const [mode, setMode] = useState('signin'); // 'signin' | 'signup' | 'magic'
+  const [mode, setMode] = useState('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
@@ -387,7 +387,7 @@ function LoginScreen({ onAuth }) {
           {mode === 'signup'
             ? 'Join MEGA and start your growth journey.'
             : mode === 'magic'
-            ? 'Enter your email and we\'ll send you a sign-in link.'
+            ? "Enter your email and we'll send you a sign-in link."
             : 'Sign in to your Vantage workspace.'}
         </div>
 
@@ -397,44 +397,27 @@ function LoginScreen({ onAuth }) {
         {mode === 'signup' && (
           <div className="login-field">
             <label>Full name</label>
-            <input
-              type="text"
-              placeholder="Your full name"
-              value={fullName}
-              onChange={e => setFullName(e.target.value)}
-            />
+            <input type="text" placeholder="Your full name" value={fullName} onChange={e => setFullName(e.target.value)} />
           </div>
         )}
 
         <div className="login-field">
           <label>Email</label>
-          <input
-            type="email"
-            placeholder="you@example.com"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter' && mode === 'signin') handleSignIn(); }}
-          />
+          <input type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter' && mode === 'signin') handleSignIn(); }} />
         </div>
 
         {mode !== 'magic' && (
           <div className="login-field">
             <label>Password</label>
-            <input
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter' && mode === 'signin') handleSignIn(); }}
-            />
+            <input type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter' && mode === 'signin') handleSignIn(); }} />
           </div>
         )}
 
-        <button
-          className="login-btn-primary"
+        <button className="login-btn-primary"
           onClick={mode === 'signup' ? handleSignUp : mode === 'magic' ? handleMagicLink : handleSignIn}
-          disabled={loading}
-        >
+          disabled={loading}>
           {loading ? 'Please wait...' : mode === 'signup' ? 'Create account' : mode === 'magic' ? 'Send magic link' : 'Sign in'}
         </button>
 
@@ -566,7 +549,6 @@ function SidebarWithWins({ route, setRoute, admin, unread, member, onOpenProfile
 
 // ── Main App ─────────────────────────────────────────────────
 function App() {
-  // Auth state: null = loading, false = not logged in, object = user
   const [authUser, setAuthUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [liveProfile, setLiveProfile] = useState(null);
@@ -606,16 +588,13 @@ function App() {
     subtasks: t.subtasks.map(s => ({ ...s }))
   })));
 
-  // ── Check auth state on mount and listen for changes
   useEffect(() => {
-    // Check if a user is already logged in
     getCurrentUser().then(user => {
       setAuthUser(user || false);
       setAuthLoading(false);
       if (user) loadProfile(user.id);
     });
 
-    // Listen for auth state changes (login, logout, magic link click)
     const { data: { subscription } } = window._supabase.auth.onAuthStateChange((_event, session) => {
       const user = session?.user || false;
       setAuthUser(user);
@@ -626,7 +605,6 @@ function App() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Load the user's profile from the database
   const loadProfile = async (userId) => {
     const { data } = await getProfile(userId);
     if (data) setLiveProfile(data);
@@ -696,34 +674,6 @@ function App() {
     localStorage.removeItem('vantage-route');
   };
 
-  // Build the member object from live profile data (liveProfile guaranteed non-null here)
-  const member = {
-    firstName: (liveProfile.full_name || 047047).split(047 047)[0] || 047Member047,
-    lastName: (liveProfile.full_name || 047047).split(047 047).slice(1).join(047 047) || 047047,
-    initials: (liveProfile.full_name || 047M047).split(047 047).map(n => n[0]).join(047047).toUpperCase().slice(0, 2),
-    email: liveProfile.email || 047047,
-    avatarColor: 047#0F52BA047,
-    plan: liveProfile.membership_tier === 047breakthrough047 ? 047Breakthrough047 : 047Foundations047,
-    product: 047Mentorship047,
-    accountType: liveProfile.account_type || 047member047,
-    trialExpiresAt: liveProfile.trial_expires_at || null,
-    joinedAt: liveProfile.joined_at || null,
-    points: 0,
-    level: 047Beginner047,
-    levelIndex: 0,
-    pointsInLevel: 0,
-    pointsToNext: 1000,
-    streakDays: 0,
-    learningThisMonth: 0470h 0m047,
-    stats: { sessions: 0, modules: 0, habits: 0, townHalls: 0 },
-    interests: [],
-    role: 047047,
-    status: 047047,
-    field: 047047,
-    focus: 047047,
-    isAdmin: liveProfile.role === 047admin047,
-  };
-
   // ── Render states ─────────────────────────────────────────
   // 1. Still checking auth
   if (authLoading) {
@@ -740,7 +690,7 @@ function App() {
     return <LoginScreen onAuth={user => { setAuthUser(user); loadProfile(user.id); }} />;
   }
 
-  // 3. Logged in but profile not yet loaded from Supabase — wait before rendering
+  // 3. Logged in but profile not yet loaded — wait before rendering
   if (!liveProfile) {
     return (
       <div className="login-loading">
@@ -750,7 +700,34 @@ function App() {
     );
   }
 
-  // 4. Logged in and profile ready — show the full platform
+  // 4. Logged in and profile ready — build member object and show platform
+  const member = {
+    firstName: (liveProfile.full_name || '').split(' ')[0] || 'Member',
+    lastName: (liveProfile.full_name || '').split(' ').slice(1).join(' ') || '',
+    initials: (liveProfile.full_name || 'M').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2),
+    email: liveProfile.email || '',
+    avatarColor: '#0F52BA',
+    plan: liveProfile.membership_tier === 'breakthrough' ? 'Breakthrough' : 'Foundations',
+    product: 'Mentorship',
+    accountType: liveProfile.account_type || 'member',
+    trialExpiresAt: liveProfile.trial_expires_at || null,
+    joinedAt: liveProfile.joined_at || null,
+    points: 0,
+    level: 'Beginner',
+    levelIndex: 0,
+    pointsInLevel: 0,
+    pointsToNext: 1000,
+    streakDays: 0,
+    learningThisMonth: '0h 0m',
+    stats: { sessions: 0, modules: 0, habits: 0, townHalls: 0 },
+    interests: [],
+    role: '',
+    status: '',
+    field: '',
+    focus: '',
+    isAdmin: liveProfile.role === 'admin',
+  };
+
   const isAdmin = !viewingAs && route.startsWith('admin-');
 
   let screen;
@@ -804,7 +781,6 @@ function App() {
             theme={tw.theme} setTheme={t => updateTweak({ theme: t })}
             onOpenTweaks={() => setTweaksOpen(true)}
             notifCount={2} onOpenNotifs={() => setNotifOpen(true)} />
-
           {screen}
         </div>
       </main>
