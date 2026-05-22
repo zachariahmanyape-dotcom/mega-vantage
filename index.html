@@ -700,6 +700,41 @@ function App() {
     );
   }
 
+  // 3.5. Trial expired — full-screen expiry wall
+  const isTrialExpired =
+    liveProfile.account_type === 'trial' &&
+    liveProfile.trial_expires_at &&
+    new Date(liveProfile.trial_expires_at) < new Date();
+
+  if (isTrialExpired) {
+    const expiryFormatted = new Date(liveProfile.trial_expires_at)
+      .toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+    return (
+      <div className="login-root">
+        <div className="login-card" style={{ textAlign: 'center' }}>
+          <div className="login-brand" style={{ justifyContent: 'center', marginBottom: 32 }}>
+            <div className="login-brand-logo">V</div>
+            <div className="login-brand-text">
+              <div className="brand-mark">VANTAGE</div>
+              <div className="brand-sub">by MEGA</div>
+            </div>
+          </div>
+          <div className="login-heading">Your trial has ended</div>
+          <div style={{ fontSize: 14, color: 'var(--text-3)', marginTop: 10, fontFamily: 'Montserrat, sans-serif', fontWeight: 600 }}>
+            {expiryFormatted}
+          </div>
+          <div style={{ fontSize: 13, color: 'var(--text-2)', lineHeight: 1.75, fontFamily: 'Montserrat, sans-serif', marginTop: 20 }}>
+            To continue your MEGA journey, get in touch at<br />
+            <a href="mailto:contact@mega-mentorship.com"
+              style={{ color: '#0F52BA', fontWeight: 700, textDecoration: 'none' }}>
+              contact@mega-mentorship.com
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // 4. Logged in and profile ready — build member object and show platform
   const member = {
     firstName: (liveProfile.full_name || '').split(' ')[0] || 'Member',

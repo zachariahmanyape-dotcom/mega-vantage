@@ -82,7 +82,7 @@ function AdminOverview({ onPick }) {
 
 }
 
-function MembersTable({ compact, onViewAs, members = [], loading = false }) {
+function MembersTable({ compact, onViewAs, onOpenDetail, members = [], loading = false }) {
   if (loading) {
     return (
       <div style={{ padding: '40px 0', textAlign: 'center', fontSize: 13, color: 'var(--text-3)' }}>
@@ -139,6 +139,11 @@ function MembersTable({ compact, onViewAs, members = [], loading = false }) {
                   <button className="btn ghost sm" onClick={() => onViewAs && onViewAs(m)}>
                     View as <Icon name="arrow-right" size={11} />
                   </button>
+                  {onOpenDetail && (
+                    <button className="btn ghost sm" onClick={() => onOpenDetail(m)}>
+                      Details
+                    </button>
+                  )}
                 </div>
               </td>
             </tr>
@@ -149,21 +154,157 @@ function MembersTable({ compact, onViewAs, members = [], loading = false }) {
 
 }
 
-function AdminMembers({ onViewAs }) {
+// ─── Invite Member Modal ──────────────────────────────────────────────────────
+function InviteMemberModal({ onClose, onInvited }) {
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [tier, setTier] = useState('foundations');
+  const [accountType, setAccountType] = useState('member');
+  const [trialExpiresAt, setTrialExpiresAt] = useState('');
+  const [sending, setSending] = useState(false);
+  const [result, setResult] = useState(null); // { type: 'success'|'error', msg }
+
+  const addDays = (days) => {
+    const d = new Date();
+    d.setDate(d.getDate() + days);
+    return [d.getFullYear(), String(d.getMonth()+1).padStart(2,'0'), String(d.getDate()).padStart(2,'0')].join('-');
+  };
+
+  const formatExpiry = (dateStr) => {
+    if (!dateStr) return '';
+    return new Date(dateStr + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+  };
+
+  const handleSend = async () => {
+    if (!email.trim()) { setResult({ type: 'error', msg: 'Email is required.' }); return; }
+    setSending(true); setResult(null);
+    try {
+      const { error: otpError } = await window._supabase.auth.signInWithOtp({
+        email: email.trim(),
+        options: { shouldCreateUser: true, data: { full_name: fullName.trim() } }
+      });
+      if (otpError) throw otpError;
+
+      const { error: upsertError } = await window._supabase
+        .from('profiles')
+        .upsert({
+          email: email.trim(),
+          full_name: fullName.trim(),
+          membership_tier: tier,
+          account_type: accountType,
+          trial_expires_at: accountType === 'trial' && trialExpiresAt ? trialExpiresAt : null,
+        }, { onConflict: 'email' });
+      if (upsertError) throw upsertError;
+
+      setResult({ type: 'success', msg: `Invite sent to ${email.trim()}` });
+      if (onInvited) onInvited();
+    } catch (err) {
+      setResult({ type: 'error', msg: err.message || 'Something went wrong.' });
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <>
+      <div onClick={onClose} style={{ position:'fixed', inset:0, background:'rgba(10,10,10,0.45)', zIndex:200, backdropFilter:'blur(3px)' }} />
+      <div className="card" style={{ position:'fixed', top:'50%', left:'50%', transform:'translate(-50%,-50%)', width:480, maxHeight:'88vh', overflow:'auto', zIndex:201, padding:0, boxShadow:'var(--shadow-3)' }}>
+        <div style={{ padding:'22px 24px', borderBottom:'1px solid var(--border)' }}>
+          <div className="display" style={{ fontSize:26, marginBottom:4 }}>Invite member</div>
+          <div style={{ fontSize:13, color:'var(--text-2)' }}>Send a magic link and pre-configure their account.</div>
+        </div>
+        <div style={{ padding:'20px 24px' }}>
+          <div className="stack" style={{ gap:14 }}>
+            <div>
+              <div className="eyebrow" style={{ marginBottom:6, fontSize:10 }}>Full name</div>
+              <input className="input" placeholder="Amira Khaled" value={fullName} onChange={e => setFullName(e.target.value)} />
+            </div>
+            <div>
+              <div className="eyebrow" style={{ marginBottom:6, fontSize:10 }}>Email</div>
+              <input className="input" type="email" placeholder="amira@example.com" value={email} onChange={e => setEmail(e.target.value)} />
+            </div>
+            <div>
+              <div className="eyebrow" style={{ marginBottom:6, fontSize:10 }}>Membership tier</div>
+              <div className="seg">
+                {['foundations','breakthrough'].map(v => (
+                  <button key={v} className={tier===v?'on':''} onClick={() => setTier(v)}>
+                    {v.charAt(0).toUpperCase()+v.slice(1)}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <div className="eyebrow" style={{ marginBottom:6, fontSize:10 }}>Account type</div>
+              <div className="seg">
+                {['member','trial','free'].map(v => (
+                  <button key={v} className={accountType===v?'on':''} onClick={() => setAccountType(v)}>
+                    {v.charAt(0).toUpperCase()+v.slice(1)}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {accountType === 'trial' && (
+              <div style={{ padding:'14px 16px', borderRadius:12, background:'var(--bg-sunken)', border:'1px solid var(--border)' }}>
+                <div className="eyebrow" style={{ marginBottom:10, fontSize:10 }}>Trial duration</div>
+                <div style={{ display:'flex', gap:8, marginBottom:10 }}>
+                  {[5,10,20].map(days => (
+                    <button key={days} className="btn sm" style={{ flex:1, justifyContent:'center' }} onClick={() => setTrialExpiresAt(addDays(days))}>
+                      {days} days
+                    </button>
+                  ))}
+                </div>
+                {trialExpiresAt && (
+                  <div style={{ fontSize:12, color:'var(--teal-600)', fontWeight:600, marginBottom:10 }}>
+                    Expires {formatExpiry(trialExpiresAt)}
+                  </div>
+                )}
+                <div>
+                  <div className="eyebrow" style={{ marginBottom:6, fontSize:9 }}>Or set exact date</div>
+                  <input className="input" type="date" value={trialExpiresAt} onChange={e => setTrialExpiresAt(e.target.value)} style={{ fontSize:13 }} />
+                </div>
+              </div>
+            )}
+            {result && (
+              <div style={{
+                padding:'10px 14px', borderRadius:8, fontSize:12, lineHeight:1.5,
+                background: result.type==='success' ? 'rgba(163,228,219,0.2)' : 'rgba(255,107,107,0.1)',
+                border: '1px solid '+(result.type==='success' ? 'rgba(163,228,219,0.5)' : 'rgba(255,107,107,0.3)'),
+                color: result.type==='success' ? '#2E8A7B' : '#c0392b',
+              }}>
+                {result.msg}
+              </div>
+            )}
+          </div>
+        </div>
+        <div style={{ padding:'14px 24px 20px', borderTop:'1px solid var(--border)', display:'flex', gap:8 }}>
+          <button className="btn primary" style={{ flex:1, justifyContent:'center' }}
+            disabled={sending || !email.trim()} onClick={handleSend}>
+            {sending ? 'Sending…' : 'Send invite'}
+          </button>
+          <button className="btn ghost" onClick={onClose}>Cancel</button>
+        </div>
+      </div>
+    </>
+  );
+}
+
+function AdminMembers({ onViewAs, onOpenDetail }) {
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showInvite, setShowInvite] = useState(false);
 
-  useEffect(() => {
-    (async () => {
-      const { data, error } = await window._supabase
-        .from('profiles')
-        .select('*')
-        .neq('role', 'admin')
-        .order('joined_at', { ascending: false });
-      if (!error && data) setMembers(data);
-      setLoading(false);
-    })();
-  }, []);
+  const fetchMembers = async () => {
+    setLoading(true);
+    const { data, error } = await window._supabase
+      .from('profiles')
+      .select('*')
+      .neq('role', 'admin')
+      .order('joined_at', { ascending: false });
+    if (!error && data) setMembers(data);
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchMembers(); }, []);
 
   return (
     <>
@@ -178,12 +319,18 @@ function AdminMembers({ onViewAs }) {
             <Icon name="search" size={14} style={{ position: 'absolute', left: 12, top: 12, color: 'var(--text-3)' }} />
             <input className="input" style={{ paddingLeft: 34 }} placeholder="Search members…" />
           </div>
-          <button className="btn primary"><Icon name="plus" size={13} /> Invite member</button>
+          <button className="btn primary" onClick={() => setShowInvite(true)}><Icon name="plus" size={13} /> Invite member</button>
         </div>
       </div>
       <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-        <MembersTable onViewAs={onViewAs} members={members} loading={loading} />
+        <MembersTable onViewAs={onViewAs} onOpenDetail={onOpenDetail} members={members} loading={loading} />
       </div>
+      {showInvite && (
+        <InviteMemberModal
+          onClose={() => setShowInvite(false)}
+          onInvited={() => { setShowInvite(false); fetchMembers(); }}
+        />
+      )}
     </>);
 
 }

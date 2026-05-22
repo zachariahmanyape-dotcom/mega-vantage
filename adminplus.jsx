@@ -253,6 +253,54 @@ function PrivateNotes({ memberName }) {
 // ─── Admin Member Detail Page ──────────────────────────────────────────────────
 function AdminMemberDetail({ member, onBack }) {
   if (!member) return null;
+
+  // Normalise — accept both raw Supabase rows and legacy mapped objects
+  const name       = member.full_name || member.name || 'Member';
+  const planRaw    = member.membership_tier || '';
+  const plan       = planRaw ? (planRaw.charAt(0).toUpperCase() + planRaw.slice(1)) : (member.plan || '—');
+  const points     = member.points || 0;
+  const streak     = member.streak || 0;
+  const status     = member.account_type
+    ? (member.account_type === 'trial' ? 'Trial' : 'Active')
+    : (member.status || '—');
+  const lastActive = member.lastActive || 'recently';
+  const memberId   = member.id || null;
+
+  // ── Edit membership state ──────────────────────────────────────────────────
+  const [editTier,          setEditTier]          = useState(member.membership_tier || planRaw || 'foundations');
+  const [editAccountType,   setEditAccountType]   = useState(member.account_type || 'member');
+  const [editTrialExpiry,   setEditTrialExpiry]   = useState(member.trial_expires_at ? member.trial_expires_at.slice(0,10) : '');
+  const [saving,            setSaving]            = useState(false);
+  const [saveResult,        setSaveResult]        = useState(null);
+
+  const addDays = (days) => {
+    const d = new Date();
+    d.setDate(d.getDate() + days);
+    return [d.getFullYear(), String(d.getMonth()+1).padStart(2,'0'), String(d.getDate()).padStart(2,'0')].join('-');
+  };
+
+  const formatExpiry = (dateStr) => {
+    if (!dateStr) return '';
+    return new Date(dateStr + 'T12:00:00').toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' });
+  };
+
+  const handleSave = async () => {
+    if (!memberId) { setSaveResult({ type:'error', msg:'Cannot save — member has no ID.' }); return; }
+    setSaving(true); setSaveResult(null);
+    const { error } = await window._supabase
+      .from('profiles')
+      .update({
+        membership_tier:  editTier,
+        account_type:     editAccountType,
+        trial_expires_at: editAccountType === 'trial' && editTrialExpiry ? editTrialExpiry : null,
+      })
+      .eq('id', memberId);
+    setSaving(false);
+    setSaveResult(error
+      ? { type:'error', msg: error.message || 'Update failed.' }
+      : { type:'success', msg: 'Membership updated.' });
+  };
+
   return (
     <>
       <div className="page-header">
@@ -261,8 +309,8 @@ function AdminMemberDetail({ member, onBack }) {
             <Icon name="chevron-right" size={13} style={{ transform:'rotate(180deg)' }} /> Back to members
           </button>
           <div className="eyebrow">Admin · Member detail</div>
-          <h1 className="page-title">{member.name}</h1>
-          <div className="page-sub" style={{ marginTop:4, color:'var(--text-2)' }}>{member.plan} · Last active {member.lastActive}</div>
+          <h1 className="page-title">{name}</h1>
+          <div className="page-sub" style={{ marginTop:4, color:'var(--text-2)' }}>{plan} · Last active {lastActive}</div>
         </div>
         <div style={{ display:'flex', gap:8 }}>
           <button className="btn"><Icon name="tasks" size={13} /> Assign task</button>
@@ -274,10 +322,10 @@ function AdminMemberDetail({ member, onBack }) {
       <div className="card" style={{ padding:0, marginBottom:20 }}>
         <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)' }}>
           {[
-            ['Points', member.points.toLocaleString()],
-            ['Streak', member.streak + ' days'],
-            ['Status', member.status],
-            ['Plan', member.plan.split(' · ')[1] || member.plan],
+            ['Points', points.toLocaleString()],
+            ['Streak', streak + ' days'],
+            ['Status', status],
+            ['Plan', plan],
           ].map(([l,v],i) => (
             <div key={l} style={{ padding:'20px', borderRight:i<3?'1px solid var(--border)':'none' }}>
               <div className="eyebrow" style={{ fontSize:10 }}>{l}</div>
@@ -287,7 +335,89 @@ function AdminMemberDetail({ member, onBack }) {
         </div>
       </div>
 
-      <PrivateNotes memberName={member.name} />
+      {/* Edit membership */}
+      {memberId && (
+        <div className="card" style={{ padding:22, marginBottom:20 }}>
+          <div className="row-between" style={{ marginBottom:18 }}>
+            <div>
+              <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                <Icon name="edit" size={16} style={{ color:'var(--text-3)' }} />
+                <div className="eyebrow" style={{ margin:0 }}>Edit membership</div>
+              </div>
+              <div style={{ fontSize:12, color:'var(--text-3)', marginTop:4 }}>Changes apply immediately on save.</div>
+            </div>
+          </div>
+
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:18, marginBottom:16 }}>
+            <div>
+              <div className="eyebrow" style={{ marginBottom:8, fontSize:10 }}>Membership tier</div>
+              <div className="seg">
+                {['foundations','breakthrough'].map(v => (
+                  <button key={v} className={editTier===v?'on':''} onClick={() => setEditTier(v)}>
+                    {v.charAt(0).toUpperCase()+v.slice(1)}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <div className="eyebrow" style={{ marginBottom:8, fontSize:10 }}>Account type</div>
+              <div className="seg">
+                {['member','trial','free'].map(v => (
+                  <button key={v} className={editAccountType===v?'on':''} onClick={() => setEditAccountType(v)}>
+                    {v.charAt(0).toUpperCase()+v.slice(1)}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {editAccountType === 'trial' && (
+            <div style={{ padding:'14px 16px', borderRadius:12, background:'var(--bg-sunken)', border:'1px solid var(--border)', marginBottom:16 }}>
+              <div className="row-between" style={{ marginBottom:10 }}>
+                <div className="eyebrow" style={{ fontSize:10, margin:0 }}>Trial expiry date</div>
+                <button className="btn sm" style={{ color:'var(--teal-600)', borderColor:'var(--teal-600)' }}
+                  onClick={() => setEditTrialExpiry(addDays(14))}>
+                  <Icon name="sessions" size={12} /> Renew +14 days
+                </button>
+              </div>
+              <div style={{ display:'flex', gap:8, marginBottom:10 }}>
+                {[7,14,30].map(days => (
+                  <button key={days} className="btn sm" style={{ flex:1, justifyContent:'center' }}
+                    onClick={() => setEditTrialExpiry(addDays(days))}>
+                    +{days} days
+                  </button>
+                ))}
+              </div>
+              {editTrialExpiry && (
+                <div style={{ fontSize:12, color:'var(--teal-600)', fontWeight:600, marginBottom:10 }}>
+                  Expires {formatExpiry(editTrialExpiry)}
+                </div>
+              )}
+              <input className="input" type="date" value={editTrialExpiry}
+                onChange={e => setEditTrialExpiry(e.target.value)}
+                style={{ fontSize:13 }} />
+            </div>
+          )}
+
+          {saveResult && (
+            <div style={{
+              padding:'10px 14px', borderRadius:8, fontSize:12, lineHeight:1.5, marginBottom:14,
+              background: saveResult.type==='success' ? 'rgba(163,228,219,0.2)' : 'rgba(255,107,107,0.1)',
+              border: '1px solid '+(saveResult.type==='success' ? 'rgba(163,228,219,0.5)' : 'rgba(255,107,107,0.3)'),
+              color: saveResult.type==='success' ? '#2E8A7B' : '#c0392b',
+            }}>
+              {saveResult.msg}
+            </div>
+          )}
+
+          <button className="btn primary" disabled={saving} onClick={handleSave} style={{ gap:8 }}>
+            <Icon name="check" size={13} />
+            {saving ? 'Saving…' : 'Save changes'}
+          </button>
+        </div>
+      )}
+
+      <PrivateNotes memberName={name} />
     </>
   );
 }
