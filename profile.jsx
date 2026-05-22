@@ -12,7 +12,7 @@ function BadgeTile({ badge }) {
   );
 }
 
-function ProfileScreen({ member, theme, setTheme }) {
+function ProfileScreen({ member, theme, setTheme, onSignOut }) {
   const earned = BADGES.filter(b=>b.earned).length;
 
   return (
@@ -123,6 +123,18 @@ function ProfileScreen({ member, theme, setTheme }) {
             ))}
           </div>
         </div>
+      </div>
+
+      {/* Sign out */}
+      <div style={{ marginTop:28, paddingTop:24, borderTop:'1px solid var(--border)', display:'flex', justifyContent:'flex-end' }}>
+        <button
+          className="btn"
+          onClick={onSignOut}
+          style={{ color:'var(--coral)', borderColor:'var(--coral)', gap:8 }}
+        >
+          <Icon name="arrow-right" size={13} style={{ transform:'rotate(180deg)', color:'var(--coral)' }} />
+          Sign out
+        </button>
       </div>
     </>
   );
