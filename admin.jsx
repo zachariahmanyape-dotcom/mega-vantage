@@ -197,17 +197,20 @@ function MembersTable({ compact, onViewAs, onOpenDetail, members = [], loading =
 
 // ─── Invite Member Modal ──────────────────────────────────────────────────────
 function InviteMemberModal({ onClose, onInvited }) {
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
-  const [tier, setTier] = useState('foundations');
-  const [accountType, setAccountType] = useState('member');
-  const [trialExpiresAt, setTrialExpiresAt] = useState('');
+  const [fullName,      setFullName]      = useState('');
+  const [email,         setEmail]         = useState('');
+  const [tier,          setTier]          = useState('foundations');
+  const [accountType,   setAccountType]   = useState('trial');
+  const [trialDays,     setTrialDays]     = useState(10);
+  const [trialExpiresAt, setTrialExpiresAt] = useState(() => {
+    const d = new Date(); d.setDate(d.getDate() + 10);
+    return [d.getFullYear(), String(d.getMonth()+1).padStart(2,'0'), String(d.getDate()).padStart(2,'0')].join('-');
+  });
   const [sending, setSending] = useState(false);
-  const [result, setResult] = useState(null); // { type: 'success'|'error', msg }
+  const [result,  setResult]  = useState(null);
 
   const addDays = (days) => {
-    const d = new Date();
-    d.setDate(d.getDate() + days);
+    const d = new Date(); d.setDate(d.getDate() + days);
     return [d.getFullYear(), String(d.getMonth()+1).padStart(2,'0'), String(d.getDate()).padStart(2,'0')].join('-');
   };
 
@@ -216,25 +219,38 @@ function InviteMemberModal({ onClose, onInvited }) {
     return new Date(dateStr + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
   };
 
+  const selectTrialDays = (days) => {
+    setTrialDays(days);
+    setTrialExpiresAt(addDays(days));
+  };
+
   const handleSend = async () => {
     if (!email.trim()) { setResult({ type: 'error', msg: 'Email is required.' }); return; }
     setSending(true); setResult(null);
     try {
-      const { error: otpError } = await window._supabase.auth.signInWithOtp({
-        email: email.trim(),
-        options: { shouldCreateUser: true, data: { full_name: fullName.trim() } }
-      });
-      if (otpError) throw otpError;
+      const { error: inviteError } = await window._supabase.auth.admin.inviteUserByEmail(
+        email.trim(),
+        {
+          data: {
+            full_name:        fullName.trim(),
+            membership_tier:  tier,
+            account_type:     accountType,
+            trial_days:       accountType === 'trial' ? trialDays : null,
+            trial_expires_at: accountType === 'trial' && trialExpiresAt ? trialExpiresAt : null,
+          },
+        }
+      );
+      if (inviteError) throw inviteError;
 
       const { error: upsertError } = await window._supabase
         .from('profiles')
         .upsert({
-          email: email.trim(),
-          full_name: fullName.trim(),
-          membership_tier: tier,
-          account_type: accountType,
+          email:            email.trim(),
+          full_name:        fullName.trim(),
+          membership_tier:  tier,
+          account_type:     accountType,
           trial_expires_at: accountType === 'trial' && trialExpiresAt ? trialExpiresAt : null,
-          member_status: 'pending',
+          member_status:    'pending',
         }, { onConflict: 'email' });
       if (upsertError) throw upsertError;
 
@@ -247,65 +263,87 @@ function InviteMemberModal({ onClose, onInvited }) {
     }
   };
 
+  const selectStyle = {
+    width: '100%', padding: '10px 12px',
+    border: '1.5px solid var(--border)', borderRadius: 10,
+    fontSize: 13, fontFamily: 'var(--ff-body)',
+    background: 'var(--bg)', color: 'var(--text)',
+    outline: 'none', cursor: 'pointer',
+    appearance: 'none', WebkitAppearance: 'none',
+    backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'8\' viewBox=\'0 0 12 8\'%3E%3Cpath fill=\'none\' stroke=\'%23999\' stroke-width=\'1.5\' stroke-linecap=\'round\' stroke-linejoin=\'round\' d=\'M1 1l5 5 5-5\'/%3E%3C/svg%3E")',
+    backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center',
+    paddingRight: 36,
+  };
+
   return (
     <>
       <div onClick={onClose} style={{ position:'fixed', inset:0, background:'rgba(10,10,10,0.45)', zIndex:200, backdropFilter:'blur(3px)' }} />
       <div className="card" style={{ position:'fixed', top:'50%', left:'50%', transform:'translate(-50%,-50%)', width:480, maxHeight:'88vh', overflow:'auto', zIndex:201, padding:0, boxShadow:'var(--shadow-3)' }}>
         <div style={{ padding:'22px 24px', borderBottom:'1px solid var(--border)' }}>
           <div className="display" style={{ fontSize:26, marginBottom:4 }}>Invite member</div>
-          <div style={{ fontSize:13, color:'var(--text-2)' }}>Send a magic link and pre-configure their account.</div>
+          <div style={{ fontSize:13, color:'var(--text-2)' }}>Send an invite link and pre-configure their account.</div>
         </div>
         <div style={{ padding:'20px 24px' }}>
           <div className="stack" style={{ gap:14 }}>
-            <div>
-              <div className="eyebrow" style={{ marginBottom:6, fontSize:10 }}>Full name</div>
-              <input className="input" placeholder="Amira Khaled" value={fullName} onChange={e => setFullName(e.target.value)} />
-            </div>
-            <div>
-              <div className="eyebrow" style={{ marginBottom:6, fontSize:10 }}>Email</div>
-              <input className="input" type="email" placeholder="amira@example.com" value={email} onChange={e => setEmail(e.target.value)} />
-            </div>
-            <div>
-              <div className="eyebrow" style={{ marginBottom:6, fontSize:10 }}>Membership tier</div>
-              <div className="seg">
-                {['foundations','breakthrough','management'].map(v => (
-                  <button key={v} className={tier===v?'on':''} onClick={() => setTier(v)}>
-                    {v.charAt(0).toUpperCase()+v.slice(1)}
-                  </button>
-                ))}
+
+            {/* Name + Email */}
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+              <div>
+                <div className="eyebrow" style={{ marginBottom:6, fontSize:10 }}>Full name</div>
+                <input className="input" placeholder="Amira Khaled" value={fullName} onChange={e => setFullName(e.target.value)} />
+              </div>
+              <div>
+                <div className="eyebrow" style={{ marginBottom:6, fontSize:10 }}>Email</div>
+                <input className="input" type="email" placeholder="amira@example.com" value={email} onChange={e => setEmail(e.target.value)} />
               </div>
             </div>
-            <div>
-              <div className="eyebrow" style={{ marginBottom:6, fontSize:10 }}>Account type</div>
-              <div className="seg">
-                {['member','trial','free'].map(v => (
-                  <button key={v} className={accountType===v?'on':''} onClick={() => setAccountType(v)}>
-                    {v.charAt(0).toUpperCase()+v.slice(1)}
-                  </button>
-                ))}
+
+            {/* Tier + Account type */}
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+              <div>
+                <div className="eyebrow" style={{ marginBottom:6, fontSize:10 }}>Membership tier</div>
+                <select style={selectStyle} value={tier} onChange={e => setTier(e.target.value)}>
+                  <option value="foundations">Foundations</option>
+                  <option value="breakthrough">Breakthrough</option>
+                </select>
+              </div>
+              <div>
+                <div className="eyebrow" style={{ marginBottom:6, fontSize:10 }}>Account type</div>
+                <select style={selectStyle} value={accountType} onChange={e => setAccountType(e.target.value)}>
+                  <option value="trial">Trial</option>
+                  <option value="paid">Paid</option>
+                  <option value="mega_management">MEGA Management</option>
+                </select>
               </div>
             </div>
+
+            {/* Trial options — only when account type is trial */}
             {accountType === 'trial' && (
               <div style={{ padding:'14px 16px', borderRadius:12, background:'var(--bg-sunken)', border:'1px solid var(--border)' }}>
                 <div className="eyebrow" style={{ marginBottom:10, fontSize:10 }}>Trial duration</div>
-                <div style={{ display:'flex', gap:8, marginBottom:10 }}>
-                  {[5,10,20].map(days => (
-                    <button key={days} className="btn sm" style={{ flex:1, justifyContent:'center' }} onClick={() => setTrialExpiresAt(addDays(days))}>
+                <div style={{ display:'flex', gap:8, marginBottom:12 }}>
+                  {[5, 10, 20].map(days => (
+                    <button key={days} className={'btn sm' + (trialDays === days ? ' primary' : '')}
+                      style={{ flex:1, justifyContent:'center' }}
+                      onClick={() => selectTrialDays(days)}>
                       {days} days
                     </button>
                   ))}
                 </div>
-                {trialExpiresAt && (
-                  <div style={{ fontSize:12, color:'var(--teal-600)', fontWeight:600, marginBottom:10 }}>
-                    Expires {formatExpiry(trialExpiresAt)}
-                  </div>
-                )}
                 <div>
-                  <div className="eyebrow" style={{ marginBottom:6, fontSize:9 }}>Or set exact date</div>
-                  <input className="input" type="date" value={trialExpiresAt} onChange={e => setTrialExpiresAt(e.target.value)} style={{ fontSize:13 }} />
+                  <div className="eyebrow" style={{ marginBottom:6, fontSize:9 }}>Trial expiry date</div>
+                  <input className="input" type="date" value={trialExpiresAt}
+                    onChange={e => { setTrialExpiresAt(e.target.value); setTrialDays(null); }}
+                    style={{ fontSize:13 }} />
+                  {trialExpiresAt && (
+                    <div style={{ fontSize:11, color:'var(--teal-600)', fontWeight:600, marginTop:8 }}>
+                      Expires {formatExpiry(trialExpiresAt)}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
+
             {result && (
               <div style={{
                 padding:'10px 14px', borderRadius:8, fontSize:12, lineHeight:1.5,
