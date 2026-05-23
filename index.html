@@ -633,7 +633,34 @@ function App() {
   const loadProfile = async (userId) => {
     const { data } = await getProfile(userId);
     if (data) {
+      // If they were pending, mark them active now that they've authenticated
+      if (data.member_status === 'pending') {
+        await window._supabase.from('profiles')
+          .update({ member_status: 'active' })
+          .eq('id', userId);
+        data.member_status = 'active';
+      }
       setLiveProfile(data);
+      loadUserData(userId);
+      return;
+    }
+
+    // Fallback: profile was created by email (invite flow) before the user's UUID existed.
+    // Re-fetch by email, link to this UUID, and activate.
+    const { data: { user } } = await window._supabase.auth.getUser();
+    if (!user?.email) return;
+
+    const { data: emailProfile } = await window._supabase
+      .from('profiles')
+      .select('*')
+      .eq('email', user.email)
+      .maybeSingle();
+
+    if (emailProfile) {
+      await window._supabase.from('profiles')
+        .update({ id: userId, member_status: 'active' })
+        .eq('email', user.email);
+      setLiveProfile({ ...emailProfile, id: userId, member_status: 'active' });
       loadUserData(userId);
     }
   };
