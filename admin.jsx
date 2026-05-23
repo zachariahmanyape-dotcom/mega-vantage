@@ -228,19 +228,27 @@ function InviteMemberModal({ onClose, onInvited }) {
     if (!email.trim()) { setResult({ type: 'error', msg: 'Email is required.' }); return; }
     setSending(true); setResult(null);
     try {
-      const { error: inviteError } = await window._supabase.auth.admin.inviteUserByEmail(
-        email.trim(),
+      const { data: { session } } = await window._supabase.auth.getSession();
+      const res = await fetch(
+        'https://npsfarsblfewdclhoquo.supabase.co/functions/v1/invite-member',
         {
-          data: {
+          method: 'POST',
+          headers: {
+            'Content-Type':  'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({
+            email:            email.trim(),
             full_name:        fullName.trim(),
             membership_tier:  tier,
             account_type:     accountType,
             trial_days:       accountType === 'trial' ? trialDays : null,
             trial_expires_at: accountType === 'trial' && trialExpiresAt ? trialExpiresAt : null,
-          },
+          }),
         }
       );
-      if (inviteError) throw inviteError;
+      const resJson = await res.json();
+      if (!res.ok) throw new Error(resJson.error || 'Invite failed');
 
       const { error: upsertError } = await window._supabase
         .from('profiles')
