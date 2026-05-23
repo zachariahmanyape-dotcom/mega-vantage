@@ -511,10 +511,16 @@ function SidebarWithWins({ route, setRoute, admin, isRealAdmin, unread, member, 
       <div className="sb-spacer" />
       <div className="sb-divider" />
 
-      {isRealAdmin && (
-        <button className="sb-item" onClick={() => setRoute(admin ? 'dashboard' : 'admin-overview')}>
-          <span className="sb-icon"><Icon name={admin ? 'logout' : 'admin'} size={18} /></span>
-          <span>{admin ? "Back to member view" : "Admin view"}</span>
+      {admin && (
+        <button className="sb-item" onClick={() => setRoute('dashboard')}>
+          <span className="sb-icon"><Icon name="logout" size={18} /></span>
+          <span>Back to member view</span>
+        </button>
+      )}
+      {isRealAdmin && !admin && (
+        <button className="sb-item" onClick={() => setRoute('admin-overview')}>
+          <span className="sb-icon"><Icon name="admin" size={18} /></span>
+          <span>Admin view</span>
         </button>
       )}
 
@@ -870,7 +876,14 @@ function App() {
   };
   window._currentMember = member;
 
-  const isAdmin = !viewingAs && route.startsWith('admin-');
+  const isRealAdmin = liveProfile.role === 'admin';
+
+  // Non-admin users should never land on an admin route — redirect them out
+  if (!isRealAdmin && route.startsWith('admin-')) {
+    setRoute('dashboard');
+  }
+
+  const isAdmin = !viewingAs && isRealAdmin && route.startsWith('admin-');
 
   let screen;
   switch (route) {
@@ -914,7 +927,7 @@ function App() {
         route={route}
         setRoute={r => { if (!viewingAs || !r.startsWith('admin-')) setRoute(r); }}
         admin={isAdmin}
-        isRealAdmin={liveProfile.role === 'admin'}
+        isRealAdmin={isRealAdmin}
         unread={3}
         member={viewingAs
           ? { ...member, firstName: viewingAs.name.split(' ')[0], initials: viewingAs.initials, avatarColor: viewingAs.color }

@@ -46,10 +46,16 @@ function Sidebar({ route, setRoute, admin, isRealAdmin, unread, member, onOpenPr
 
       <div className="sb-spacer" />
       <div className="sb-divider" />
-      {isRealAdmin && (
-        <button className="sb-item" onClick={() => setRoute(admin ? "dashboard" : "admin-overview")}>
-          <span className="sb-icon"><Icon name={admin ? "logout" : "admin"} size={18} /></span>
-          <span>{admin ? "Back to member view" : "Admin view"}</span>
+      {admin && (
+        <button className="sb-item" onClick={() => setRoute("dashboard")}>
+          <span className="sb-icon"><Icon name="logout" size={18} /></span>
+          <span>Back to member view</span>
+        </button>
+      )}
+      {isRealAdmin && !admin && (
+        <button className="sb-item" onClick={() => setRoute("admin-overview")}>
+          <span className="sb-icon"><Icon name="admin" size={18} /></span>
+          <span>Admin view</span>
         </button>
       )}
 
