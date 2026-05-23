@@ -854,7 +854,7 @@ function App() {
     case 'admin-analytics': screen = <AdminAnalytics />; break;
     default:
       screen = <DashboardScreen member={member} onJoin={onJoin} onGoto={setRoute} gameMode={tw.gameMode}
-        intention={intention} onClearIntention={() => setIntention(null)} tasks={tasks} goals={GOALS} />;
+        intention={intention} onClearIntention={() => setIntention(null)} tasks={liveTasks} goals={liveGoals} />;
   }
 
   return (
@@ -913,7 +913,7 @@ function App() {
         <ReflectionModal onSubmit={submitReflection} onLater={() => setShowReflection(false)} />
       )}
       {!showOnboarding && !showReflection && showIntention && (
-        <IntentionModal tasks={tasks} goals={GOALS} onSet={setIntentionHandler} onSkip={skipIntention} />
+        <IntentionModal tasks={liveTasks} goals={liveGoals} onSet={setIntentionHandler} onSkip={skipIntention} />
       )}
 
       {rewards.map(r =>

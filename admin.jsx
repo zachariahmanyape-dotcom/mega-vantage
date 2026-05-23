@@ -250,18 +250,6 @@ function InviteMemberModal({ onClose, onInvited }) {
       const resJson = await res.json();
       if (!res.ok) throw new Error(resJson.error || 'Invite failed');
 
-      const { error: upsertError } = await window._supabase
-        .from('profiles')
-        .upsert({
-          email:            email.trim(),
-          full_name:        fullName.trim(),
-          membership_tier:  tier,
-          account_type:     accountType,
-          trial_expires_at: accountType === 'trial' && trialExpiresAt ? trialExpiresAt : null,
-          member_status:    'pending',
-        }, { onConflict: 'email' });
-      if (upsertError) throw upsertError;
-
       setResult({ type: 'success', msg: `Invite sent to ${email.trim()}` });
       if (onInvited) onInvited();
     } catch (err) {
