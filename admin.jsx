@@ -86,7 +86,7 @@ function MembersTable({ compact, onViewAs, onOpenDetail, members = [], loading =
   const [blockedMember, setBlockedMember] = useState(null);
 
   const handleViewAs = (m) => {
-    if (m.member_status === 'pending' || m.member_status === 'inactive') {
+    if (['pending', 'inactive', 'expired'].includes(m.member_status)) {
       setBlockedMember(m);
       return;
     }
@@ -105,6 +105,7 @@ function MembersTable({ compact, onViewAs, onOpenDetail, members = [], loading =
   const statusColor = (s) =>
     s === 'Pending'  ? '#C88A1A' :
     s === 'Inactive' ? 'var(--text-3)' :
+    s === 'Expired'  ? 'var(--coral)' :
     s === 'Trial'    ? '#E8B24C' :
     s === 'At risk'  ? 'var(--coral)' :
     s === 'Top performer' ? 'var(--accent)' :
@@ -115,7 +116,7 @@ function MembersTable({ compact, onViewAs, onOpenDetail, members = [], loading =
     <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
       <thead>
         <tr style={{ background: 'var(--bg-sunken)' }}>
-          {['Member', 'Plan', 'Last active', 'Points', 'Streak', 'Status', ''].map((h) =>
+          {['Member', 'Plan', 'Last active', 'Points', 'Streak', 'Trial Expires', 'Status', ''].map((h) =>
           <th key={h} style={{ textAlign: 'left', padding: '10px 16px', fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-3)', fontWeight: 600, fontFamily: 'var(--ff-sub)' }}>{h}</th>
           )}
         </tr>
@@ -133,7 +134,12 @@ function MembersTable({ compact, onViewAs, onOpenDetail, members = [], loading =
           const status =
             memberStatus === 'pending'  ? 'Pending'  :
             memberStatus === 'inactive' ? 'Inactive' :
-            m.account_type === 'trial'  ? 'Trial'    : 'Active';
+            memberStatus === 'expired'  ? 'Expired'  :
+            m.account_type === 'trial'  ? 'Trial'    :
+            m.account_type === 'free'   ? 'Free'     : 'Active';
+          const trialExpiry = m.trial_expires_at
+            ? new Date(m.trial_expires_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+            : null;
           return (
             <tr key={m.id || name} style={{ borderTop: '1px solid var(--border)' }}>
               <td style={{ padding: '12px 16px' }}>
@@ -149,6 +155,9 @@ function MembersTable({ compact, onViewAs, onOpenDetail, members = [], loading =
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: streak > 0 ? 'var(--coral)' : 'var(--text-3)' }}>
                   <Icon name="flame" size={12} />{streak}
                 </span>
+              </td>
+              <td style={{ padding: '12px 16px', color: trialExpiry ? (memberStatus === 'expired' ? 'var(--coral)' : 'var(--text-2)') : 'var(--text-3)', fontSize: 12 }}>
+                {trialExpiry || '—'}
               </td>
               <td style={{ padding: '12px 16px' }}>
                 <span className="chip" style={{ color: statusColor(status), borderColor: statusColor(status) + '55', background: statusColor(status) + '15' }}>
@@ -308,6 +317,7 @@ function InviteMemberModal({ onClose, onInvited }) {
                 <select style={selectStyle} value={accountType} onChange={e => setAccountType(e.target.value)}>
                   <option value="trial">Trial</option>
                   <option value="paid">Paid</option>
+                  <option value="free">Free</option>
                   <option value="mega_management">MEGA Management</option>
                 </select>
               </div>

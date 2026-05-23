@@ -7,7 +7,7 @@ function Avatar({ initials, color, size=32, style }) {
   return <div className="avatar" style={s}>{initials}</div>;
 }
 
-function Sidebar({ route, setRoute, admin, unread, member, onOpenProfile }) {
+function Sidebar({ route, setRoute, admin, isRealAdmin, unread, member, onOpenProfile }) {
   const items = admin ? [
     { k: "admin-overview", label: "Overview", icon: "dashboard" },
     { k: "admin-members",  label: "Members",  icon: "users" },
@@ -46,10 +46,12 @@ function Sidebar({ route, setRoute, admin, unread, member, onOpenProfile }) {
 
       <div className="sb-spacer" />
       <div className="sb-divider" />
-      <button className="sb-item" onClick={() => setRoute(admin ? "dashboard" : "admin-overview")}>
-        <span className="sb-icon"><Icon name={admin ? "logout" : "admin"} size={18} /></span>
-        <span>{admin ? "Back to member view" : "Admin view"}</span>
-      </button>
+      {isRealAdmin && (
+        <button className="sb-item" onClick={() => setRoute(admin ? "dashboard" : "admin-overview")}>
+          <span className="sb-icon"><Icon name={admin ? "logout" : "admin"} size={18} /></span>
+          <span>{admin ? "Back to member view" : "Admin view"}</span>
+        </button>
+      )}
 
       {!admin && (
         <button className="user-card" onClick={onOpenProfile} style={{ cursor:'pointer', textAlign:'left' }}>

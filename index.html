@@ -465,7 +465,7 @@ function RemoteBanner({ member, onExit }) {
 }
 
 // ── Sidebar with Wins ────────────────────────────────────────
-function SidebarWithWins({ route, setRoute, admin, unread, member, onOpenProfile, viewingAs }) {
+function SidebarWithWins({ route, setRoute, admin, isRealAdmin, unread, member, onOpenProfile, viewingAs }) {
   const memberItems = [
     { k: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
     { k: 'tasks', label: 'Tasks & Goals', icon: 'tasks' },
@@ -511,10 +511,12 @@ function SidebarWithWins({ route, setRoute, admin, unread, member, onOpenProfile
       <div className="sb-spacer" />
       <div className="sb-divider" />
 
-      <button className="sb-item" onClick={() => setRoute(admin ? 'dashboard' : 'admin-overview')}>
-        <span className="sb-icon"><Icon name={admin ? 'logout' : 'admin'} size={18} /></span>
-        <span>{admin ? "Back to member view" : "Admin view"}</span>
-      </button>
+      {isRealAdmin && (
+        <button className="sb-item" onClick={() => setRoute(admin ? 'dashboard' : 'admin-overview')}>
+          <span className="sb-icon"><Icon name={admin ? 'logout' : 'admin'} size={18} /></span>
+          <span>{admin ? "Back to member view" : "Admin view"}</span>
+        </button>
+      )}
 
       {!admin && (
         <button className="user-card" onClick={onOpenProfile} style={{ cursor: 'pointer', textAlign: 'left' }}>
@@ -630,17 +632,40 @@ function App() {
     return () => subscription.unsubscribe();
   }, []);
 
+  const checkAndApplyTrialExpiry = async (profile, userId) => {
+    // Only trial accounts are subject to expiry
+    const exemptTypes = ['paid', 'mega_management', 'free'];
+    if (exemptTypes.includes(profile.account_type)) return profile;
+    if (profile.account_type !== 'trial') return profile;
+    if (!profile.trial_expires_at) return profile;
+    if (new Date(profile.trial_expires_at) >= new Date()) return profile;
+
+    // Trial has lapsed — mark expired in Supabase
+    if (profile.member_status !== 'expired') {
+      await window._supabase.from('profiles')
+        .update({ member_status: 'expired' })
+        .eq('id', userId);
+    }
+    return { ...profile, member_status: 'expired' };
+  };
+
   const loadProfile = async (userId) => {
     const { data } = await getProfile(userId);
     if (data) {
-      // If they were pending, mark them active now that they've authenticated
-      if (data.member_status === 'pending') {
+      let profile = data;
+
+      // Apply trial expiry check first
+      profile = await checkAndApplyTrialExpiry(profile, userId);
+
+      // If still pending (not expired), mark active on first login
+      if (profile.member_status === 'pending') {
         await window._supabase.from('profiles')
           .update({ member_status: 'active' })
           .eq('id', userId);
-        data.member_status = 'active';
+        profile = { ...profile, member_status: 'active' };
       }
-      setLiveProfile(data);
+
+      setLiveProfile(profile);
       loadUserData(userId);
       return;
     }
@@ -657,10 +682,13 @@ function App() {
       .maybeSingle();
 
     if (emailProfile) {
+      let profile = emailProfile;
+      profile = await checkAndApplyTrialExpiry(profile, userId);
+      const newStatus = profile.member_status === 'expired' ? 'expired' : 'active';
       await window._supabase.from('profiles')
-        .update({ id: userId, member_status: 'active' })
+        .update({ id: userId, member_status: newStatus })
         .eq('email', user.email);
-      setLiveProfile({ ...emailProfile, id: userId, member_status: 'active' });
+      setLiveProfile({ ...profile, id: userId, member_status: newStatus });
       loadUserData(userId);
     }
   };
@@ -757,34 +785,57 @@ function App() {
 
   // 3.5. Trial expired — full-screen expiry wall
   const isTrialExpired =
-    liveProfile.account_type === 'trial' &&
-    liveProfile.trial_expires_at &&
-    new Date(liveProfile.trial_expires_at) < new Date();
+    liveProfile.member_status === 'expired' ||
+    (liveProfile.account_type === 'trial' &&
+     liveProfile.trial_expires_at &&
+     new Date(liveProfile.trial_expires_at) < new Date());
 
   if (isTrialExpired) {
-    const expiryFormatted = new Date(liveProfile.trial_expires_at)
-      .toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+    const expiryDate = liveProfile.trial_expires_at
+      ? new Date(liveProfile.trial_expires_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+      : null;
     return (
-      <div className="login-root">
-        <div className="login-card" style={{ textAlign: 'center' }}>
-          <div className="login-brand" style={{ justifyContent: 'center', marginBottom: 32 }}>
-            <div className="login-brand-logo">V</div>
-            <div className="login-brand-text">
-              <div className="brand-mark">VANTAGE</div>
-              <div className="brand-sub">by MEGA</div>
+      <div style={{ position: 'fixed', inset: 0, background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, zIndex: 999 }}>
+        <div style={{ width: '100%', maxWidth: 480, textAlign: 'center' }}>
+
+          {/* Logo */}
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 12, marginBottom: 40 }}>
+            <div style={{ width: 44, height: 44, borderRadius: 12, background: '#0F52BA', color: '#fff', display: 'grid', placeItems: 'center', fontFamily: 'Bebas Neue, sans-serif', fontSize: 26, letterSpacing: 1 }}>V</div>
+            <div style={{ textAlign: 'left' }}>
+              <div style={{ fontFamily: 'Bebas Neue, sans-serif', fontSize: 20, letterSpacing: 4, color: 'var(--text)' }}>VANTAGE</div>
+              <div style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 11, fontWeight: 600, letterSpacing: 3, textTransform: 'uppercase', color: 'var(--text-3)' }}>by MEGA</div>
             </div>
           </div>
-          <div className="login-heading">Your trial has ended</div>
-          <div style={{ fontSize: 14, color: 'var(--text-3)', marginTop: 10, fontFamily: 'Montserrat, sans-serif', fontWeight: 600 }}>
-            {expiryFormatted}
+
+          {/* Accent bar */}
+          <div style={{ width: 48, height: 4, borderRadius: 999, background: '#FF6B6B', margin: '0 auto 28px' }} />
+
+          {/* Heading */}
+          <div style={{ fontFamily: 'Bebas Neue, sans-serif', fontSize: 52, lineHeight: 0.95, letterSpacing: 2, color: 'var(--text)', marginBottom: 20 }}>
+            Your trial<br />has ended.
           </div>
-          <div style={{ fontSize: 13, color: 'var(--text-2)', lineHeight: 1.75, fontFamily: 'Montserrat, sans-serif', marginTop: 20 }}>
-            To continue your MEGA journey, get in touch at<br />
-            <a href="mailto:contact@mega-mentorship.com"
-              style={{ color: '#0F52BA', fontWeight: 700, textDecoration: 'none' }}>
+
+          {/* Date */}
+          {expiryDate && (
+            <div style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 13, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', color: '#E8B24C', marginBottom: 24 }}>
+              Expired {expiryDate}
+            </div>
+          )}
+
+          {/* Message */}
+          <div style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 14, color: 'var(--text-2)', lineHeight: 1.8, marginBottom: 36 }}>
+            To continue your Vantage journey, reach out to your MEGA mentor<br />or contact us at{' '}
+            <a href="mailto:contact@mega-mentorship.com" style={{ color: '#0F52BA', fontWeight: 700, textDecoration: 'none' }}>
               contact@mega-mentorship.com
             </a>
           </div>
+
+          {/* Sign out */}
+          <button
+            onClick={handleSignOut}
+            style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 12, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', color: 'var(--text-3)', background: 'none', border: '1px solid var(--border)', borderRadius: 8, padding: '10px 24px', cursor: 'pointer' }}>
+            Sign out
+          </button>
         </div>
       </div>
     );
@@ -863,6 +914,7 @@ function App() {
         route={route}
         setRoute={r => { if (!viewingAs || !r.startsWith('admin-')) setRoute(r); }}
         admin={isAdmin}
+        isRealAdmin={liveProfile.role === 'admin'}
         unread={3}
         member={viewingAs
           ? { ...member, firstName: viewingAs.name.split(' ')[0], initials: viewingAs.initials, avatarColor: viewingAs.color }
