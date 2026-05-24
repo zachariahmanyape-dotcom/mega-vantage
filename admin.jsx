@@ -511,11 +511,42 @@ function AdminSessions() {
   const [saving, setSaving] = React.useState(false);
   const [msg, setMsg] = React.useState(null);
   const [reloadKey, setReloadKey] = React.useState(0);
+  const [googleConnected, setGoogleConnected] = React.useState(false);
+  const [googleEmail, setGoogleEmail] = React.useState('');
+  const [connecting, setConnecting] = React.useState(false);
 
   React.useEffect(() => {
     window._supabase.from('profiles').select('id, full_name, email').order('full_name').
     then(({ data }) => setMembers(data || []));
+    window._supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return;
+      window._supabase.from('profiles').select('google_connected, google_email').eq('id', user.id).single().
+      then(({ data }) => {if (data) {setGoogleConnected(!!data.google_connected);setGoogleEmail(data.google_email || '');}});
+    });
   }, []);
+
+  const connectGoogle = async () => {
+    setMsg(null);
+    setConnecting(true);
+    const { data, error } = await window._supabase.functions.invoke('google-oauth-start');
+    if (error || !data?.url) {
+      let detail = '';
+      try {detail = (await error.context.json())?.error || '';} catch (_e) {}
+      setConnecting(false);
+      setMsg({ ok: false, text: 'Could not start Google connect' + (detail ? ': ' + detail : '') });
+      return;
+    }
+    window.open(data.url, '_blank', 'noopener');
+    let tries = 0;
+    const poll = setInterval(async () => {
+      tries++;
+      const { data: { user } } = await window._supabase.auth.getUser();
+      const { data: prof } = await window._supabase.from('profiles').select('google_connected, google_email').eq('id', user.id).single();
+      if (prof?.google_connected) {
+        setGoogleConnected(true);setGoogleEmail(prof.google_email || '');setConnecting(false);clearInterval(poll);
+      } else if (tries > 40) {setConnecting(false);clearInterval(poll);}
+    }, 3000);
+  };
 
   const reset = () => {
     setTitle('');setAttendeeId('');setDate('');
@@ -535,7 +566,8 @@ function AdminSessions() {
     const { data: { user } } = await window._supabase.auth.getUser();
     const mentorName = window._currentMember ?
     `${window._currentMember.firstName} ${window._currentMember.lastName}`.trim() : 'MEGA';
-    const { error } = await window._supabase.from('sessions').insert({
+    const attendee = type === '1:1' ? members.find((m) => m.id === attendeeId) : null;
+    const { data: inserted, error } = await window._supabase.from('sessions').insert({
       type,
       title: title.trim(),
       session_date: date,
@@ -546,13 +578,38 @@ function AdminSessions() {
       recurrence,
       attendee_id: type === '1:1' ? attendeeId : null,
       created_by: user?.id || null
-    });
+    }).select().single();
+    if (error) {setSaving(false);setMsg({ ok: false, text: error.message });return;}
+
+    // Auto-attach a Google Meet link when connected and no manual link was given.
+    let meetNote = '';
+    if (googleConnected && !link.trim()) {
+      const description = type === '1:1' ?
+      `1:1 with ${attendee?.full_name || 'member'} — via Vantage` :
+      `${title.trim()} — via Vantage`;
+      const { data: mres, error: merr } = await window._supabase.functions.invoke('google-calendar-event', {
+        body: {
+          sessionId: inserted.id, title: title.trim(), dateISO: date,
+          startTime, endTime,
+          attendeeEmail: type === '1:1' ? attendee?.email || null : null,
+          description
+        }
+      });
+      if (merr) {
+        let detail = '';
+        try {detail = (await merr.context.json())?.error || '';} catch (_e) {}
+        console.error('Meet link error:', detail || merr.message);
+        meetNote = ' (Meet link not added' + (detail ? ': ' + detail : '') + ')';
+      } else if (mres?.meeting_link) {
+        meetNote = type === '1:1' ? ' Google Meet link added and the member was invited.' : ' Google Meet link added.';
+      }
+    }
+
     setSaving(false);
-    if (error) {setMsg({ ok: false, text: error.message });return;}
     const who = type === 'Town Hall' ?
     'all members' :
-    members.find((m) => m.id === attendeeId)?.full_name || 'the member';
-    setMsg({ ok: true, text: `Session scheduled for ${who}.` });
+    attendee?.full_name || 'the member';
+    setMsg({ ok: true, text: `Session scheduled for ${who}.` + meetNote });
     reset();
     setReloadKey((k) => k + 1);
   };
@@ -578,6 +635,22 @@ function AdminSessions() {
         {/* Create panel */}
         <div className="card" style={{ padding: 22, height: 'fit-content', position: 'sticky', top: 20 }}>
           <div className="eyebrow" style={{ marginBottom: 14 }}>Create session</div>
+
+          <div style={{ marginBottom: 12, padding: '10px 12px', borderRadius: 10, background: 'var(--bg-sunken)', border: '1px solid var(--border)' }}>
+            {googleConnected ?
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, flexWrap: 'wrap' }}>
+                <span style={{ width: 8, height: 8, borderRadius: 999, background: 'var(--teal-600)', flexShrink: 0 }} />
+                <span style={{ color: 'var(--text-2)', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>Google connected{googleEmail ? ' · ' + googleEmail : ''}</span>
+                <button className="btn ghost sm" style={{ marginLeft: 'auto' }} onClick={connectGoogle} disabled={connecting}>{connecting ? 'Waiting…' : 'Reconnect'}</button>
+              </div> :
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, flexWrap: 'wrap' }}>
+                <span style={{ color: 'var(--text-3)' }}>Connect Google to auto-add Meet links.</span>
+                <button className="btn sm" style={{ marginLeft: 'auto' }} onClick={connectGoogle} disabled={connecting}>{connecting ? 'Waiting…' : 'Connect Google'}</button>
+              </div>
+            }
+          </div>
+
           <div className="stack" style={{ gap: 12 }}>
             <div className="seg" style={{ width: '100%' }}>
               <button className={type === '1:1' ? 'on' : ''} onClick={() => setType('1:1')}>1:1</button>
@@ -620,7 +693,7 @@ function AdminSessions() {
               </select>
             </div>
 
-            <input className="input" placeholder="Meeting link (optional)" value={link} onChange={(e) => setLink(e.target.value)} />
+            <input className="input" placeholder={googleConnected ? 'Meeting link (leave blank to auto-create a Google Meet)' : 'Meeting link (optional)'} value={link} onChange={(e) => setLink(e.target.value)} />
 
             {msg &&
             <div style={{
