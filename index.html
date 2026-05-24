@@ -890,7 +890,7 @@ function App() {
     case 'dashboard':
       screen = <DashboardScreen member={member} onJoin={onJoin} onGoto={setRoute} gameMode={tw.gameMode}
         intention={intention} onClearIntention={() => setIntention(null)}
-        tasks={liveTasks} goals={liveGoals} />;
+        tasks={liveTasks} goals={liveGoals} setTasks={setLiveTasks} />;
       break;
     case 'tasks':
       screen = <TasksScreen
@@ -918,7 +918,7 @@ function App() {
     case 'admin-analytics': screen = <AdminAnalytics />; break;
     default:
       screen = <DashboardScreen member={member} onJoin={onJoin} onGoto={setRoute} gameMode={tw.gameMode}
-        intention={intention} onClearIntention={() => setIntention(null)} tasks={liveTasks} goals={liveGoals} />;
+        intention={intention} onClearIntention={() => setIntention(null)} tasks={liveTasks} goals={liveGoals} setTasks={setLiveTasks} />;
   }
 
   return (

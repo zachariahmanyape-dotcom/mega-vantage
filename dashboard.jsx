@@ -22,15 +22,39 @@ function fmtMins(m) { return `${Math.floor(m/60)}h ${m%60}m`; }
 Object.assign(window, { fetchFocusSessions, focusYmd, focusWeekStart, fmtMins });
 
 // ─── Focus Timer with task-linking ────────────────────────────────────────────
-function FocusTimerModal({ tasks, goals, onStart, onClose }) {
+function FocusTimerModal({ tasks, goals, setTasks, onStart, onClose }) {
   const [q, setQ] = useState('');
   const [selected, setSelected] = useState(null);
+  const [newGoalId, setNewGoalId] = useState('');
+  const [savingNew, setSavingNew] = useState(false);
+  const [errNew, setErrNew] = useState('');
 
   const options = [
     ...tasks.filter(t => !t.subtasks.every(s=>s.done)).map(t => ({ id:t.id, label:t.title, subject:t.subject, kind:'task' })),
     ...goals.map(g => ({ id:g.id, label:g.title, subject:null, kind:'goal' })),
   ];
   const filtered = options.filter(o => q==='' || o.label.toLowerCase().includes(q.toLowerCase()));
+  const noTaskMatch = q.trim() !== '' && filtered.filter(o => o.kind === 'task').length === 0;
+
+  const createTask = async () => {
+    setErrNew('');
+    setSavingNew(true);
+    const { data: { user } } = await window._supabase.auth.getUser();
+    const { data, error } = await window._supabase.from('tasks').insert({
+      user_id: user.id,
+      title: q.trim(),
+      priority: 'Routine',
+      goal_id: newGoalId || null,
+      order_index: 0,
+    }).select('*, roadmap_step:roadmap_steps(title, goal_id)').single();
+    setSavingNew(false);
+    if (error) { setErrNew(error.message); return; }
+    const mapped = window.mapTaskRow ? window.mapTaskRow(data) : data;
+    if (setTasks) setTasks(ts => [mapped, ...ts]);
+    setSelected({ id: data.id, label: data.title, subject: data.subject || null, kind: 'task' });
+    setNewGoalId('');
+    setQ('');
+  };
 
   return (
     <>
@@ -73,6 +97,24 @@ function FocusTimerModal({ tasks, goals, onStart, onClose }) {
               </div>
             );
           })}
+          {noTaskMatch && (
+            <div style={{ border:'1px dashed var(--border)', borderRadius:10, padding:'12px 14px', background:'var(--bg-sunken)', marginTop:4 }}>
+              <div style={{ fontSize:12, color:'var(--text-2)', marginBottom:10 }}>No task matches “<strong>{q.trim()}</strong>”. Create it?</div>
+              {goals.length > 0 && (
+                <div style={{ marginBottom:10 }}>
+                  <div className="eyebrow" style={{ marginBottom:6 }}>Link to goal (optional)</div>
+                  <select className="input" style={{ fontSize:13 }} value={newGoalId} onChange={e=>setNewGoalId(e.target.value)}>
+                    <option value="">No goal</option>
+                    {goals.map(g => <option key={g.id} value={g.id}>{g.title}</option>)}
+                  </select>
+                </div>
+              )}
+              {errNew && <div style={{ fontSize:11, color:'var(--coral)', marginBottom:8 }}>{errNew}</div>}
+              <button className="btn primary sm" disabled={savingNew} onClick={createTask} style={{ width:'100%', justifyContent:'center' }}>
+                <Icon name="plus" size={12} /> {savingNew ? 'Creating…' : `Create task “${q.trim()}”`}
+              </button>
+            </div>
+          )}
         </div>
         <div style={{ padding:'14px 24px 20px', borderTop:'1px solid var(--border)', display:'flex', gap:8 }}>
           <button className="btn primary" style={{ flex:1, justifyContent:'center' }} disabled={!selected} onClick={() => onStart(selected)}>
@@ -85,7 +127,7 @@ function FocusTimerModal({ tasks, goals, onStart, onClose }) {
   );
 }
 
-const DashPomodoro = ({ gameMode, tasks, goals, focusRows, onSaved }) => {
+const DashPomodoro = ({ gameMode, tasks, goals, setTasks, focusRows, onSaved }) => {
   const [running, setRunning] = useState(false);
   const [seconds, setSeconds] = useState(25 * 60);
   const [durationMin, setDurationMin] = useState(25);
@@ -220,7 +262,7 @@ const DashPomodoro = ({ gameMode, tasks, goals, focusRows, onSaved }) => {
           <button className="btn" onClick={resetTimer}>Reset</button>
         </div>
       </div>
-      {showPicker && <FocusTimerModal tasks={tasks} goals={goals} onStart={handleStart} onClose={() => setShowPicker(false)} />}
+      {showPicker && <FocusTimerModal tasks={tasks} goals={goals} setTasks={setTasks} onStart={handleStart} onClose={() => setShowPicker(false)} />}
     </>
   );
 };
@@ -501,7 +543,7 @@ const DashTasksPeek = ({ tasks, onGoTasks }) => {
 };
 
 // ─── Main Dashboard ───────────────────────────────────────────────────────────
-function DashboardScreen({ member, onJoin, onGoto, gameMode, intention, onClearIntention, tasks, goals }) {
+function DashboardScreen({ member, onJoin, onGoto, gameMode, intention, onClearIntention, tasks, goals, setTasks }) {
   const today = new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' });
   const [focusRows, setFocusRows] = useState([]);
   const reloadFocus = () => fetchFocusSessions().then(setFocusRows);
@@ -537,7 +579,7 @@ function DashboardScreen({ member, onJoin, onGoto, gameMode, intention, onClearI
             <DashStreak days={member.streakDays} gameMode={gameMode} />
             <DashLevel member={member} />
           </div>
-          <DashPomodoro gameMode={gameMode} tasks={tasks} goals={goals} focusRows={focusRows} onSaved={reloadFocus} />
+          <DashPomodoro gameMode={gameMode} tasks={tasks} goals={goals} setTasks={setTasks} focusRows={focusRows} onSaved={reloadFocus} />
           <DashFocusBreakdown focusRows={focusRows} />
           <DashTasksPeek tasks={tasks} onGoTasks={() => onGoto('tasks')} />
         </div>

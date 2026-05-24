@@ -603,4 +603,4 @@ function TasksScreen({ tasks, setTasks, goals, setGoals, dataLoading, onReward }
 
 }
 
-Object.assign(window, { TasksScreen, SubjectTag, PriorityBadge, DueDateBadge });
+Object.assign(window, { TasksScreen, SubjectTag, PriorityBadge, DueDateBadge, mapTaskRow });
