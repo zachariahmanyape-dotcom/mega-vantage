@@ -9,6 +9,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Fira+Sans+Extra+Condensed:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css" />
 
+<!-- Dynamic favicon: white logo for dark browser UI, blue logo otherwise -->
+<link rel="icon" type="image/svg+xml" href="logo-white.svg" media="(prefers-color-scheme: dark)" />
+<link rel="icon" type="image/svg+xml" href="logo-blue.svg" />
+
 <style>
 /* ── Login screen styles ───────────────────────────────────── */
 .login-root {
@@ -373,7 +377,7 @@ function LoginScreen({ onAuth }) {
     <div className="login-root">
       <div className="login-card">
         <div className="login-brand">
-          <div className="login-brand-logo">V</div>
+          <div className="login-brand-logo"><img src="logo-white.svg" alt="Vantage" /></div>
           <div className="login-brand-text">
             <div className="brand-mark">VANTAGE</div>
             <div className="brand-sub">by MEGA</div>
@@ -492,7 +496,12 @@ function SidebarWithWins({ route, setRoute, admin, isRealAdmin, unread, member, 
   return (
     <aside className={"sidebar" + (admin ? " admin" : "")}>
       <div className="brand">
-        <div className="brand-logo" style={admin ? { background: 'var(--coral)', color: '#fff' } : undefined}>V</div>
+        <div className="brand-logo" style={admin ? { background: 'var(--coral)' } : undefined}>
+          {admin
+            ? <img className="brand-logo-img" src="logo-white.svg" alt="Vantage" />
+            : <><img className="brand-logo-img logo-light-mode" src="logo-white.svg" alt="Vantage" />
+                <img className="brand-logo-img logo-dark-mode" src="logo-black.svg" alt="Vantage" /></>}
+        </div>
         <div>
           <div className="brand-mark">VANTAGE</div>
           <div className="brand-sub">{admin ? "Admin · MEGA" : "by MEGA"}</div>
@@ -811,7 +820,7 @@ function App() {
 
           {/* Logo */}
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 12, marginBottom: 40 }}>
-            <div style={{ width: 44, height: 44, borderRadius: 12, background: '#0F52BA', color: '#fff', display: 'grid', placeItems: 'center', fontFamily: 'Bebas Neue, sans-serif', fontSize: 26, letterSpacing: 1 }}>V</div>
+            <div style={{ width: 44, height: 44, borderRadius: 12, background: '#0F52BA', display: 'grid', placeItems: 'center' }}><img src="logo-white.svg" alt="Vantage" style={{ width: 26, height: 26, objectFit: 'contain' }} /></div>
             <div style={{ textAlign: 'left' }}>
               <div style={{ fontFamily: 'Bebas Neue, sans-serif', fontSize: 20, letterSpacing: 4, color: 'var(--text)' }}>VANTAGE</div>
               <div style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 11, fontWeight: 600, letterSpacing: 3, textTransform: 'uppercase', color: 'var(--text-3)' }}>by MEGA</div>

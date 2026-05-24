@@ -392,6 +392,15 @@ input, textarea, select { font: inherit; color: inherit; }
   letter-spacing: 0.02em;
 }
 
+/* Vantage logo inside the brand box — swaps with theme.
+   Light mode: box is black (var(--text)) → show white logo.
+   Dark mode:  box is white          → show black logo. */
+.brand-logo-img { width: 20px; height: 20px; object-fit: contain; display: block; }
+.brand-logo .logo-dark-mode { display: none; }
+[data-theme="dark"] .brand-logo .logo-light-mode { display: none; }
+[data-theme="dark"] .brand-logo .logo-dark-mode { display: block; }
+.login-brand-logo img { width: 26px; height: 26px; object-fit: contain; display: block; }
+
 .sb-section {
   font-family: var(--ff-sub);
   font-size: 10px;
