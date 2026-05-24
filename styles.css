@@ -810,3 +810,10 @@ body[data-game="loud"] .level-badge { animation: levelPulse 2.4s ease-in-out inf
 /* dividers in sidebars */
 .sb-divider { height: 1px; background: var(--border); margin: 6px 4px; }
 .sidebar.admin .sb-divider { background: #141A2A; }
+
+/* Dark mode: make native date/time picker icons white instead of black */
+[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator,
+[data-theme="dark"] input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: invert(1) brightness(1.8);
+  cursor: pointer;
+}

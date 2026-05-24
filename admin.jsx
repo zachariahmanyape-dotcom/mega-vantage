@@ -13,8 +13,8 @@ function AdminOverview({ onPick }) {
           </div>
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
-          <button className="btn"><Icon name="plus" size={13} /> New task</button>
-          <button className="btn primary"><Icon name="plus" size={13} /> Schedule session</button>
+          <button className="btn" onClick={() => onPick('admin-tasks')}><Icon name="plus" size={13} /> New task</button>
+          <button className="btn primary" onClick={() => onPick('admin-sessions')}><Icon name="plus" size={13} /> Schedule session</button>
         </div>
       </div>
 
@@ -498,6 +498,31 @@ function AdminTasks() {
 
 }
 
+const SESSION_TIME_OPTS = (() => {
+  const a = [];
+  for (let m = 0; m < 24 * 60; m += 15) {
+    a.push(`${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`);
+  }
+  return a;
+})();
+function fmtTime12(v) {
+  const [h, m] = v.split(':').map(Number);
+  const p = h >= 12 ? 'PM' : 'AM';
+  const d = h % 12 === 0 ? 12 : h % 12;
+  return `${d}:${String(m).padStart(2, '0')} ${p}`;
+}
+function sessionDurLabel(s, e) {
+  const [sh, sm] = s.split(':').map(Number);
+  const [eh, em] = e.split(':').map(Number);
+  const mins = (eh * 60 + em) - (sh * 60 + sm);
+  if (mins <= 0) return '';
+  const h = Math.floor(mins / 60), mm = mins % 60;
+  const parts = [];
+  if (h) parts.push(h + (h === 1 ? ' hr' : ' hrs'));
+  if (mm) parts.push(mm + ' min');
+  return ' · ' + parts.join(' ');
+}
+
 function AdminSessions() {
   const [type, setType] = React.useState('1:1');
   const [title, setTitle] = React.useState('');
@@ -552,6 +577,14 @@ function AdminSessions() {
     setTitle('');setAttendeeId('');setDate('');
     setStartTime('17:00');setEndTime('18:00');
     setRecurrence('does-not-repeat');setLink('');
+  };
+
+  const onStartChange = (v) => {
+    setStartTime(v);
+    if (endTime <= v) {
+      const idx = SESSION_TIME_OPTS.indexOf(v);
+      setEndTime(SESSION_TIME_OPTS[Math.min(idx + 4, SESSION_TIME_OPTS.length - 1)]);
+    }
   };
 
   const submit = async () => {
@@ -675,11 +708,15 @@ function AdminSessions() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               <div>
                 <div className="eyebrow" style={{ marginBottom: 6 }}>Start</div>
-                <input className="input" type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
+                <select className="input" style={{ fontSize: 13 }} value={startTime} onChange={(e) => onStartChange(e.target.value)}>
+                  {SESSION_TIME_OPTS.map((v) => <option key={v} value={v}>{fmtTime12(v)}</option>)}
+                </select>
               </div>
               <div>
                 <div className="eyebrow" style={{ marginBottom: 6 }}>End</div>
-                <input className="input" type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
+                <select className="input" style={{ fontSize: 13 }} value={endTime} onChange={(e) => setEndTime(e.target.value)}>
+                  {SESSION_TIME_OPTS.filter((v) => v > startTime).map((v) => <option key={v} value={v}>{fmtTime12(v)}{sessionDurLabel(startTime, v)}</option>)}
+                </select>
               </div>
             </div>
 
