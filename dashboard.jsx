@@ -392,7 +392,7 @@ function DashboardScreen({ member, onJoin, onGoto, gameMode, intention, onClearI
       <div className="page-header" style={{ alignItems:'flex-end' }}>
         <div>
           <div className="eyebrow">Good morning · {today}</div>
-          <h1 className="page-title">Hello, <span style={{ color:'var(--accent)' }}>AmirA</span></h1>
+          <h1 className="page-title">Hello, <span style={{ color:'var(--accent)' }}>{member.firstName}</span></h1>
           <div className="page-sub" style={{ marginTop:10, maxWidth:620, color:'var(--text-2)' }}>
             You're on pace for a sharp week. One session, three tasks, and a town hall between now and Friday.
           </div>
