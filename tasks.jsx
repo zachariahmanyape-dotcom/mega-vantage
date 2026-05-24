@@ -279,6 +279,38 @@ function FocusStats() {
   const subjects = Object.entries(bySubj).map(([subject,minutes])=>({subject,minutes})).sort((a,b)=>b.minutes-a.minutes);
   const maxSubj = Math.max(...subjects.map(s=>s.minutes),1);
 
+  // Most-focused-time-of-day (minutes by hour)
+  const byHour = new Array(24).fill(0);
+  rows.forEach(r => { byHour[when(r).getHours()] += (r.duration_minutes || 0); });
+  const maxHour = Math.max(...byHour, 1);
+
+  // Weekly rhythm — weekday (Mon..Sun) × hour heatmap
+  const DOW = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const grid = Array.from({ length: 7 }, () => new Array(24).fill(0));
+  rows.forEach(r => { const d = when(r); grid[(d.getDay() + 6) % 7][d.getHours()] += (r.duration_minutes || 0); });
+  const maxCell = Math.max(1, ...grid.flat());
+
+  // Year grid (GitHub-style)
+  const yr = new Date().getFullYear();
+  const dayMap = {};
+  rows.forEach(r => { const k = window.focusYmd(when(r)); dayMap[k] = (dayMap[k] || 0) + (r.duration_minutes || 0); });
+  const jan1 = new Date(yr, 0, 1);
+  const gridStart = new Date(jan1); gridStart.setDate(jan1.getDate() - ((jan1.getDay() + 6) % 7));
+  const yearEnd = new Date(yr, 11, 31);
+  const weeks = [];
+  let cur = new Date(gridStart);
+  while (cur <= yearEnd) {
+    const wk = [];
+    for (let i = 0; i < 7; i++) { wk.push(new Date(cur)); cur.setDate(cur.getDate() + 1); }
+    weeks.push(wk);
+  }
+  const yearCellStyle = (mins, inYear) => {
+    if (!inYear) return { background: 'transparent' };
+    if (mins <= 0) return { background: 'var(--bg-sunken)' };
+    const op = mins < 30 ? 0.3 : mins < 60 ? 0.55 : mins < 120 ? 0.78 : 1;
+    return { background: 'var(--accent)', opacity: op };
+  };
+
   const stat = (label, value, sub) => (
     <div className="card" style={{ padding:'18px 18px 16px', borderRadius:22 }}>
       <div className="eyebrow" style={{ fontSize:10 }}>{label}</div>
@@ -331,6 +363,63 @@ function FocusStats() {
                 </div>
               );
             })}
+          </div>
+        </div>
+      </div>
+
+      <div style={{ display:'grid', gridTemplateColumns:'1.3fr 1fr', gap:22, minWidth:0 }}>
+        <div className="card" style={{ padding:22, minWidth:0 }}>
+          <div className="eyebrow">Most focused time of day</div>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(24,1fr)', gap:2, height:120, marginTop:16, alignItems:'end' }}>
+            {byHour.map((mins,h) => (
+              <div key={h} title={`${h}:00 — ${window.fmtMins(mins)}`} style={{ height:'100%', display:'flex', alignItems:'flex-end' }}>
+                <div style={{ width:'100%', height:Math.max(2, mins/maxHour*100)+'%', background: mins>0?'var(--accent)':'var(--bg-sunken)', borderRadius:2 }} />
+              </div>
+            ))}
+          </div>
+          <div style={{ display:'flex', justifyContent:'space-between', fontSize:10, color:'var(--text-3)', marginTop:6 }}>
+            <span>12 AM</span><span>6 AM</span><span>12 PM</span><span>6 PM</span><span>11 PM</span>
+          </div>
+        </div>
+
+        <div className="card" style={{ padding:22, minWidth:0 }}>
+          <div className="eyebrow" style={{ marginBottom:14 }}>Weekly rhythm</div>
+          <div style={{ display:'flex', flexDirection:'column', gap:3 }}>
+            {grid.map((rowArr,di) => (
+              <div key={di} style={{ display:'flex', alignItems:'center', gap:6 }}>
+                <span style={{ fontSize:9, color:'var(--text-3)', width:22, flexShrink:0 }}>{DOW[di]}</span>
+                <div style={{ display:'grid', gridTemplateColumns:'repeat(24,1fr)', gap:2, flex:1 }}>
+                  {rowArr.map((mins,h) => (
+                    <div key={h} title={`${DOW[di]} ${h}:00 — ${window.fmtMins(mins)}`} style={{ height:12, borderRadius:2, background: mins>0?'var(--accent)':'var(--bg-sunken)', opacity: mins>0?(0.25+0.75*(mins/maxCell)):1 }} />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div style={{ fontSize:10, color:'var(--text-3)', marginTop:8, paddingLeft:28 }}>12 AM → 11 PM</div>
+        </div>
+      </div>
+
+      <div className="card" style={{ padding:22 }}>
+        <div className="row-between" style={{ marginBottom:16 }}>
+          <div className="eyebrow">Focus in {yr}</div>
+          <div style={{ display:'flex', alignItems:'center', gap:5, fontSize:10, color:'var(--text-3)' }}>
+            Less
+            {[0,0.3,0.55,0.78,1].map((op,i) => <span key={i} style={{ width:11, height:11, borderRadius:2, background: op===0?'var(--bg-sunken)':'var(--accent)', opacity: op===0?1:op, display:'inline-block' }} />)}
+            More
+          </div>
+        </div>
+        <div style={{ overflowX:'auto', paddingBottom:6 }}>
+          <div style={{ display:'flex', gap:3, minWidth:'min-content' }}>
+            {weeks.map((wk,wi) => (
+              <div key={wi} style={{ display:'flex', flexDirection:'column', gap:3 }}>
+                {wk.map((d,dyi) => {
+                  const inYear = d.getFullYear()===yr;
+                  const mins = inYear ? (dayMap[window.focusYmd(d)]||0) : 0;
+                  return <div key={dyi} title={inYear?`${d.toLocaleDateString('en-US',{month:'short',day:'numeric'})} — ${window.fmtMins(mins)}`:''} style={{ width:11, height:11, borderRadius:2, ...yearCellStyle(mins, inYear) }} />;
+                })}
+              </div>
+            ))}
           </div>
         </div>
       </div>
