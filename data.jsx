@@ -183,21 +183,6 @@ const CHAT_MESSAGES = [
     text: "Glad it's landing. We'll do a live CV teardown session at the May Town Hall — send me your latest version by May 1 if you want yours on the big screen (anonymized if you want)." },
 ];
 
-const BADGES = [
-  { id: "b1", name: "First 1:1", earned: true,  desc: "Completed your first mentorship call." },
-  { id: "b2", name: "7-Day Streak", earned: true, desc: "Showed up seven weekdays in a row." },
-  { id: "b3", name: "14-Day Streak", earned: true, desc: "Two full weeks of weekday consistency." },
-  { id: "b4", name: "First Goal", earned: true, desc: "Closed out your first goal end-to-end." },
-  { id: "b5", name: "Subject Mastered: Comms", earned: true, desc: "Completed all modules in Professional Communication." },
-  { id: "b6", name: "Town Hall Regular", earned: true, desc: "Attended four town halls." },
-  { id: "b7", name: "30-Day Streak", earned: false, desc: "Six weeks of weekday consistency." },
-  { id: "b8", name: "Subject Mastered: Time", earned: false, desc: "Complete all Time Management modules." },
-  { id: "b9", name: "Public Speaker", earned: false, desc: "Present at a town hall." },
-  { id: "b10", name: "Mentor's Favourite", earned: false, desc: "Earn 500 points in a single week." },
-  { id: "b11", name: "Elite Rank", earned: false, desc: "Reach the Elite tier." },
-  { id: "b12", name: "Perfect Month", earned: false, desc: "Hit every task deadline in a month." },
-];
-
 const ADMIN_MEMBERS = [
   { name: "Amira Khaled",    plan: "Mentorship · Breakthrough", lastActive: "2m ago", points: 4260, streak: 14, status: "Active",       color: "#0F52BA", initials: "AK" },
   { name: "Noura Al-Mansouri", plan: "Mentorship · Breakthrough", lastActive: "34m ago", points: 3890, streak: 12, status: "Active",   color: "#4FB7A6", initials: "NA" },
@@ -257,4 +242,4 @@ function Icon({name, size=18, stroke=1.8, style, className}) {
 }
 
 // exports
-Object.assign(window, { Icon, SUBJECTS, MEMBER, LEVELS, TASKS, GOALS, RESOURCES, CHANNELS, CHAT_MESSAGES, BADGES, ADMIN_MEMBERS });
+Object.assign(window, { Icon, SUBJECTS, MEMBER, LEVELS, TASKS, GOALS, RESOURCES, CHANNELS, CHAT_MESSAGES, ADMIN_MEMBERS });

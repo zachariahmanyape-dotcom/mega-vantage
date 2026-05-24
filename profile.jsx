@@ -13,18 +13,51 @@ function BadgeTile({ badge }) {
 }
 
 function ProfileScreen({ member, theme, setTheme, onSignOut }) {
-  const earned = BADGES.filter(b=>b.earned).length;
-
   const [sessions, setSessions] = React.useState([]);
+  const [focusRows, setFocusRows] = React.useState([]);
+  const [doneTasks, setDoneTasks] = React.useState([]);
+
   React.useEffect(() => {
     let active = true;
     window.fetchListSessions().then(rows => { if (active) setSessions(rows); });
+    window.fetchFocusSessions().then(rows => { if (active) setFocusRows(rows); });
+    window._supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return;
+      window._supabase.from('tasks').select('id, title, is_completed, completed_at').eq('user_id', user.id).eq('is_completed', true)
+        .then(({ data }) => { if (active) setDoneTasks(data || []); });
+    });
     return () => { active = false; };
   }, []);
+
   const pastSessions = sessions.filter(s => s.status === 'past');
   const upcomingCount = sessions.filter(s => s.status === 'upcoming').length;
   const totalMin = pastSessions.reduce((a, s) => a + Math.max(0, (s.endH - s.startH) * 60), 0);
   const totalLearning = `${Math.floor(totalMin / 60)}h ${Math.round(totalMin % 60)}m`;
+
+  // ── Milestones (derived from real activity) ──
+  const milestones = [];
+  if (member.joinedAt) milestones.push({ icon: 'star', color: 'var(--accent)', label: 'Joined Vantage', date: member.joinedAt, desc: `${member.product} · ${member.plan}` });
+  const pastSorted = [...pastSessions].sort((a, b) => a.dateISO.localeCompare(b.dateISO));
+  if (pastSorted.length) milestones.push({ icon: 'sessions', color: 'var(--accent)', label: 'First session attended', date: pastSorted[0].dateISO, desc: pastSorted[0].title });
+  const focusSorted = [...focusRows].sort((a, b) => new Date(a.started_at || a.created_at) - new Date(b.started_at || b.created_at));
+  if (focusSorted.length) milestones.push({ icon: 'clock', color: 'var(--teal-600)', label: 'First focus session', date: focusSorted[0].started_at || focusSorted[0].created_at, desc: `${focusSorted[0].duration_minutes || 0}m focused` });
+  const tasksSorted = [...doneTasks].filter(t => t.completed_at).sort((a, b) => new Date(a.completed_at) - new Date(b.completed_at));
+  if (tasksSorted.length) milestones.push({ icon: 'check', color: 'var(--teal-600)', label: 'First task completed', date: tasksSorted[0].completed_at, desc: tasksSorted[0].title });
+  milestones.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+  // ── Badges (earned from real data) ──
+  const totalFocusMin = focusRows.reduce((a, r) => a + (r.duration_minutes || 0), 0);
+  const badges = [
+    { id: 'b_sess1', name: 'First Session', desc: 'Attended your first session.', earned: pastSessions.length >= 1 },
+    { id: 'b_focus1', name: 'First Focus', desc: 'Logged your first focus session.', earned: focusRows.length >= 1 },
+    { id: 'b_task1', name: 'First Task', desc: 'Completed your first task.', earned: doneTasks.length >= 1 },
+    { id: 'b_task5', name: 'Task Streaker', desc: 'Completed 5 tasks.', earned: doneTasks.length >= 5 },
+    { id: 'b_focus10', name: 'Deep Worker', desc: 'Logged 10 focus sessions.', earned: focusRows.length >= 10 },
+    { id: 'b_focus5h', name: '5 Hours In', desc: 'Focused for 5 hours in total.', earned: totalFocusMin >= 300 },
+    { id: 'b_task20', name: 'Finisher', desc: 'Completed 20 tasks.', earned: doneTasks.length >= 20 },
+    { id: 'b_focus25h', name: 'Marathoner', desc: 'Focused for 25 hours in total.', earned: totalFocusMin >= 1500 },
+  ];
+  const earned = badges.filter(b => b.earned).length;
 
   return (
     <>
@@ -76,7 +109,7 @@ function ProfileScreen({ member, theme, setTheme, onSignOut }) {
 
       {/* Milestone timeline */}
       <div style={{ marginBottom:20 }}>
-        <MilestoneTimeline />
+        <MilestoneTimeline milestones={milestones} />
       </div>
 
       <div style={{ display:'grid', gridTemplateColumns:'1.4fr 1fr', gap:20 }}>
@@ -87,10 +120,10 @@ function ProfileScreen({ member, theme, setTheme, onSignOut }) {
               <div className="eyebrow">Achievements</div>
               <div className="display" style={{ fontSize:22, marginTop:4 }}>Badge wall</div>
             </div>
-            <div style={{ fontSize:12, color:'var(--text-3)' }}>{earned} of {BADGES.length} earned</div>
+            <div style={{ fontSize:12, color:'var(--text-3)' }}>{earned} of {badges.length} earned</div>
           </div>
           <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12, marginTop:16 }}>
-            {BADGES.map(b => <BadgeTile key={b.id} badge={b} />)}
+            {badges.map(b => <BadgeTile key={b.id} badge={b} />)}
           </div>
         </div>
 
