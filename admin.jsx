@@ -794,29 +794,31 @@ function AdminResources() {
 }
 
 function AdminChat() {
+  const [memberCount, setMemberCount] = React.useState(0);
+  React.useEffect(() => {
+    window._supabase.rpc('member_count').then(({ data }) => setMemberCount(data || 0));
+  }, []);
+  const memberLabel = `${memberCount} ${memberCount === 1 ? 'member' : 'members'}`;
   return (
     <>
       <div className="page-header">
         <div>
           <div className="eyebrow">Admin · Channels</div>
-          <h1 className="page-title">The MEGA Members
-          </h1>
+          <h1 className="page-title">Channels</h1>
+          <div className="page-sub" style={{ marginTop: 8, color: 'var(--text-2)', maxWidth: 560 }}>
+            The community space for all MEGA Mentorship members.
+          </div>
         </div>
-        <button className="btn primary"><Icon name="plus" size={13} /> New company channel</button>
       </div>
       <div className="card" style={{ padding: 22 }}>
-        <div className="eyebrow" style={{ marginBottom: 14 }}>All channels</div>
-        <div className="stack" style={{ gap: 8 }}>
-          {CHANNELS.map((c) => <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', border: '1px solid var(--border)', borderRadius: 12 }}>
-              <Avatar initials={c.avatar} color={c.color} size={32} />
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 13, fontWeight: 600 }}>#{c.name}</div>
-                <div style={{ fontSize: 11, color: 'var(--text-3)' }}>{c.kind === 'global' ? 'Global · all Mentorship members' : 'Company (Management)'} · {c.members} members</div>
-              </div>
-              <button className="btn ghost sm">Manage</button>
-              <button className="btn sm">Post</button>
-            </div>
-          )}
+        <div className="eyebrow" style={{ marginBottom: 14 }}>Channels</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', border: '1px solid var(--border)', borderRadius: 12 }}>
+          <Avatar initials="MG" color="#0F52BA" size={32} />
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 13, fontWeight: 600 }}># MEGA Mentorship</div>
+            <div style={{ fontSize: 11, color: 'var(--text-3)' }}>Global · all members · {memberLabel}</div>
+          </div>
+          <span style={{ fontSize: 11, color: 'var(--text-3)' }}>Messaging coming soon</span>
         </div>
       </div>
     </>);
