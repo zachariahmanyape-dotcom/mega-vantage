@@ -85,7 +85,8 @@ const DashPomodoro = ({ gameMode, tasks, goals }) => {
   const [linkedItem, setLinkedItem] = useState(null);
   const [showPicker, setShowPicker] = useState(false);
   const [sessionDone, setSessionDone] = useState(false);
-  const elapsed = useRef(0);
+  const [saving, setSaving] = useState(false);
+  const [savedNote, setSavedNote] = useState('');
 
   const adjust = (delta) => {
     if (running) return;
@@ -104,7 +105,6 @@ const DashPomodoro = ({ gameMode, tasks, goals }) => {
         if (s <= 1) { clearInterval(t); setRunning(false); setSessionDone(true); }
         return Math.max(0, s-1);
       });
-      elapsed.current += 1;
     }, 1000);
     return () => clearInterval(t);
   }, [running]);
@@ -114,22 +114,57 @@ const DashPomodoro = ({ gameMode, tasks, goals }) => {
     setShowPicker(false);
     setSeconds(durationMin * 60);
     setSessionDone(false);
+    setSavedNote('');
     setRunning(true);
-    elapsed.current = 0;
   };
 
-  const handleStop = () => {
+  const handleStop = () => { setRunning(false); };
+
+  const resetTimer = () => {
     setRunning(false);
-    if (linkedItem && elapsed.current > 0) {
-      window.FOCUS_LOG[linkedItem.id] = (window.FOCUS_LOG[linkedItem.id]||0) + Math.floor(elapsed.current/60);
+    setSeconds(durationMin * 60);
+    setLinkedItem(null);
+    setSessionDone(false);
+    setSavedNote('');
+  };
+
+  const elapsedSec = durationMin * 60 - seconds;
+
+  const handleSave = async () => {
+    if (elapsedSec <= 0 || saving) return;
+    const mins = Math.max(1, Math.round(elapsedSec / 60));
+    const item = linkedItem;
+    setSaving(true);
+    setRunning(false);
+    try {
+      const { data: { user } } = await window._supabase.auth.getUser();
+      const { error } = await window._supabase.from('focus_sessions').insert({
+        user_id: user.id,
+        duration_minutes: mins,
+        label: item ? item.label : null,
+        subject: item ? item.subject : null,
+        linked_id: item ? String(item.id) : null,
+        linked_kind: item ? item.kind : null,
+        started_at: new Date(Date.now() - elapsedSec * 1000).toISOString(),
+      });
+      if (error) throw error;
+      setSavedNote(`✓ Saved ${mins}m${item ? ' to "' + item.label + '"' : ''}`);
+      setTimeout(() => setSavedNote(''), 4000);
+    } catch (e) {
+      console.error('Failed to save focus session:', e.message);
+      setSavedNote('Could not save — please try again.');
     }
-    elapsed.current = 0;
+    setSaving(false);
+    setSeconds(durationMin * 60);
+    setLinkedItem(null);
     setSessionDone(false);
   };
 
   const mm = String(Math.floor(seconds/60)).padStart(2,'0');
   const ss = String(seconds%60).padStart(2,'0');
   const pct = (1 - seconds/(durationMin*60)) * 100;
+  const fresh = elapsedSec === 0;
+  const greenBtn = { flex:1, justifyContent:'center', background:'var(--teal-600)', color:'#fff', borderColor:'var(--teal-600)' };
 
   return (
     <>
@@ -150,7 +185,7 @@ const DashPomodoro = ({ gameMode, tasks, goals }) => {
           <span className="sub" style={{ fontSize:13, color:'var(--text-3)' }}>pomodoro</span>
         </div>
         <div className="progress" style={{ marginTop:10 }}><span style={{ width: pct+'%' }} /></div>
-        {!running && (
+        {!running && fresh && (
           <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginTop:12 }}>
             <span className="eyebrow" style={{ margin:0 }}>Session length</span>
             <div style={{ display:'flex', alignItems:'center', gap:8 }}>
@@ -160,13 +195,20 @@ const DashPomodoro = ({ gameMode, tasks, goals }) => {
             </div>
           </div>
         )}
-        {sessionDone && <div style={{ marginTop:8, fontSize:12, color:'var(--teal-600)', fontWeight:600 }}>✓ Session complete{linkedItem?' — time logged to "'+linkedItem.label+'"':''}</div>}
+        {sessionDone && <div style={{ marginTop:8, fontSize:12, color:'var(--teal-600)', fontWeight:600 }}>✓ Session complete — save it to log your focus time</div>}
+        {savedNote && <div style={{ marginTop:8, fontSize:12, color: savedNote[0]==='✓' ? 'var(--teal-600)' : 'var(--coral)', fontWeight:600 }}>{savedNote}</div>}
         <div style={{ display:'flex', gap:8, marginTop:14 }}>
-          {!running
-            ? <button className="btn primary" onClick={() => setShowPicker(true)} style={{ flex:1, justifyContent:'center' }}><Icon name="play" size={14} /> Start focus</button>
-            : <button className="btn coral" onClick={handleStop} style={{ flex:1, justifyContent:'center' }}><Icon name="pause" size={14} /> Stop</button>
-          }
-          <button className="btn" onClick={() => { setRunning(false); setSeconds(durationMin*60); setLinkedItem(null); elapsed.current=0; setSessionDone(false); }}>Reset</button>
+          {running ? (
+            <>
+              <button className="btn coral" onClick={handleStop} style={{ justifyContent:'center' }}><Icon name="pause" size={14} /> Stop</button>
+              <button className="btn" onClick={handleSave} disabled={saving} style={greenBtn}><Icon name="check" size={14} /> {saving?'Saving…':'Save'}</button>
+            </>
+          ) : !fresh ? (
+            <button className="btn" onClick={handleSave} disabled={saving} style={greenBtn}><Icon name="check" size={14} /> {saving?'Saving…':'Save focus'}</button>
+          ) : (
+            <button className="btn primary" onClick={() => setShowPicker(true)} style={{ flex:1, justifyContent:'center' }}><Icon name="play" size={14} /> Start focus</button>
+          )}
+          <button className="btn" onClick={resetTimer}>Reset</button>
         </div>
       </div>
       {showPicker && <FocusTimerModal tasks={tasks} goals={goals} onStart={handleStart} onClose={() => setShowPicker(false)} />}
