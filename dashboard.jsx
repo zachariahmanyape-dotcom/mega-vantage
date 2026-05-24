@@ -81,10 +81,21 @@ function FocusTimerModal({ tasks, goals, onStart, onClose }) {
 const DashPomodoro = ({ gameMode, tasks, goals }) => {
   const [running, setRunning] = useState(false);
   const [seconds, setSeconds] = useState(25 * 60);
+  const [durationMin, setDurationMin] = useState(25);
   const [linkedItem, setLinkedItem] = useState(null);
   const [showPicker, setShowPicker] = useState(false);
   const [sessionDone, setSessionDone] = useState(false);
   const elapsed = useRef(0);
+
+  const adjust = (delta) => {
+    if (running) return;
+    setDurationMin(d => {
+      const nd = Math.min(120, Math.max(5, d + delta));
+      setSeconds(nd * 60);
+      setSessionDone(false);
+      return nd;
+    });
+  };
 
   useEffect(() => {
     if (!running) return;
@@ -101,6 +112,8 @@ const DashPomodoro = ({ gameMode, tasks, goals }) => {
   const handleStart = (item) => {
     setLinkedItem(item);
     setShowPicker(false);
+    setSeconds(durationMin * 60);
+    setSessionDone(false);
     setRunning(true);
     elapsed.current = 0;
   };
@@ -116,7 +129,7 @@ const DashPomodoro = ({ gameMode, tasks, goals }) => {
 
   const mm = String(Math.floor(seconds/60)).padStart(2,'0');
   const ss = String(seconds%60).padStart(2,'0');
-  const pct = (1 - seconds/(25*60)) * 100;
+  const pct = (1 - seconds/(durationMin*60)) * 100;
 
   return (
     <>
@@ -137,13 +150,23 @@ const DashPomodoro = ({ gameMode, tasks, goals }) => {
           <span className="sub" style={{ fontSize:13, color:'var(--text-3)' }}>pomodoro</span>
         </div>
         <div className="progress" style={{ marginTop:10 }}><span style={{ width: pct+'%' }} /></div>
+        {!running && (
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginTop:12 }}>
+            <span className="eyebrow" style={{ margin:0 }}>Session length</span>
+            <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+              <button className="btn ghost sm" onClick={() => adjust(-5)} disabled={durationMin<=5} style={{ minWidth:36, justifyContent:'center' }}>−5</button>
+              <span style={{ fontSize:14, fontWeight:700, minWidth:56, textAlign:'center', fontFamily:'var(--ff-sub)', letterSpacing:'0.04em' }}>{durationMin} min</span>
+              <button className="btn ghost sm" onClick={() => adjust(5)} disabled={durationMin>=120} style={{ minWidth:36, justifyContent:'center' }}>+5</button>
+            </div>
+          </div>
+        )}
         {sessionDone && <div style={{ marginTop:8, fontSize:12, color:'var(--teal-600)', fontWeight:600 }}>✓ Session complete{linkedItem?' — time logged to "'+linkedItem.label+'"':''}</div>}
         <div style={{ display:'flex', gap:8, marginTop:14 }}>
           {!running
             ? <button className="btn primary" onClick={() => setShowPicker(true)} style={{ flex:1, justifyContent:'center' }}><Icon name="play" size={14} /> Start focus</button>
             : <button className="btn coral" onClick={handleStop} style={{ flex:1, justifyContent:'center' }}><Icon name="pause" size={14} /> Stop</button>
           }
-          <button className="btn" onClick={() => { setRunning(false); setSeconds(25*60); setLinkedItem(null); elapsed.current=0; }}>Reset</button>
+          <button className="btn" onClick={() => { setRunning(false); setSeconds(durationMin*60); setLinkedItem(null); elapsed.current=0; setSessionDone(false); }}>Reset</button>
         </div>
       </div>
       {showPicker && <FocusTimerModal tasks={tasks} goals={goals} onStart={handleStart} onClose={() => setShowPicker(false)} />}
