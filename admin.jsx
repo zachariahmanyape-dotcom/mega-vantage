@@ -499,6 +499,64 @@ function AdminTasks() {
 }
 
 function AdminSessions() {
+  const [type, setType] = React.useState('1:1');
+  const [title, setTitle] = React.useState('');
+  const [attendeeId, setAttendeeId] = React.useState('');
+  const [date, setDate] = React.useState('');
+  const [startTime, setStartTime] = React.useState('17:00');
+  const [endTime, setEndTime] = React.useState('18:00');
+  const [recurrence, setRecurrence] = React.useState('does-not-repeat');
+  const [link, setLink] = React.useState('');
+  const [members, setMembers] = React.useState([]);
+  const [saving, setSaving] = React.useState(false);
+  const [msg, setMsg] = React.useState(null);
+  const [reloadKey, setReloadKey] = React.useState(0);
+
+  React.useEffect(() => {
+    window._supabase.from('profiles').select('id, full_name, email').order('full_name').
+    then(({ data }) => setMembers(data || []));
+  }, []);
+
+  const reset = () => {
+    setTitle('');setAttendeeId('');setDate('');
+    setStartTime('17:00');setEndTime('18:00');
+    setRecurrence('does-not-repeat');setLink('');
+  };
+
+  const submit = async () => {
+    setMsg(null);
+    if (!title.trim()) {setMsg({ ok: false, text: 'Add a session title.' });return;}
+    if (!date) {setMsg({ ok: false, text: 'Pick a date.' });return;}
+    if (!startTime || !endTime) {setMsg({ ok: false, text: 'Set a start and end time.' });return;}
+    if (endTime <= startTime) {setMsg({ ok: false, text: 'End time must be after the start time.' });return;}
+    if (type === '1:1' && !attendeeId) {setMsg({ ok: false, text: 'Select the member for this 1:1.' });return;}
+
+    setSaving(true);
+    const { data: { user } } = await window._supabase.auth.getUser();
+    const mentorName = window._currentMember ?
+    `${window._currentMember.firstName} ${window._currentMember.lastName}`.trim() : 'MEGA';
+    const { error } = await window._supabase.from('sessions').insert({
+      type,
+      title: title.trim(),
+      session_date: date,
+      start_time: startTime,
+      end_time: endTime,
+      mentor_name: mentorName,
+      meeting_link: link.trim() || null,
+      recurrence,
+      attendee_id: type === '1:1' ? attendeeId : null,
+      created_by: user?.id || null
+    });
+    setSaving(false);
+    if (error) {setMsg({ ok: false, text: error.message });return;}
+    const who = type === 'Town Hall' ?
+    'all members' :
+    members.find((m) => m.id === attendeeId)?.full_name || 'the member';
+    setMsg({ ok: true, text: `Session scheduled for ${who}.` });
+    reset();
+    setReloadKey((k) => k + 1);
+  };
+
   return (
     <>
       <div className="page-header">
@@ -506,16 +564,15 @@ function AdminSessions() {
           <div className="eyebrow">Admin · Sessions</div>
           <h1 className="page-title">Schedule</h1>
           <div className="page-sub" style={{ marginTop: 6, color: 'var(--text-2)' }}>
-            Create 1:1s and town halls. Set recurring cadence and meeting links.
+            Create 1:1s and town halls. 1:1s appear only for the chosen member; town halls appear for everyone.
           </div>
         </div>
-        <button className="btn primary"><Icon name="plus" size={13} /> New session</button>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 24 }}>
         {/* Calendar */}
         <div className="card" style={{ padding: 24 }}>
-          <Calendar isAdmin={true} />
+          <Calendar isAdmin={true} reloadKey={reloadKey} />
         </div>
 
         {/* Create panel */}
@@ -523,35 +580,60 @@ function AdminSessions() {
           <div className="eyebrow" style={{ marginBottom: 14 }}>Create session</div>
           <div className="stack" style={{ gap: 12 }}>
             <div className="seg" style={{ width: '100%' }}>
-              <button className="on">1:1</button>
-              <button>Town Hall</button>
+              <button className={type === '1:1' ? 'on' : ''} onClick={() => setType('1:1')}>1:1</button>
+              <button className={type === 'Town Hall' ? 'on' : ''} onClick={() => setType('Town Hall')}>Town Hall</button>
             </div>
-            <input className="input" placeholder="Session title" defaultValue="1:1 with Noura — portfolio review" />
+
+            {type === '1:1' &&
+            <div>
+                <div className="eyebrow" style={{ marginBottom: 6 }}>Member</div>
+                <select className="input" style={{ fontSize: 13 }} value={attendeeId} onChange={(e) => setAttendeeId(e.target.value)}>
+                  <option value="">Select a member…</option>
+                  {members.map((m) =>
+                  <option key={m.id} value={m.id}>{m.full_name || m.email}</option>
+                  )}
+                </select>
+              </div>
+            }
+
+            <input className="input" placeholder={type === 'Town Hall' ? 'Town hall title' : 'Session title'} value={title} onChange={(e) => setTitle(e.target.value)} />
+
+            <input className="input" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-              <input className="input" type="date" defaultValue="2026-04-29" />
-              <input className="input" type="time" defaultValue="17:00" />
+              <div>
+                <div className="eyebrow" style={{ marginBottom: 6 }}>Start</div>
+                <input className="input" type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
+              </div>
+              <div>
+                <div className="eyebrow" style={{ marginBottom: 6 }}>End</div>
+                <input className="input" type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
+              </div>
             </div>
+
             <div>
               <div className="eyebrow" style={{ marginBottom: 6 }}>Recurrence</div>
-              <select className="input" style={{ fontSize: 13 }}>
-                <option>Does not repeat</option>
-                <option>Daily</option>
-                <option>Weekly (select days)</option>
-                <option>Biweekly</option>
-                <option>Monthly</option>
+              <select className="input" style={{ fontSize: 13 }} value={recurrence} onChange={(e) => setRecurrence(e.target.value)}>
+                <option value="does-not-repeat">Does not repeat</option>
+                <option value="weekly">Weekly</option>
+                <option value="biweekly">Biweekly</option>
+                <option value="monthly">Monthly</option>
               </select>
             </div>
-            <input className="input" placeholder="Meeting link" defaultValue="https://zoom.us/j/vantage-noura" />
-            <div className="row-between" style={{ padding: '6px 0' }}>
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 500 }}>90-min reminder</div>
-                <div style={{ fontSize: 11, color: 'var(--text-3)' }}>In-app and email</div>
-              </div>
-              <div style={{ width: 36, height: 20, borderRadius: 999, background: 'var(--accent)', position: 'relative', cursor: 'pointer' }}>
-                <div style={{ position: 'absolute', top: 2, left: 18, width: 16, height: 16, borderRadius: 999, background: '#fff' }} />
-              </div>
-            </div>
-            <button className="btn primary" style={{ justifyContent: 'center' }}>Schedule & notify</button>
+
+            <input className="input" placeholder="Meeting link (optional)" value={link} onChange={(e) => setLink(e.target.value)} />
+
+            {msg &&
+            <div style={{
+              fontSize: 12, padding: '8px 12px', borderRadius: 8, lineHeight: 1.45,
+              background: msg.ok ? 'rgba(79,183,166,0.14)' : 'rgba(255,107,107,0.12)',
+              color: msg.ok ? 'var(--teal-600)' : 'var(--coral)',
+              border: '1px solid ' + (msg.ok ? 'rgba(79,183,166,0.3)' : 'rgba(255,107,107,0.3)')
+            }}>{msg.text}</div>
+            }
+
+            <button className="btn primary" style={{ justifyContent: 'center' }} onClick={submit} disabled={saving}>
+              {saving ? 'Scheduling…' : 'Schedule session'}
+            </button>
           </div>
         </div>
       </div>

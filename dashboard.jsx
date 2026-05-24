@@ -233,31 +233,68 @@ const DashLevel = ({ member }) => {
 };
 
 // ─── Upcoming session card ────────────────────────────────────────────────────
+const startMsOf = (s) => {
+  const d = new Date(s.date + 'T00:00');
+  d.setHours(Math.floor(s.startH), Math.round((s.startH % 1) * 60), 0, 0);
+  return d.getTime();
+};
+
 const DashUpcoming = ({ onJoin }) => {
-  const s = SESSIONS.find(s => s.status === 'upcoming');
-  const [remaining, setRemaining] = useState(s.countdownMinutes);
+  const [sessions, setSessions] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
+  const [now, setNow] = useState(Date.now());
+
   useEffect(() => {
-    const t = setInterval(() => setRemaining(r => Math.max(0,r-1)), 60000);
+    let active = true;
+    window.fetchCalSessions().then(rows => { if (active) { setSessions(rows); setLoading(false); } });
+    return () => { active = false; };
+  }, []);
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 60000);
     return () => clearInterval(t);
   }, []);
-  const h = Math.floor(remaining/60), m = remaining%60;
 
-  const calSes = { id:s.id, type:s.type, title:s.title, date:s.date, startH:16.5, endH:17.5, mentor:s.mentor, mInit:s.mentorInitials, mColor:s.mentorColor, status:s.status, link:s.link, recurring:'weekly' };
+  const s = sessions.filter(x => x.status === 'upcoming').sort((a, b) => startMsOf(a) - startMsOf(b))[0];
+
+  if (loading) {
+    return (
+      <div className="card" style={{ padding:22 }}>
+        <div className="eyebrow" style={{ margin:0 }}>Next up</div>
+        <div style={{ fontSize:13, color:'var(--text-3)', marginTop:8 }}>Loading…</div>
+      </div>
+    );
+  }
+  if (!s) {
+    return (
+      <div className="card" style={{ padding:22 }}>
+        <div className="eyebrow" style={{ margin:0 }}>Next up</div>
+        <div className="display" style={{ fontSize:22, marginTop:8, lineHeight:1.1 }}>No upcoming sessions</div>
+        <div style={{ fontSize:13, color:'var(--text-2)', marginTop:6 }}>You're all caught up. Your mentor will schedule your next session soon.</div>
+      </div>
+    );
+  }
+
+  const remaining = Math.max(0, Math.round((startMsOf(s) - now) / 60000));
+  const days = Math.floor(remaining / 1440);
+  const h = Math.floor(remaining % 1440 / 60), m = remaining % 60;
+  const countdown = days > 0 ? `${days}d ${h}h` : h > 0 ? `${h}h ${m}m` : `${m}m`;
+  const dateLabel = new Date(s.date + 'T12:00').toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
+  const timeLabel = `${fmtH(s.startH)} – ${fmtH(s.endH)} GST`;
 
   return (
     <>
       <div className="card" style={{ padding:0, overflow:'hidden', cursor:'pointer' }} onClick={() => setModalOpen(true)}>
         <div style={{ padding:'14px 22px', borderBottom:'1px solid var(--border)', display:'flex', justifyContent:'space-between', alignItems:'center', background:'var(--bg-sunken)' }}>
           <div className="eyebrow" style={{ margin:0 }}>Next up · click to view agenda</div>
-          <div className="chip sapphire"><span className="dot"/>{s.type}</div>
+          <div className={"chip " + (s.type === 'Town Hall' ? 'coral' : 'sapphire')}><span className="dot"/>{s.type}</div>
         </div>
         <div style={{ padding:'20px 22px' }}>
-          <div className="sub" style={{ fontSize:13, color:'var(--text-3)', letterSpacing:'0.06em' }}>{s.date} · {s.time}</div>
+          <div className="sub" style={{ fontSize:13, color:'var(--text-3)', letterSpacing:'0.06em' }}>{dateLabel} · {timeLabel}</div>
           <div className="display" style={{ fontSize:24, marginTop:6, lineHeight:1.1, maxWidth:520 }}>{s.title}</div>
           <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginTop:18, gap:16, flexWrap:'wrap' }}>
             <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-              <Avatar initials={s.mentorInitials} color={s.mentorColor} size={32} />
+              <Avatar initials={s.mInit} color={s.mColor} size={32} />
               <div>
                 <div style={{ fontSize:13, fontWeight:600 }}>{s.mentor}</div>
                 <div style={{ fontSize:11, color:'var(--text-3)' }}>Your mentor</div>
@@ -266,14 +303,14 @@ const DashUpcoming = ({ onJoin }) => {
             <div style={{ display:'flex', alignItems:'center', gap:14 }}>
               <div style={{ textAlign:'right' }}>
                 <div className="eyebrow" style={{ fontSize:10 }}>Starts in</div>
-                <div style={{ fontFamily:'var(--ff-display)', fontSize:22, lineHeight:1 }}>{h>0?`${h}h ${m}m`:`${m}m`}</div>
+                <div style={{ fontFamily:'var(--ff-display)', fontSize:22, lineHeight:1 }}>{countdown}</div>
               </div>
               <button className="btn primary" onClick={e=>{e.stopPropagation();onJoin();}}>Join <Icon name="arrow-right" size={14} /></button>
             </div>
           </div>
         </div>
       </div>
-      {modalOpen && <SessionDetailModal session={calSes} onClose={() => setModalOpen(false)} isAdmin={false} />}
+      {modalOpen && <SessionDetailModal session={s} onClose={() => setModalOpen(false)} isAdmin={false} />}
     </>
   );
 };

@@ -7,16 +7,6 @@ const HOURS = Array.from({ length: HOUR_END - HOUR_START }, (_, i) => HOUR_START
 const DAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
-const CAL_SESSIONS = [
-{ id: 'cs1', type: '1:1', title: '1:1 — Brand kickoff', date: '2026-04-08', startH: 16.5, endH: 17.5, mentor: 'Ramy El-Sayed', mInit: 'RE', mColor: '#0F52BA', status: 'past', link: 'https://zoom.us/j/vantage' },
-{ id: 'cs2', type: '1:1', title: '1:1 — Positioning review', date: '2026-04-15', startH: 16.5, endH: 17.5, mentor: 'Ramy El-Sayed', mInit: 'RE', mColor: '#0F52BA', status: 'past', link: 'https://zoom.us/j/vantage', recurring: 'weekly' },
-{ id: 'cs3', type: '1:1', title: '1:1 — Career check-in', date: '2026-04-22', startH: 16.5, endH: 17.5, mentor: 'Ramy El-Sayed', mInit: 'RE', mColor: '#0F52BA', status: 'upcoming', link: 'https://zoom.us/j/vantage', recurring: 'weekly' },
-{ id: 'cs4', type: 'Town Hall', title: 'April Town Hall', date: '2026-04-30', startH: 19, endH: 20.25, mentor: 'All Mentorship', mInit: 'MG', mColor: '#0A0A0A', status: 'upcoming', link: 'https://zoom.us/j/townhall', recurring: 'monthly' },
-{ id: 'cs5', type: '1:1', title: '1:1 — CV rewrite review', date: '2026-05-05', startH: 17, endH: 18, mentor: 'Ramy El-Sayed', mInit: 'RE', mColor: '#0F52BA', status: 'upcoming', link: 'https://zoom.us/j/vantage', recurring: 'weekly' },
-{ id: 'cs6', type: '1:1', title: '1:1 — Mid-month check', date: '2026-05-13', startH: 16.5, endH: 17.5, mentor: 'Ramy El-Sayed', mInit: 'RE', mColor: '#0F52BA', status: 'upcoming', link: 'https://zoom.us/j/vantage', recurring: 'weekly' },
-{ id: 'cs7', type: 'Town Hall', title: 'May Town Hall', date: '2026-05-28', startH: 19, endH: 20.25, mentor: 'All Mentorship', mInit: 'MG', mColor: '#0A0A0A', status: 'upcoming', link: 'https://zoom.us/j/townhall', recurring: 'monthly' }];
-
-
 const DEFAULT_AGENDA = {
   '1:1': [
   "Review last session's action items",
@@ -52,6 +42,75 @@ function getWeekStart(d) {
 function addDays(d, n) {const r = new Date(d);r.setDate(r.getDate() + n);return r;}
 
 function sesColor(type) {return type === 'Town Hall' ? '#FF6B6B' : '#0F52BA';}
+
+// ---------- Live session data (Supabase) ----------
+function timeToH(t) {
+  if (!t) return 0;
+  const [h, m] = String(t).split(':');
+  return parseInt(h, 10) + (parseInt(m, 10) || 0) / 60;
+}
+function nameInitials(name) {
+  if (!name) return '';
+  return name.trim().split(/\s+/).map((w) => w[0]).join('').toUpperCase().slice(0, 2);
+}
+function sessionIsPast(dateISO, endH) {
+  const end = new Date(dateISO + 'T00:00');
+  end.setHours(Math.floor(endH), Math.round((endH % 1) * 60), 0, 0);
+  return end < new Date();
+}
+async function fetchSessions() {
+  const { data, error } = await window._supabase.
+  from('sessions').
+  select('*').
+  order('session_date', { ascending: true }).
+  order('start_time', { ascending: true });
+  if (error) {console.error('Failed to load sessions:', error.message);return [];}
+  return data || [];
+}
+// Map a DB row to the shape the calendar grid expects.
+function mapToCalSession(r) {
+  const startH = timeToH(r.start_time);
+  const endH = timeToH(r.end_time);
+  const isTH = r.type === 'Town Hall';
+  return {
+    id: r.id,
+    type: r.type,
+    title: r.title,
+    date: r.session_date,
+    startH, endH,
+    mentor: r.mentor_name || 'MEGA',
+    mInit: nameInitials(r.mentor_name) || (isTH ? 'MG' : 'ME'),
+    mColor: isTH ? '#0A0A0A' : '#0F52BA',
+    status: sessionIsPast(r.session_date, endH) ? 'past' : 'upcoming',
+    link: r.meeting_link || '',
+    recurring: r.recurrence && r.recurrence !== 'does-not-repeat' ? r.recurrence : undefined,
+    isTownHall: isTH };
+
+}
+// Map a DB row to the shape the Sessions list view expects.
+function mapToListSession(r) {
+  const startH = timeToH(r.start_time);
+  const endH = timeToH(r.end_time);
+  const d = new Date(r.session_date + 'T12:00');
+  const isTH = r.type === 'Town Hall';
+  return {
+    id: r.id,
+    type: r.type,
+    title: r.title,
+    mentor: r.mentor_name || 'MEGA',
+    mentorInitials: nameInitials(r.mentor_name) || (isTH ? 'MG' : 'ME'),
+    mentorColor: isTH ? '#0A0A0A' : '#0F52BA',
+    date: d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
+    dateISO: r.session_date,
+    time: `${fmtH(startH)} – ${fmtH(endH)} GST`,
+    startH, endH,
+    status: sessionIsPast(r.session_date, endH) ? 'past' : 'upcoming',
+    link: r.meeting_link || '',
+    notes: null };
+
+}
+async function fetchCalSessions() {return (await fetchSessions()).map(mapToCalSession);}
+async function fetchListSessions() {return (await fetchSessions()).map(mapToListSession);}
 
 // ---------- Session Detail Modal ----------
 function SessionDetailModal({ session, onClose, isAdmin }) {
@@ -120,14 +179,9 @@ function SessionDetailModal({ session, onClose, isAdmin }) {
             </div>
             <div>
               <div className="eyebrow" style={{ marginBottom: 4 }}>Attending</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
-                {['AK', 'RE'].map((ini, k) =>
-                <Avatar key={k} initials={ini} color={['#0F52BA', '#4FB7A6'][k]} size={22} style={{ marginLeft: k > 0 ? -6 : 0, border: '2px solid var(--bg-elev)' }} />
-                )}
-                {isTH && <>
-                  <Avatar initials="NA" color="#E8B24C" size={22} style={{ marginLeft: -6, border: '2px solid var(--bg-elev)' }} />
-                  <span style={{ fontSize: 11, color: 'var(--text-3)', marginLeft: 6 }}>+211 members</span>
-                </>}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Avatar initials={session.mInit} color={session.mColor} size={22} style={{ border: '2px solid var(--bg-elev)' }} />
+                <span style={{ fontSize: 11, color: 'var(--text-3)' }}>{isTH ? 'All members' : 'You + ' + (session.mentor || 'your mentor')}</span>
               </div>
             </div>
           </div>
@@ -372,13 +426,20 @@ function DayView({ sessions, date, filters, onSelect }) {
 }
 
 // ---------- Main Calendar ----------
-function Calendar({ isAdmin }) {
+function Calendar({ isAdmin, reloadKey }) {
   const TODAY = new Date();
   const [view, setView] = useState('month');
   const [date, setDate] = useState(new Date());
   const [filters, setFilters] = useState({ '1:1': true, 'Town Hall': true });
   const [selected, setSelected] = useState(null);
   const [recurringType, setRecurringType] = useState('does-not-repeat');
+  const [sessions, setSessions] = useState([]);
+
+  React.useEffect(() => {
+    let active = true;
+    fetchCalSessions().then((rows) => {if (active) setSessions(rows);});
+    return () => {active = false;};
+  }, [reloadKey]);
 
   const navigate = (delta) => {
     const d = new Date(date);
@@ -420,7 +481,7 @@ function Calendar({ isAdmin }) {
       </div>
 
       {/* Filter bar + time summary */}
-      <CalendarFilterBar filters={filters} setFilters={setFilters} sessions={CAL_SESSIONS} view={view} date={date} />
+      <CalendarFilterBar filters={filters} setFilters={setFilters} sessions={sessions} view={view} date={date} />
 
       {/* Admin: recurring option */}
       {isAdmin &&
@@ -438,13 +499,13 @@ function Calendar({ isAdmin }) {
       }
 
       {/* Active view */}
-      {view === 'month' && <MonthView sessions={CAL_SESSIONS} date={date} filters={filters} onSelect={setSelected} />}
-      {view === 'week' && <WeekView sessions={CAL_SESSIONS} date={date} filters={filters} onSelect={setSelected} />}
-      {view === 'day' && <DayView sessions={CAL_SESSIONS} date={date} filters={filters} onSelect={setSelected} />}
+      {view === 'month' && <MonthView sessions={sessions} date={date} filters={filters} onSelect={setSelected} />}
+      {view === 'week' && <WeekView sessions={sessions} date={date} filters={filters} onSelect={setSelected} />}
+      {view === 'day' && <DayView sessions={sessions} date={date} filters={filters} onSelect={setSelected} />}
 
       {selected && <SessionDetailModal session={selected} onClose={() => setSelected(null)} isAdmin={isAdmin} />}
     </div>);
 
 }
 
-Object.assign(window, { Calendar, SessionDetailModal, CAL_SESSIONS, fmtH });
+Object.assign(window, { Calendar, SessionDetailModal, fmtH, fetchSessions, fetchCalSessions, fetchListSessions, mapToCalSession, mapToListSession });

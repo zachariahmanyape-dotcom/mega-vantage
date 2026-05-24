@@ -2,23 +2,26 @@
 
 function SessionsScreen({ onJoin, isAdmin }) {
   const [view, setView] = useState('calendar');
-  const [selectedList, setSelectedList] = useState(null);
+  const [sessions, setSessions] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const upcoming = SESSIONS.filter((s) => s.status === 'upcoming');
-  const past = SESSIONS.filter((s) => s.status === 'past');
+  React.useEffect(() => {
+    let active = true;
+    window.fetchListSessions().then((rows) => {if (active) {setSessions(rows);setLoading(false);}});
+    return () => {active = false;};
+  }, []);
 
-  // Convert SESSIONS to CAL_SESSIONS format for modal
+  const upcoming = sessions.filter((s) => s.status === 'upcoming');
+  const past = sessions.filter((s) => s.status === 'past');
+
+  // Convert a list session to the shape the detail modal expects
   function toCalSes(s) {
     return {
       ...s,
-      startH: s.time ? parseFloat(s.time.replace(/(\d+):(\d+)\s*(AM|PM).*/, (_, h, m, p) => {
-        let hh = parseInt(h);if (p === 'PM' && hh !== 12) hh += 12;return hh + parseInt(m) / 60;
-      })) : 16.5,
-      endH: s.time ? parseFloat(s.time.replace(/.*–\s*(\d+):(\d+)\s*(AM|PM).*/, (_, h, m, p) => {
-        let hh = parseInt(h);if (p === 'PM' && hh !== 12) hh += 12;return hh + parseInt(m) / 60;
-      })) : 17.5,
-      mentor: s.mentor || 'Ramy El-Sayed',
-      mInit: s.mentorInitials || 'RE',
+      startH: s.startH != null ? s.startH : 16.5,
+      endH: s.endH != null ? s.endH : 17.5,
+      mentor: s.mentor || 'MEGA',
+      mInit: s.mentorInitials || 'ME',
       mColor: s.mentorColor || '#0F52BA',
       date: s.dateISO || s.date
     };
@@ -101,13 +104,23 @@ function SessionsScreen({ onJoin, isAdmin }) {
       {view === 'list' &&
       <div>
           <div className="eyebrow" style={{ marginBottom: 10 }}>Upcoming · {upcoming.length}</div>
+          {loading ?
+          <div style={{ padding: '24px 0', color: 'var(--text-3)', fontSize: 13 }}>Loading sessions…</div> :
+          upcoming.length === 0 ?
+          <div className="card" style={{ padding: '28px 22px', textAlign: 'center', color: 'var(--text-3)', fontSize: 13 }}>No upcoming sessions scheduled yet. Your mentor will book your next one soon.</div> :
+
           <div className="stack" style={{ gap: 12 }}>
-            {upcoming.map((s) => <ListCard key={s.id} s={s} />)}
-          </div>
+              {upcoming.map((s) => <ListCard key={s.id} s={s} />)}
+            </div>
+          }
           <div className="eyebrow" style={{ marginTop: 28, marginBottom: 10 }}>Past · {past.length}</div>
+          {!loading && past.length === 0 ?
+          <div style={{ padding: '16px 0', color: 'var(--text-3)', fontSize: 13 }}>No past sessions yet.</div> :
+
           <div className="stack" style={{ gap: 12 }}>
-            {past.map((s) => <ListCard key={s.id} s={s} past />)}
-          </div>
+              {past.map((s) => <ListCard key={s.id} s={s} past />)}
+            </div>
+          }
         </div>
       }
     </>);

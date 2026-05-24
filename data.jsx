@@ -146,77 +146,6 @@ const GOALS = [
   },
 ];
 
-const SESSIONS = [
-  {
-    id: "s1",
-    type: "1:1",
-    title: "1:1 with Zachariah — career direction check-in",
-    mentor: "Zachariah Rampa",
-    mentorInitials: "ZR",
-    mentorColor: "#0F52BA",
-    date: "Wed, Apr 22",
-    dateISO: "2026-04-22",
-    time: "4:30 PM – 5:30 PM GST",
-    countdownMinutes: 72, // arbitrary for upcoming card
-    status: "upcoming",
-    link: "https://zoom.us/j/vantage-amira",
-  },
-  {
-    id: "s2",
-    type: "Town Hall",
-    title: "April Town Hall — Guest: Lina Haddad on portfolio careers",
-    mentor: "Founder + all members",
-    mentorInitials: "MEGA",
-    mentorColor: "#0A0A0A",
-    date: "Thu, Apr 30",
-    dateISO: "2026-04-30",
-    time: "7:00 PM – 8:15 PM GST",
-    countdownMinutes: 60*24*11,
-    status: "upcoming",
-    link: "https://zoom.us/j/vantage-townhall",
-  },
-  {
-    id: "s3",
-    type: "1:1",
-    title: "1:1 with Ramy — CV rewrite review",
-    mentor: "Ramy El-Sayed",
-    mentorInitials: "RE",
-    mentorColor: "#0F52BA",
-    date: "Mon, May 5",
-    dateISO: "2026-05-05",
-    time: "5:00 PM – 6:00 PM GST",
-    countdownMinutes: 60*24*16,
-    status: "upcoming",
-    link: "https://zoom.us/j/vantage-amira",
-  },
-  {
-    id: "s4",
-    type: "1:1",
-    title: "1:1 with Ramy — personal brand kickoff",
-    mentor: "Ramy El-Sayed",
-    mentorInitials: "RE",
-    mentorColor: "#0F52BA",
-    date: "Wed, Apr 8",
-    dateISO: "2026-04-08",
-    time: "4:30 PM – 5:30 PM GST",
-    status: "past",
-    notes: "Discussed positioning around 'analyst who ships'. Action items logged as task #t1.",
-  },
-  {
-    id: "s5",
-    type: "Town Hall",
-    title: "March Town Hall — Career capital",
-    mentor: "Founder + all members",
-    mentorInitials: "MEGA",
-    mentorColor: "#0A0A0A",
-    date: "Thu, Mar 27",
-    dateISO: "2026-03-27",
-    time: "7:00 PM – 8:15 PM GST",
-    status: "past",
-    notes: "Recording + slides attached. Follow-up worksheet in Resources.",
-  },
-];
-
 const RESOURCES = [
   { id: "r1", type: "video",    title: "Energy vs. hours: a new way to plan your week", folder: "Foundations / Core", subject: "Time Management", plan: "Both", addedDays: 1,  length: "14 min" },
   { id: "r2", type: "doc",      title: "CV Rewrite — Results-First template",           folder: "Breakthrough / Career Lab", subject: "CV Development", plan: "Breakthrough", addedDays: 2, length: "PDF · 6 pages" },
@@ -328,4 +257,4 @@ function Icon({name, size=18, stroke=1.8, style, className}) {
 }
 
 // exports
-Object.assign(window, { Icon, SUBJECTS, MEMBER, LEVELS, TASKS, GOALS, SESSIONS, RESOURCES, CHANNELS, CHAT_MESSAGES, BADGES, ADMIN_MEMBERS });
+Object.assign(window, { Icon, SUBJECTS, MEMBER, LEVELS, TASKS, GOALS, RESOURCES, CHANNELS, CHAT_MESSAGES, BADGES, ADMIN_MEMBERS });
