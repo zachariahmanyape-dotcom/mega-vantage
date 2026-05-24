@@ -29,10 +29,9 @@ function FocusTimerModal({ tasks, goals, setTasks, onStart, onClose }) {
   const [savingNew, setSavingNew] = useState(false);
   const [errNew, setErrNew] = useState('');
 
-  const options = [
-    ...tasks.filter(t => !t.subtasks.every(s=>s.done)).map(t => ({ id:t.id, label:t.title, subject:t.subject, kind:'task' })),
-    ...goals.map(g => ({ id:g.id, label:g.title, subject:null, kind:'goal' })),
-  ];
+  const options = tasks
+    .filter(t => !t.is_completed)
+    .map(t => ({ id:t.id, label:t.title, subject:t.subject, kind:'task' }));
   const filtered = options.filter(o => q==='' || o.label.toLowerCase().includes(q.toLowerCase()));
   const noTaskMatch = q.trim() !== '' && filtered.filter(o => o.kind === 'task').length === 0;
 
@@ -62,21 +61,21 @@ function FocusTimerModal({ tasks, goals, setTasks, onStart, onClose }) {
       <div className="card" style={{ position:'fixed', top:'50%', left:'50%', transform:'translate(-50%,-50%)', width:460, maxHeight:'78vh', overflow:'auto', zIndex:201, padding:0, boxShadow:'var(--shadow-3)' }}>
         <div style={{ padding:'22px 24px', borderBottom:'1px solid var(--border)' }}>
           <div className="display" style={{ fontSize:26, marginBottom:4 }}>Start a focus session</div>
-          <div style={{ fontSize:13, color:'var(--text-2)' }}>Link this session to a task or goal to track time.</div>
+          <div style={{ fontSize:13, color:'var(--text-2)' }}>Link this session to a task to track your time.</div>
         </div>
         <div style={{ padding:'14px 24px 0' }}>
           <div style={{ position:'relative' }}>
             <Icon name="search" size={14} style={{ position:'absolute', left:12, top:12, color:'var(--text-3)' }} />
-            <input className="input" style={{ paddingLeft:34, fontSize:13 }} placeholder="Search tasks and goals…" value={q} onChange={e=>setQ(e.target.value)} />
+            <input className="input" style={{ paddingLeft:34, fontSize:13 }} placeholder="Search your tasks…" value={q} onChange={e=>setQ(e.target.value)} />
           </div>
         </div>
         <div style={{ padding:'12px 24px', maxHeight:280, overflow:'auto' }}>
-          {['task','goal'].map(kind => {
+          {['task'].map(kind => {
             const items = filtered.filter(o=>o.kind===kind);
             if (!items.length) return null;
             return (
               <div key={kind} style={{ marginBottom:12 }}>
-                <div className="eyebrow" style={{ marginBottom:6 }}>{kind==='task'?'Tasks':'Goals'}</div>
+                <div className="eyebrow" style={{ marginBottom:6 }}>Tasks</div>
                 {items.map(o => (
                   <button key={o.id} onClick={() => setSelected(o)} style={{
                     display:'flex', alignItems:'center', gap:10, padding:'9px 10px', width:'100%',
