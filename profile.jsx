@@ -15,6 +15,17 @@ function BadgeTile({ badge }) {
 function ProfileScreen({ member, theme, setTheme, onSignOut }) {
   const earned = BADGES.filter(b=>b.earned).length;
 
+  const [sessions, setSessions] = React.useState([]);
+  React.useEffect(() => {
+    let active = true;
+    window.fetchListSessions().then(rows => { if (active) setSessions(rows); });
+    return () => { active = false; };
+  }, []);
+  const pastSessions = sessions.filter(s => s.status === 'past');
+  const upcomingCount = sessions.filter(s => s.status === 'upcoming').length;
+  const totalMin = pastSessions.reduce((a, s) => a + Math.max(0, (s.endH - s.startH) * 60), 0);
+  const totalLearning = `${Math.floor(totalMin / 60)}h ${Math.round(totalMin % 60)}m`;
+
   return (
     <>
       <div className="page-header">
@@ -53,9 +64,9 @@ function ProfileScreen({ member, theme, setTheme, onSignOut }) {
             </div>
           </div>
         </div>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', borderTop:'1px solid var(--border)' }}>
-          {[['Total learning','87h 12m'],['Sessions',`${member.stats.sessions} done`],['Modules',`${member.stats.modules} done`],['Longest streak','22 days']].map(([l,v],i) => (
-            <div key={l} style={{ padding:'16px 20px', borderRight:i<3?'1px solid var(--border)':'none' }}>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', borderTop:'1px solid var(--border)' }}>
+          {[['Total learning', totalLearning],['Sessions', `${pastSessions.length} done`],['Upcoming', `${upcomingCount} scheduled`]].map(([l,v],i) => (
+            <div key={l} style={{ padding:'16px 20px', borderRight:i<2?'1px solid var(--border)':'none' }}>
               <div className="eyebrow" style={{ fontSize:10 }}>{l}</div>
               <div style={{ fontSize:17, fontWeight:700, marginTop:4 }}>{v}</div>
             </div>
