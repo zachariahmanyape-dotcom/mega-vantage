@@ -111,15 +111,10 @@ function Topbar({ theme, setTheme, onOpenTweaks, notifCount, onOpenNotifs }) {
   );
 }
 
-// Notification drawer (simple popover)
-function NotifPanel({ open, onClose }) {
+// Notification drawer (simple popover) — driven by real upcoming sessions
+function NotifPanel({ open, onClose, sessions }) {
   if (!open) return null;
-  const notifs = [
-    { t: "Session reminder: 1:1 with Ramy in 90 minutes", when: "just now", kind:"session" },
-    { t: "New task assigned: Refactor CV — results-first formatting", when: "2h ago", kind:"task" },
-    { t: "Session reminder: April Town Hall in 90 minutes", when: "Apr 30", kind:"session" },
-    { t: "New task assigned: Prepare two questions for Ramy", when: "Yesterday", kind:"task" },
-  ];
+  const items = (sessions || []).slice(0, 6);
   return (
     <>
       <div onClick={onClose} style={{ position:'fixed', inset:0, zIndex:40 }} />
@@ -129,30 +124,40 @@ function NotifPanel({ open, onClose }) {
       }}>
         <div style={{ padding:'14px 18px', borderBottom:'1px solid var(--border)', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
           <div className="sub" style={{ fontSize:13, textTransform:'uppercase', letterSpacing:'0.1em', color:'var(--text-3)' }}>Notifications</div>
-          <div style={{ fontSize:11, color:'var(--text-3)' }}>{notifs.length} new</div>
+          <div style={{ fontSize:11, color:'var(--text-3)' }}>{items.length} upcoming</div>
         </div>
-        <div>
-          {notifs.map((n,i) => (
-            <div key={i} style={{
-              padding:'12px 18px',
-              borderBottom:i===notifs.length-1 ? 'none' : '1px solid var(--border)',
-              display:'flex', gap:12, alignItems:'flex-start'
-            }}>
-              <div style={{
-                width:28, height:28, flex:'0 0 28px', borderRadius:8,
-                display:'grid', placeItems:'center',
-                background: n.kind==='session' ? 'var(--sapphire-100)' : 'var(--coral-100)',
-                color: n.kind==='session' ? 'var(--sapphire)' : 'var(--coral)'
-              }}>
-                <Icon name={n.kind==='session' ? 'sessions' : 'tasks'} size={14} />
-              </div>
-              <div style={{ flex:1 }}>
-                <div style={{ fontSize:13, lineHeight:1.45 }}>{n.t}</div>
-                <div style={{ fontSize:11, color:'var(--text-3)', marginTop:3 }}>{n.when}</div>
-              </div>
-            </div>
-          ))}
-        </div>
+        {items.length === 0 ? (
+          <div style={{ padding:'28px 18px', textAlign:'center', fontSize:13, color:'var(--text-3)' }}>You're all caught up — no upcoming sessions.</div>
+        ) : (
+          <div>
+            {items.map((s,i) => {
+              const d = new Date(s.date + 'T12:00');
+              const isTH = s.type === 'Town Hall';
+              return (
+                <div key={s.id} style={{
+                  padding:'12px 18px',
+                  borderBottom:i===items.length-1 ? 'none' : '1px solid var(--border)',
+                  display:'flex', gap:12, alignItems:'flex-start'
+                }}>
+                  <div style={{
+                    width:28, height:28, flex:'0 0 28px', borderRadius:8,
+                    display:'grid', placeItems:'center',
+                    background: isTH ? 'var(--coral-100)' : 'var(--sapphire-100)',
+                    color: isTH ? 'var(--coral)' : 'var(--sapphire)'
+                  }}>
+                    <Icon name="sessions" size={14} />
+                  </div>
+                  <div style={{ flex:1 }}>
+                    <div style={{ fontSize:13, lineHeight:1.45 }}>{s.title}</div>
+                    <div style={{ fontSize:11, color:'var(--text-3)', marginTop:3 }}>
+                      {d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}{window.fmtH ? ' · ' + window.fmtH(s.startH) : ''}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
         <div style={{ padding:'10px 18px', textAlign:'center', borderTop:'1px solid var(--border)', fontSize:12, color:'var(--text-3)' }}>
           Manage notification preferences in <span style={{ color:'var(--accent)', fontWeight:600 }}>Profile → Settings</span>
         </div>

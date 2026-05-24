@@ -592,6 +592,7 @@ function App() {
 
   const [liveTasks, setLiveTasks] = useState([]);
   const [liveGoals, setLiveGoals] = useState([]);
+  const [upcomingSessions, setUpcomingSessions] = useState([]);
   const [dataLoading, setDataLoading] = useState(true);
 
   const loadUserData = async (userId) => {
@@ -619,6 +620,10 @@ function App() {
     })) : []);
     setLiveGoals(goalsRes.data || []);
     setDataLoading(false);
+    try {
+      const cs = await window.fetchCalSessions();
+      setUpcomingSessions((cs || []).filter(s => s.status === 'upcoming'));
+    } catch (e) { /* sessions are non-critical for load */ }
   };
 
   useEffect(() => {
@@ -942,12 +947,12 @@ function App() {
           <Topbar
             theme={tw.theme} setTheme={t => updateTweak({ theme: t })}
             onOpenTweaks={() => setTweaksOpen(true)}
-            notifCount={2} onOpenNotifs={() => setNotifOpen(true)} />
+            notifCount={upcomingSessions.length} onOpenNotifs={() => setNotifOpen(true)} />
           {screen}
         </div>
       </main>
 
-      <NotifPanel open={notifOpen} onClose={() => setNotifOpen(false)} />
+      <NotifPanel open={notifOpen} onClose={() => setNotifOpen(false)} sessions={upcomingSessions} />
       <TweaksPanel
         open={tweaksOpen} onClose={() => setTweaksOpen(false)}
         theme={tw.theme} setTheme={t => updateTweak({ theme: t })}
