@@ -57,9 +57,10 @@ function EffortImpactMatrix({ point }) {
 }
 
 function TaskRow({ task, expanded, onToggle, onCheck, onSubCheck }) {
-  const done = task.subtasks.filter((s) => s.done).length;
-  const pct = Math.round(done / task.subtasks.length * 100);
-  const completed = done === task.subtasks.length;
+  const hasSubs = task.subtasks && task.subtasks.length > 0;
+  const done = hasSubs ? task.subtasks.filter((s) => s.done).length : 0;
+  const completed = !!task.is_completed;
+  const pct = completed ? 100 : (hasSubs ? Math.round(done / task.subtasks.length * 100) : 0);
   const timeSpent = window.FOCUS_LOG?.[task.id] || 0;
 
   return (
@@ -76,8 +77,7 @@ function TaskRow({ task, expanded, onToggle, onCheck, onSubCheck }) {
           </div>
           <div style={{ display: 'flex', gap: 10, marginTop: 8, alignItems: 'center', fontSize: 12, color: 'var(--text-3)', flexWrap: 'wrap' }}>
             <DueDateBadge due={task.due} dueSort={task.dueSort} />
-            <span>{done} of {task.subtasks.length} subtasks</span>
-            <span style={{ opacity: 0.5 }}>·</span>
+            {hasSubs && <><span>{done} of {task.subtasks.length} subtasks</span><span style={{ opacity: 0.5 }}>·</span></>}
             <span className="sub" style={{ color: 'var(--text-2)' }}>+{task.points} XP</span>
             {timeSpent > 0 && <span style={{ color: 'var(--teal-600)', fontWeight: 600 }}>⏱ {timeSpent}m focused</span>}
           </div>
@@ -91,7 +91,8 @@ function TaskRow({ task, expanded, onToggle, onCheck, onSubCheck }) {
       {expanded &&
       <div style={{ padding: '18px 20px 20px', borderTop: '1px solid var(--border)', background: 'var(--bg-sunken)', display: 'grid', gridTemplateColumns: '1fr 180px', gap: 24 }}>
           <div>
-            <div className="eyebrow" style={{ marginBottom: 10 }}>Subtasks</div>
+            <div className="eyebrow" style={{ marginBottom: 10 }}>{hasSubs ? 'Subtasks' : 'Details'}</div>
+            {!hasSubs && <div style={{ fontSize: 13, color: 'var(--text-3)' }}>{task.notes || 'No subtasks for this task.'}</div>}
             <div className="stack" style={{ gap: 8 }}>
               {task.subtasks.map((s, i) =>
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 8, background: 'var(--bg-elev)', border: '1px solid var(--border)' }}>
@@ -382,8 +383,13 @@ function CreateItemModal({ goals, defaultKind, onClose, onTaskCreated, onGoalCre
   const [dueDate, setDueDate] = React.useState('');
   const [goalId, setGoalId] = React.useState('');
   const [targetDate, setTargetDate] = React.useState('');
+  const [goalTasks, setGoalTasks] = React.useState([]);
   const [saving, setSaving] = React.useState(false);
   const [err, setErr] = React.useState('');
+
+  const addGoalTask = () => setGoalTasks(g => [...g, { title: '', due: '' }]);
+  const updateGoalTask = (i, field, val) => setGoalTasks(g => g.map((t, j) => j === i ? { ...t, [field]: val } : t));
+  const removeGoalTask = (i) => setGoalTasks(g => g.filter((_, j) => j !== i));
 
   const submit = async () => {
     setErr('');
@@ -405,16 +411,26 @@ function CreateItemModal({ goals, defaultKind, onClose, onTaskCreated, onGoalCre
       if (error) { setErr(error.message); return; }
       onTaskCreated(mapTaskRow(data));
     } else {
-      const { data, error } = await window._supabase.from('goals').insert({
+      const { data: goal, error } = await window._supabase.from('goals').insert({
         user_id: user.id,
         title: title.trim(),
         description: description.trim() || null,
         target_date: targetDate || null,
         status: 'active',
       }).select().single();
+      if (error) { setSaving(false); setErr(error.message); return; }
+      let createdTasks = [];
+      const rows = goalTasks.filter(t => t.title.trim()).map(t => ({
+        user_id: user.id, title: t.title.trim(), due_date: t.due || null,
+        goal_id: goal.id, priority: 'Routine', order_index: 0,
+      }));
+      if (rows.length) {
+        const { data: tdata, error: terr } = await window._supabase.from('tasks').insert(rows).select('*, roadmap_step:roadmap_steps(title, goal_id)');
+        if (terr) { setSaving(false); setErr('Goal created, but adding tasks failed: ' + terr.message); return; }
+        createdTasks = (tdata || []).map(mapTaskRow);
+      }
       setSaving(false);
-      if (error) { setErr(error.message); return; }
-      onGoalCreated(data);
+      onGoalCreated(goal, createdTasks);
     }
     onClose();
   };
@@ -475,10 +491,27 @@ function CreateItemModal({ goals, defaultKind, onClose, onTaskCreated, onGoalCre
                 </div>
               </>
             ) : (
-              <div>
-                <div className="eyebrow" style={{ marginBottom:6 }}>Target date</div>
-                <input className="input" type="date" value={targetDate} onChange={e=>setTargetDate(e.target.value)} />
-              </div>
+              <>
+                <div>
+                  <div className="eyebrow" style={{ marginBottom:6 }}>Target date</div>
+                  <input className="input" type="date" value={targetDate} onChange={e=>setTargetDate(e.target.value)} />
+                </div>
+                <div>
+                  <div className="eyebrow" style={{ marginBottom:6 }}>Tasks for this goal (optional)</div>
+                  {goalTasks.length > 0 &&
+                    <div className="stack" style={{ gap:8, marginBottom:8 }}>
+                      {goalTasks.map((t,i) =>
+                        <div key={i} style={{ display:'flex', gap:8, alignItems:'center' }}>
+                          <input className="input" placeholder="Task title" value={t.title} onChange={e=>updateGoalTask(i,'title',e.target.value)} style={{ flex:1, fontSize:13 }} />
+                          <input className="input" type="date" value={t.due} onChange={e=>updateGoalTask(i,'due',e.target.value)} style={{ width:140, fontSize:13 }} title="Due date (optional)" />
+                          <button className="btn ghost sm" onClick={()=>removeGoalTask(i)} style={{ flexShrink:0 }}>✕</button>
+                        </div>
+                      )}
+                    </div>
+                  }
+                  <button className="btn ghost sm" onClick={addGoalTask}><Icon name="plus" size={12} /> Add task</button>
+                </div>
+              </>
             )}
 
             {err && <div style={{ fontSize:12, color:'var(--coral)', background:'var(--coral-100)', borderRadius:8, padding:'8px 12px' }}>{err}</div>}
@@ -498,6 +531,28 @@ function TasksScreen({ tasks, setTasks, goals, setGoals, dataLoading, onReward }
   const [tab, setTab] = useState('tasks');
   const [expanded, setExpanded] = useState(null);
   const [creating, setCreating] = useState(false);
+  const [taskFilter, setTaskFilter] = useState('all');
+  const [showCompleted, setShowCompleted] = useState(false);
+
+  const dayDiff = (dd) => {
+    if (!dd) return null;
+    const d = new Date(dd + 'T00:00:00');
+    const t = new Date(); t.setHours(0, 0, 0, 0);
+    return Math.round((d - t) / 86400000);
+  };
+  const matchesDue = (t, f) => {
+    if (f === 'all') return true;
+    const diff = dayDiff(t.due_date);
+    if (diff === null) return false;
+    if (f === 'today') return diff <= 0;
+    if (f === 'tomorrow') return diff === 1;
+    if (f === 'week') return diff <= 7;
+    return true;
+  };
+  const openTasks = tasks.filter(t => !t.is_completed);
+  const completedTasks = tasks.filter(t => t.is_completed);
+  const visibleOpen = openTasks.filter(t => matchesDue(t, taskFilter));
+  const openCount = (f) => openTasks.filter(t => matchesDue(t, f)).length;
 
   const tasksLoading = dataLoading;
   const goalsLoading = dataLoading;
@@ -548,30 +603,50 @@ function TasksScreen({ tasks, setTasks, goals, setGoals, dataLoading, onReward }
 
       {tab === 'tasks' &&
       <div>
-          {/* Priority legend */}
-          <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
-            {Object.entries(PRIORITY_CONFIG).map(([k, v]) =>
-          <span key={k} style={{ fontSize: 11, padding: '3px 9px', borderRadius: 999, background: v.bg, color: v.color, border: '1px solid ' + v.color + '55', fontFamily: 'var(--ff-sub)', fontWeight: 700 }}>{k}</span>
-          )}
-            <span style={{ fontSize: 11, color: 'var(--text-3)', alignSelf: 'center', marginLeft: 4 }}>· Drag tasks in the matrix to reprioritize</span>
+          <div className="seg" style={{ marginBottom: 16, display: 'inline-flex', flexWrap: 'wrap' }}>
+            {[['today', 'Today'], ['tomorrow', 'Tomorrow'], ['week', 'Next 7 days'], ['all', 'All']].map(([k, label]) =>
+            <button key={k} className={taskFilter === k ? 'on' : ''} onClick={() => setTaskFilter(k)}>{label} ({openCount(k)})</button>
+            )}
           </div>
           {tasksLoading
             ? <div style={{ color: 'var(--text-3)', fontSize: 14, padding: 20 }}>Loading tasks...</div>
-            : tasks.length === 0
-            ? <div className="card" style={{ padding: 32, textAlign: 'center', color: 'var(--text-3)' }}>
-                <div style={{ fontSize: 32, marginBottom: 12 }}>✅</div>
-                <div style={{ fontFamily: 'var(--ff-display)', fontSize: 22, marginBottom: 8 }}>No tasks yet</div>
-                <div style={{ fontSize: 14 }}>Tasks from your growth roadmap will appear here.</div>
-              </div>
-            : <div className="stack" style={{ gap: 12 }}>
-                {tasks.map((t) =>
-                  <TaskRow key={t.id} task={t}
-                    expanded={expanded === t.id}
-                    onToggle={() => setExpanded(expanded === t.id ? null : t.id)}
-                    onCheck={() => completeTask(t.id)}
-                    onSubCheck={(i) => toggleSub(t.id, i)} />
-                )}
-              </div>
+            : <>
+                {visibleOpen.length === 0
+                  ? <div className="card" style={{ padding: 32, textAlign: 'center', color: 'var(--text-3)' }}>
+                      <div style={{ fontSize: 32, marginBottom: 12 }}>{openTasks.length === 0 ? '✅' : '🗓️'}</div>
+                      <div style={{ fontFamily: 'var(--ff-display)', fontSize: 22, marginBottom: 8 }}>{openTasks.length === 0 ? 'No open tasks' : 'Nothing in this view'}</div>
+                      <div style={{ fontSize: 14 }}>{openTasks.length === 0 ? 'Create one with the + New button.' : 'No tasks match this date range.'}</div>
+                    </div>
+                  : <div className="stack" style={{ gap: 12 }}>
+                      {visibleOpen.map((t) =>
+                      <TaskRow key={t.id} task={t}
+                        expanded={expanded === t.id}
+                        onToggle={() => setExpanded(expanded === t.id ? null : t.id)}
+                        onCheck={() => completeTask(t.id)}
+                        onSubCheck={(i) => toggleSub(t.id, i)} />
+                      )}
+                    </div>
+                }
+                {completedTasks.length > 0 &&
+                <div style={{ marginTop: 24 }}>
+                    <button onClick={() => setShowCompleted(s => !s)} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-2)', fontSize: 13, fontWeight: 600, padding: '4px 0' }}>
+                      <Icon name={showCompleted ? 'chevron-down' : 'chevron-right'} size={14} />
+                      Completed ({completedTasks.length})
+                    </button>
+                    {showCompleted &&
+                  <div className="stack" style={{ gap: 12, marginTop: 10 }}>
+                        {completedTasks.map((t) =>
+                    <TaskRow key={t.id} task={t}
+                      expanded={expanded === t.id}
+                      onToggle={() => setExpanded(expanded === t.id ? null : t.id)}
+                      onCheck={() => completeTask(t.id)}
+                      onSubCheck={(i) => toggleSub(t.id, i)} />
+                    )}
+                      </div>
+                  }
+                  </div>
+                }
+              </>
           }
         </div>
       }
@@ -597,7 +672,7 @@ function TasksScreen({ tasks, setTasks, goals, setGoals, dataLoading, onReward }
         goals={goals}
         onClose={() => setCreating(false)}
         onTaskCreated={(t) => { setTasks(ts => [t, ...ts]); setTab('tasks'); }}
-        onGoalCreated={(g) => { setGoals(gs => [g, ...gs]); setTab('goals'); }}
+        onGoalCreated={(g, ts = []) => { setGoals(gs => [g, ...gs]); if (ts.length) setTasks(prev => [...ts, ...prev]); setTab('goals'); }}
       />}
     </>);
 
