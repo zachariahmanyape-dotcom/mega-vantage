@@ -233,6 +233,133 @@ function GoalCard({ goal, tasks }) {
   );
 }
 
+function FocusStats() {
+  const [rows, setRows] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    let active = true;
+    window.fetchFocusSessions().then(r => { if (active) { setRows(r); setLoading(false); } });
+    return () => { active = false; };
+  }, []);
+
+  if (loading) return <div style={{ color:'var(--text-3)', fontSize:14, padding:20 }}>Loading focus stats…</div>;
+
+  if (rows.length === 0) {
+    return (
+      <div className="card" style={{ padding:40, textAlign:'center', color:'var(--text-3)' }}>
+        <div style={{ fontSize:32, marginBottom:12 }}>⏱️</div>
+        <div style={{ fontFamily:'var(--ff-display)', fontSize:22, marginBottom:8, color:'var(--text)' }}>No focus sessions yet</div>
+        <div style={{ fontSize:14 }}>Start a focus timer on your dashboard and hit Save — your stats will show up here.</div>
+      </div>
+    );
+  }
+
+  const when = (r) => new Date(r.started_at || r.created_at);
+  const totalMin = rows.reduce((a,r)=>a+(r.duration_minutes||0),0);
+  const todayKey = window.focusYmd(new Date());
+  const todayRows = rows.filter(r => window.focusYmd(when(r)) === todayKey);
+  const todayMin = todayRows.reduce((a,r)=>a+(r.duration_minutes||0),0);
+  const ws = window.focusWeekStart();
+  const weekRows = rows.filter(r => when(r) >= ws);
+  const weekMin = weekRows.reduce((a,r)=>a+(r.duration_minutes||0),0);
+
+  const days = [];
+  for (let i=6;i>=0;i--){ const d=new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate()-i); days.push(d); }
+  const dayBars = days.map(d => ({
+    label: d.toLocaleDateString('en-US',{weekday:'short'})[0],
+    full: d.toLocaleDateString('en-US',{weekday:'short'}),
+    min: rows.filter(r => window.focusYmd(when(r)) === window.focusYmd(d)).reduce((a,r)=>a+(r.duration_minutes||0),0),
+  }));
+  const maxDay = Math.max(...dayBars.map(d=>d.min),1);
+
+  const bySubj = {};
+  rows.forEach(r => { const k = r.subject || 'General'; bySubj[k]=(bySubj[k]||0)+(r.duration_minutes||0); });
+  const subjects = Object.entries(bySubj).map(([subject,minutes])=>({subject,minutes})).sort((a,b)=>b.minutes-a.minutes);
+  const maxSubj = Math.max(...subjects.map(s=>s.minutes),1);
+
+  const stat = (label, value, sub) => (
+    <div className="card" style={{ padding:'18px 18px 16px', borderRadius:22 }}>
+      <div className="eyebrow" style={{ fontSize:10 }}>{label}</div>
+      <div style={{ display:'flex', alignItems:'baseline', gap:6, marginTop:8 }}>
+        <span className="display" style={{ fontSize:34, lineHeight:1 }}>{value}</span>
+        {sub && <span style={{ fontSize:11, color:'var(--text-3)' }}>{sub}</span>}
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="stack" style={{ gap:22 }}>
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:14 }}>
+        {stat('Today', window.fmtMins(todayMin), `${todayRows.length} ${todayRows.length===1?'session':'sessions'}`)}
+        {stat('This week', window.fmtMins(weekMin), `${weekRows.length} ${weekRows.length===1?'session':'sessions'}`)}
+        {stat('Total focus', window.fmtMins(totalMin))}
+        {stat('Sessions', String(rows.length), 'all time')}
+      </div>
+
+      <div style={{ display:'grid', gridTemplateColumns:'1.3fr 1fr', gap:22, minWidth:0 }}>
+        <div className="card" style={{ padding:22, minWidth:0 }}>
+          <div className="eyebrow">Focus · last 7 days</div>
+          <div style={{ fontSize:13, color:'var(--text-2)', marginTop:2 }}>Daily average <strong>{window.fmtMins(Math.round(weekMin/7))}</strong></div>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', gap:10, height:140, marginTop:18, alignItems:'end' }}>
+            {dayBars.map((d,i) => (
+              <div key={i} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:6, height:'100%', justifyContent:'end' }} title={`${d.full}: ${window.fmtMins(d.min)}`}>
+                <div className="bar" style={{ height:'100%' }}>
+                  <span style={{ height:(d.min/maxDay*100)+'%', background:i===6?'var(--accent)':'var(--border-strong)', opacity:i===6?1:0.7 }} />
+                </div>
+                <div style={{ fontSize:11, color:i===6?'var(--text)':'var(--text-3)', fontWeight:i===6?700:500 }}>{d.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="card" style={{ padding:22, minWidth:0 }}>
+          <div className="eyebrow" style={{ marginBottom:16 }}>By subject · all time</div>
+          <div className="stack" style={{ gap:10 }}>
+            {subjects.map(s => {
+              const color = SUBJECTS[s.subject] || '#888';
+              return (
+                <div key={s.subject}>
+                  <div style={{ display:'flex', justifyContent:'space-between', fontSize:12, marginBottom:5 }}>
+                    <span style={{ fontWeight:600 }}>{s.subject}</span>
+                    <span style={{ color:'var(--text-3)', fontFamily:'var(--ff-sub)' }}>{window.fmtMins(s.minutes)}</span>
+                  </div>
+                  <div style={{ height:7, background:'var(--bg-sunken)', borderRadius:999, overflow:'hidden' }}>
+                    <div style={{ height:'100%', width:(s.minutes/maxSubj*100)+'%', borderRadius:999, background:color }} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      <div className="card" style={{ padding:22 }}>
+        <div className="eyebrow" style={{ marginBottom:14 }}>Focus records</div>
+        <div className="stack" style={{ gap:0 }}>
+          {rows.slice(0,15).map((r,i) => {
+            const d = when(r);
+            return (
+              <div key={r.id} style={{ display:'flex', alignItems:'center', gap:12, padding:'10px 0', borderTop:i===0?'none':'1px solid var(--border)' }}>
+                <div style={{ width:34, height:34, borderRadius:9, background:'var(--accent-soft)', color:'var(--accent)', display:'grid', placeItems:'center', flexShrink:0 }}>
+                  <Icon name="clock" size={15} />
+                </div>
+                <div style={{ flex:1, minWidth:0 }}>
+                  <div style={{ fontSize:13, fontWeight:600, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{r.label || 'Focus session'}</div>
+                  <div style={{ fontSize:11, color:'var(--text-3)', marginTop:2 }}>
+                    {d.toLocaleDateString('en-US',{month:'short',day:'numeric'})} · {d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}{r.subject ? ' · '+r.subject : ''}
+                  </div>
+                </div>
+                <div style={{ fontSize:13, fontWeight:700, color:'var(--accent)' }}>{window.fmtMins(r.duration_minutes||0)}</div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function TasksScreen({ tasks, setTasks, goals, setGoals, dataLoading, onReward }) {
   const [tab, setTab] = useState('tasks');
   const [expanded, setExpanded] = useState(null);
@@ -277,6 +404,7 @@ function TasksScreen({ tasks, setTasks, goals, setGoals, dataLoading, onReward }
         <div className="tabs">
           <button className={tab === 'tasks' ? 'on' : ''} onClick={() => setTab('tasks')}>Tasks ({tasks.length})</button>
           <button className={tab === 'goals' ? 'on' : ''} onClick={() => setTab('goals')}>Goals ({goals.length})</button>
+          <button className={tab === 'focus' ? 'on' : ''} onClick={() => setTab('focus')}>Focus</button>
         </div>
       </div>
 
@@ -324,6 +452,8 @@ function TasksScreen({ tasks, setTasks, goals, setGoals, dataLoading, onReward }
           }
         </div>
       }
+
+      {tab === 'focus' && <FocusStats />}
     </>);
 
 }

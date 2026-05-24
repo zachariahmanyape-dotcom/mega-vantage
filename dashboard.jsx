@@ -2,17 +2,24 @@
 
 const { useState, useEffect, useRef } = React;
 
-// ─── Focus time data (shared state via window) ────────────────────────────────
-if (!window.FOCUS_LOG) window.FOCUS_LOG = {}; // { taskId: minutes }
+// ─── Focus session data (Supabase) ────────────────────────────────────────────
+if (!window.FOCUS_LOG) window.FOCUS_LOG = {}; // legacy, retained for task time refs
 
-const WEEKLY_FOCUS = [
-  { subject:'Personal Branding',          minutes:165 },
-  { subject:'CV Development',             minutes:112 },
-  { subject:'Growth Mindset',             minutes:78  },
-  { subject:'Time Management',            minutes:52  },
-  { subject:'Professional Communication', minutes:30  },
-];
-const TOTAL_FOCUS_MIN = WEEKLY_FOCUS.reduce((a,s)=>a+s.minutes,0);
+async function fetchFocusSessions() {
+  const { data: { user } } = await window._supabase.auth.getUser();
+  if (!user) return [];
+  const { data, error } = await window._supabase
+    .from('focus_sessions')
+    .select('id, duration_minutes, label, subject, linked_kind, started_at, created_at')
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false });
+  if (error) { console.error('Failed to load focus sessions:', error.message); return []; }
+  return data || [];
+}
+function focusYmd(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+function focusWeekStart() { const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() - ((d.getDay()+6)%7)); return d; }
+function fmtMins(m) { return `${Math.floor(m/60)}h ${m%60}m`; }
+Object.assign(window, { fetchFocusSessions, focusYmd, focusWeekStart, fmtMins });
 
 // ─── Focus Timer with task-linking ────────────────────────────────────────────
 function FocusTimerModal({ tasks, goals, onStart, onClose }) {
@@ -78,7 +85,7 @@ function FocusTimerModal({ tasks, goals, onStart, onClose }) {
   );
 }
 
-const DashPomodoro = ({ gameMode, tasks, goals }) => {
+const DashPomodoro = ({ gameMode, tasks, goals, focusRows, onSaved }) => {
   const [running, setRunning] = useState(false);
   const [seconds, setSeconds] = useState(25 * 60);
   const [durationMin, setDurationMin] = useState(25);
@@ -150,6 +157,7 @@ const DashPomodoro = ({ gameMode, tasks, goals }) => {
       if (error) throw error;
       setSavedNote(`✓ Saved ${mins}m${item ? ' to "' + item.label + '"' : ''}`);
       setTimeout(() => setSavedNote(''), 4000);
+      if (onSaved) onSaved();
     } catch (e) {
       console.error('Failed to save focus session:', e.message);
       setSavedNote('Could not save — please try again.');
@@ -165,13 +173,14 @@ const DashPomodoro = ({ gameMode, tasks, goals }) => {
   const pct = (1 - seconds/(durationMin*60)) * 100;
   const fresh = elapsedSec === 0;
   const greenBtn = { flex:1, justifyContent:'center', background:'var(--teal-600)', color:'#fff', borderColor:'var(--teal-600)' };
+  const weekMin = (focusRows || []).filter(r => new Date(r.started_at || r.created_at) >= focusWeekStart()).reduce((a, r) => a + (r.duration_minutes || 0), 0);
 
   return (
     <>
       <div className="card" style={{ padding:20 }}>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
           <div className="eyebrow">Focus timer</div>
-          <div style={{ fontSize:11, color:'var(--text-3)' }}>{Math.floor(TOTAL_FOCUS_MIN/60)}h {TOTAL_FOCUS_MIN%60}m this week</div>
+          <div style={{ fontSize:11, color:'var(--text-3)' }}>{fmtMins(weekMin)} this week</div>
         </div>
         {linkedItem && (
           <div style={{ display:'flex', alignItems:'center', gap:8, marginTop:8, padding:'6px 10px', background:'var(--accent-soft)', borderRadius:8, border:'1px solid var(--accent)' }}>
@@ -217,38 +226,44 @@ const DashPomodoro = ({ gameMode, tasks, goals }) => {
 };
 
 // ─── Weekly Focus Breakdown ───────────────────────────────────────────────────
-const DashFocusBreakdown = () => {
-  const maxMin = Math.max(...WEEKLY_FOCUS.map(s=>s.minutes));
+const DashFocusBreakdown = ({ focusRows }) => {
+  const ws = focusWeekStart();
+  const week = (focusRows || []).filter(r => new Date(r.started_at || r.created_at) >= ws);
+  const bySubj = {};
+  week.forEach(r => { const k = r.subject || 'General'; bySubj[k] = (bySubj[k] || 0) + (r.duration_minutes || 0); });
+  const list = Object.entries(bySubj).map(([subject, minutes]) => ({ subject, minutes })).sort((a, b) => b.minutes - a.minutes);
+  const total = list.reduce((a, s) => a + s.minutes, 0);
+  const maxMin = Math.max(...list.map(s => s.minutes), 1);
   return (
     <div className="card" style={{ padding:22 }}>
       <div className="row-between" style={{ marginBottom:16 }}>
         <div>
           <div className="eyebrow">Focus this week · by subject</div>
           <div style={{ fontSize:13, color:'var(--text-2)', marginTop:2 }}>
-            Total: <strong>{Math.floor(TOTAL_FOCUS_MIN/60)}h {TOTAL_FOCUS_MIN%60}m</strong>
+            Total: <strong>{fmtMins(total)}</strong>
           </div>
         </div>
       </div>
-      <div className="stack" style={{ gap:10 }}>
-        {WEEKLY_FOCUS.map(s => {
-          const color = SUBJECTS[s.subject] || '#888';
-          const h = Math.floor(s.minutes/60);
-          const m = s.minutes%60;
-          return (
-            <div key={s.subject}>
-              <div style={{ display:'flex', justifyContent:'space-between', fontSize:12, marginBottom:5 }}>
-                <span style={{ fontWeight:600, color:'var(--text)' }}>{s.subject}</span>
-                <span style={{ color:'var(--text-3)', fontFamily:'var(--ff-sub)', letterSpacing:'0.04em' }}>
-                  {h>0?`${h}h ${m}m`:`${m}m`}
-                </span>
+      {list.length === 0 ? (
+        <div style={{ fontSize:13, color:'var(--text-3)', padding:'8px 0' }}>No focus time logged this week yet. Start a focus session and hit Save to track it here.</div>
+      ) : (
+        <div className="stack" style={{ gap:10 }}>
+          {list.map(s => {
+            const color = SUBJECTS[s.subject] || '#888';
+            return (
+              <div key={s.subject}>
+                <div style={{ display:'flex', justifyContent:'space-between', fontSize:12, marginBottom:5 }}>
+                  <span style={{ fontWeight:600, color:'var(--text)' }}>{s.subject}</span>
+                  <span style={{ color:'var(--text-3)', fontFamily:'var(--ff-sub)', letterSpacing:'0.04em' }}>{fmtMins(s.minutes)}</span>
+                </div>
+                <div style={{ height:7, background:'var(--bg-sunken)', borderRadius:999, overflow:'hidden' }}>
+                  <div style={{ height:'100%', width:(s.minutes/maxMin*100)+'%', borderRadius:999, background:color, transition:'width .4s ease' }} />
+                </div>
               </div>
-              <div style={{ height:7, background:'var(--bg-sunken)', borderRadius:999, overflow:'hidden' }}>
-                <div style={{ height:'100%', width:(s.minutes/maxMin*100)+'%', borderRadius:999, background:color, transition:'width .4s ease' }} />
-              </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };
@@ -488,6 +503,9 @@ const DashTasksPeek = ({ tasks, onGoTasks }) => {
 // ─── Main Dashboard ───────────────────────────────────────────────────────────
 function DashboardScreen({ member, onJoin, onGoto, gameMode, intention, onClearIntention, tasks, goals }) {
   const today = new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' });
+  const [focusRows, setFocusRows] = useState([]);
+  const reloadFocus = () => fetchFocusSessions().then(setFocusRows);
+  useEffect(() => { reloadFocus(); }, []);
 
   return (
     <>
@@ -519,8 +537,8 @@ function DashboardScreen({ member, onJoin, onGoto, gameMode, intention, onClearI
             <DashStreak days={member.streakDays} gameMode={gameMode} />
             <DashLevel member={member} />
           </div>
-          <DashPomodoro gameMode={gameMode} tasks={tasks} goals={goals} />
-          <DashFocusBreakdown />
+          <DashPomodoro gameMode={gameMode} tasks={tasks} goals={goals} focusRows={focusRows} onSaved={reloadFocus} />
+          <DashFocusBreakdown focusRows={focusRows} />
           <DashTasksPeek tasks={tasks} onGoTasks={() => onGoto('tasks')} />
         </div>
       </div>
