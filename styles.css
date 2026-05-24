@@ -141,7 +141,7 @@ input, textarea, select { font: inherit; color: inherit; }
 .sidebar.admin .user-card { background: rgba(0,0,0,0.18); border-color: rgba(255,255,255,0.12); }
 .sidebar.admin .sb-section { color: rgba(255,255,255,0.4); }
 .sidebar.admin .sb-divider { background: rgba(255,255,255,0.12); }
-.sidebar.admin .brand-logo { background: var(--coral); }
+.sidebar.admin .brand-logo { background: var(--coral); color: #fff; }
 
 /* Admin remote view banner */
 .remote-banner {
@@ -392,13 +392,11 @@ input, textarea, select { font: inherit; color: inherit; }
   letter-spacing: 0.02em;
 }
 
-/* Vantage logo inside the brand box — swaps with theme.
-   Light mode: box is black (var(--text)) → show white logo.
-   Dark mode:  box is white          → show black logo. */
-.brand-logo-img { width: 20px; height: 20px; object-fit: contain; display: block; }
-.brand-logo .logo-dark-mode { display: none; }
-[data-theme="dark"] .brand-logo .logo-light-mode { display: none; }
-[data-theme="dark"] .brand-logo .logo-dark-mode { display: block; }
+/* Vantage logo inside the brand box. Inline SVG uses currentColor, so it
+   auto-inverts with the theme: brand-logo color is var(--bg-elev) (white on
+   the black light-mode box, dark on the white dark-mode box); admin forces
+   white on the coral box. viewBox is cropped so the mark fills the box. */
+.brand-logo-img { width: 26px; height: 26px; display: block; }
 .login-brand-logo img { width: 26px; height: 26px; object-fit: contain; display: block; }
 
 .sb-section {
