@@ -112,6 +112,103 @@ function mapToListSession(r) {
 async function fetchCalSessions() {return (await fetchSessions()).map(mapToCalSession);}
 async function fetchListSessions() {return (await fetchSessions()).map(mapToListSession);}
 
+// ---------- Add to calendar (free: .ics download + Google/Outlook links) ----------
+// Session times are wall-clock GST (UTC+4, no DST). Convert to UTC for portability.
+function sessionDateTimes(session) {
+  const dateISO = session.date && /^\d{4}-\d{2}-\d{2}$/.test(session.date) ? session.date : session.dateISO;
+  const [Y, M, D] = dateISO.split('-').map(Number);
+  const mk = (h) => {
+    const hh = Math.floor(h),mm = Math.round((h - hh) * 60);
+    return new Date(Date.UTC(Y, M - 1, D, hh, mm) - 4 * 3600 * 1000);
+  };
+  return { start: mk(session.startH), end: mk(session.endH) };
+}
+function icsStamp(d) {
+  const p = (n) => String(n).padStart(2, '0');
+  return d.getUTCFullYear() + p(d.getUTCMonth() + 1) + p(d.getUTCDate()) + 'T' + p(d.getUTCHours()) + p(d.getUTCMinutes()) + '00Z';
+}
+function sessionDescription(session) {
+  return (session.mentor ? 'With ' + session.mentor + '. ' : '') + (session.link ? 'Join: ' + session.link : '');
+}
+function googleCalUrl(session) {
+  const { start, end } = sessionDateTimes(session);
+  const params = new URLSearchParams({
+    action: 'TEMPLATE',
+    text: session.title || 'Vantage session',
+    dates: `${icsStamp(start)}/${icsStamp(end)}`,
+    details: sessionDescription(session),
+    location: session.link || '' });
+
+  return 'https://calendar.google.com/calendar/render?' + params.toString();
+}
+function outlookCalUrl(session) {
+  const { start, end } = sessionDateTimes(session);
+  const params = new URLSearchParams({
+    path: '/calendar/action/compose',
+    rru: 'addevent',
+    subject: session.title || 'Vantage session',
+    startdt: start.toISOString(),
+    enddt: end.toISOString(),
+    body: sessionDescription(session),
+    location: session.link || '' });
+
+  return 'https://outlook.office.com/calendar/0/deeplink/compose?' + params.toString();
+}
+function downloadICS(session) {
+  const { start, end } = sessionDateTimes(session);
+  const esc = (s) => String(s || '').replace(/([,;\\])/g, '\\$1').replace(/\n/g, '\\n');
+  const lines = [
+  'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Vantage//MEGA//EN', 'CALSCALE:GREGORIAN',
+  'BEGIN:VEVENT',
+  'UID:' + (session.id || Date.now()) + '@vantage',
+  'DTSTAMP:' + icsStamp(new Date()),
+  'DTSTART:' + icsStamp(start),
+  'DTEND:' + icsStamp(end),
+  'SUMMARY:' + esc(session.title || 'Vantage session'),
+  'DESCRIPTION:' + esc(sessionDescription(session)),
+  session.link ? 'LOCATION:' + esc(session.link) : '',
+  'END:VEVENT', 'END:VCALENDAR'].
+  filter(Boolean);
+  const blob = new Blob([lines.join('\r\n')], { type: 'text/calendar;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = (session.title || 'session').replace(/[^a-z0-9]+/gi, '-').toLowerCase().replace(/^-|-$/g, '') + '.ics';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function AddToCalendar({ session, compact }) {
+  const [open, setOpen] = useState(false);
+  const opts = [
+  { label: 'Google Calendar', fn: () => window.open(googleCalUrl(session), '_blank', 'noopener') },
+  { label: 'Outlook', fn: () => window.open(outlookCalUrl(session), '_blank', 'noopener') },
+  { label: 'Apple / download .ics', fn: () => downloadICS(session) }];
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <button className={compact ? 'btn sm' : 'btn'} onClick={(e) => {e.stopPropagation();setOpen((o) => !o);}} style={{ justifyContent: 'center' }}>
+        <Icon name="sessions" size={13} /> Add to calendar
+      </button>
+      {open &&
+      <>
+          <div onClick={(e) => {e.stopPropagation();setOpen(false);}} style={{ position: 'fixed', inset: 0, zIndex: 300 }} />
+          <div className="card" style={{ position: 'absolute', bottom: 'calc(100% + 6px)', right: 0, zIndex: 301, padding: 6, width: 210, boxShadow: 'var(--shadow-3)' }}>
+            {opts.map((opt) =>
+          <button key={opt.label} onClick={(e) => {e.stopPropagation();opt.fn();setOpen(false);}}
+          style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '9px 10px', borderRadius: 8, border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, color: 'var(--text)', textAlign: 'left' }}
+          onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-sunken)'}
+          onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
+                <Icon name="external" size={12} style={{ color: 'var(--text-3)' }} /> {opt.label}
+              </button>
+          )}
+          </div>
+        </>
+      }
+    </div>);
+
+}
+
 // ---------- Session Detail Modal ----------
 function SessionDetailModal({ session, onClose, isAdmin }) {
   const [agenda, setAgenda] = useState(() =>
@@ -217,11 +314,14 @@ function SessionDetailModal({ session, onClose, isAdmin }) {
 
         {/* Footer */}
         {!past &&
-        <div style={{ padding: '14px 24px', borderTop: '1px solid var(--border)', display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+        <div style={{ padding: '14px 24px', borderTop: '1px solid var(--border)', display: 'flex', gap: 8, justifyContent: 'flex-end', alignItems: 'center' }}>
             {isAdmin && <button className="btn ghost sm">Reschedule</button>}
-            <button className="btn primary" onClick={() => window.open(session.link, '_blank')}>
+            <AddToCalendar session={session} compact />
+            {session.link &&
+            <button className="btn primary" onClick={() => window.open(session.link, '_blank', 'noopener')}>
               Join session <Icon name="external" size={13} />
             </button>
+            }
           </div>
         }
       </div>
@@ -508,4 +608,4 @@ function Calendar({ isAdmin, reloadKey }) {
 
 }
 
-Object.assign(window, { Calendar, SessionDetailModal, fmtH, fetchSessions, fetchCalSessions, fetchListSessions, mapToCalSession, mapToListSession });
+Object.assign(window, { Calendar, SessionDetailModal, AddToCalendar, fmtH, fetchSessions, fetchCalSessions, fetchListSessions, mapToCalSession, mapToListSession });
