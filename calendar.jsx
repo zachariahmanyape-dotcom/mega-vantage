@@ -232,7 +232,7 @@ function MonthView({ sessions, date, filters, onSelect }) {
   const firstDay = new Date(year, month, 1).getDay();
   const startOffset = firstDay === 0 ? 6 : firstDay - 1;
   const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const today = new Date(2026, 3, 19);
+  const today = new Date();
 
   const cells = [];
   for (let i = 0; i < startOffset; i++) cells.push(null);
@@ -279,7 +279,7 @@ function MonthView({ sessions, date, filters, onSelect }) {
 // ---------- Week View ----------
 function WeekView({ sessions, date, filters, onSelect }) {
   const ws = getWeekStart(date);
-  const today = new Date(2026, 3, 19);
+  const today = new Date();
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(ws, i));
   const filtered = sessions.filter((s) => s.type === '1:1' ? filters['1:1'] : filters['Town Hall']);
 
@@ -328,7 +328,7 @@ function WeekView({ sessions, date, filters, onSelect }) {
 
 // ---------- Day View ----------
 function DayView({ sessions, date, filters, onSelect }) {
-  const today = new Date(2026, 3, 19);
+  const today = new Date();
   const isToday = sameDay(date, today);
   const filtered = sessions.filter((s) =>
   sameDay(new Date(s.date + 'T12:00'), date) && (
@@ -373,9 +373,9 @@ function DayView({ sessions, date, filters, onSelect }) {
 
 // ---------- Main Calendar ----------
 function Calendar({ isAdmin }) {
-  const TODAY = new Date(2026, 3, 19);
+  const TODAY = new Date();
   const [view, setView] = useState('month');
-  const [date, setDate] = useState(new Date(2026, 3, 19));
+  const [date, setDate] = useState(new Date());
   const [filters, setFilters] = useState({ '1:1': true, 'Town Hall': true });
   const [selected, setSelected] = useState(null);
   const [recurringType, setRecurringType] = useState('does-not-repeat');
