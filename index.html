@@ -611,11 +611,11 @@ function App() {
       ...t,
       subtasks: [],
       points: 50,
-      subject: 'General',
+      subject: t.subject || 'General',
       impact: [2.5, 2.5],
       due: t.due_date ? new Date(t.due_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : null,
       dueSort: t.due_date ? Math.ceil((new Date(t.due_date) - new Date()) / 86400000) : 999,
-      priority: 'Routine',
+      priority: t.priority || 'Routine',
     })) : []);
     setLiveGoals(goalsRes.data || []);
     setDataLoading(false);

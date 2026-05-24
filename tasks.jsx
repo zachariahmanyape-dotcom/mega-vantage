@@ -160,7 +160,7 @@ function GoalCard({ goal, tasks }) {
   }
 
   // ── Supabase shape (id, title, description, target_date, status) ──────────
-  const linked = tasks.filter(t => t.roadmap_step?.goal_id === goal.id);
+  const linked = tasks.filter(t => t.goal_id === goal.id || t.roadmap_step?.goal_id === goal.id);
   const totalLinked = linked.length;
   const doneLinked  = linked.filter(t => t.is_completed).length;
   const pct = totalLinked ? Math.round(doneLinked / totalLinked * 100) : 0;
@@ -360,9 +360,144 @@ function FocusStats() {
   );
 }
 
+function mapTaskRow(t) {
+  return {
+    ...t,
+    subtasks: [],
+    points: 50,
+    subject: t.subject || 'General',
+    impact: [2.5, 2.5],
+    due: t.due_date ? new Date(t.due_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : null,
+    dueSort: t.due_date ? Math.ceil((new Date(t.due_date) - new Date()) / 86400000) : 999,
+    priority: t.priority || 'Routine',
+  };
+}
+
+function CreateItemModal({ goals, defaultKind, onClose, onTaskCreated, onGoalCreated }) {
+  const [kind, setKind] = React.useState(defaultKind || 'task');
+  const [title, setTitle] = React.useState('');
+  const [description, setDescription] = React.useState('');
+  const [subject, setSubject] = React.useState('');
+  const [priority, setPriority] = React.useState('Routine');
+  const [dueDate, setDueDate] = React.useState('');
+  const [goalId, setGoalId] = React.useState('');
+  const [targetDate, setTargetDate] = React.useState('');
+  const [saving, setSaving] = React.useState(false);
+  const [err, setErr] = React.useState('');
+
+  const submit = async () => {
+    setErr('');
+    if (!title.trim()) { setErr('Please enter a title.'); return; }
+    setSaving(true);
+    const { data: { user } } = await window._supabase.auth.getUser();
+    if (kind === 'task') {
+      const { data, error } = await window._supabase.from('tasks').insert({
+        user_id: user.id,
+        title: title.trim(),
+        notes: description.trim() || null,
+        subject: subject || null,
+        priority,
+        due_date: dueDate || null,
+        goal_id: goalId || null,
+        order_index: 0,
+      }).select('*, roadmap_step:roadmap_steps(title, goal_id)').single();
+      setSaving(false);
+      if (error) { setErr(error.message); return; }
+      onTaskCreated(mapTaskRow(data));
+    } else {
+      const { data, error } = await window._supabase.from('goals').insert({
+        user_id: user.id,
+        title: title.trim(),
+        description: description.trim() || null,
+        target_date: targetDate || null,
+        status: 'active',
+      }).select().single();
+      setSaving(false);
+      if (error) { setErr(error.message); return; }
+      onGoalCreated(data);
+    }
+    onClose();
+  };
+
+  return (
+    <>
+      <div onClick={onClose} style={{ position:'fixed', inset:0, background:'rgba(10,10,10,0.45)', zIndex:200, backdropFilter:'blur(3px)' }} />
+      <div className="card" style={{ position:'fixed', top:'50%', left:'50%', transform:'translate(-50%,-50%)', width:480, maxHeight:'86vh', overflow:'auto', zIndex:201, padding:0, boxShadow:'var(--shadow-3)' }}>
+        <div style={{ padding:'18px 22px', borderBottom:'1px solid var(--border)', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+          <div style={{ fontFamily:'var(--ff-display)', fontSize:22 }}>Create new</div>
+          <button onClick={onClose} style={{ color:'var(--text-3)', fontSize:14, background:'none', border:'none', cursor:'pointer' }}>✕</button>
+        </div>
+        <div style={{ padding:'18px 22px' }}>
+          <div className="seg" style={{ width:'100%', marginBottom:16 }}>
+            <button className={kind==='task'?'on':''} onClick={()=>setKind('task')}>Task</button>
+            <button className={kind==='goal'?'on':''} onClick={()=>setKind('goal')}>Goal</button>
+          </div>
+
+          <div className="stack" style={{ gap:12 }}>
+            <div>
+              <div className="eyebrow" style={{ marginBottom:6 }}>Title</div>
+              <input className="input" placeholder={kind==='task'?'What needs to get done?':'What do you want to achieve?'} value={title} onChange={e=>setTitle(e.target.value)} autoFocus />
+            </div>
+            <div>
+              <div className="eyebrow" style={{ marginBottom:6 }}>Description</div>
+              <textarea className="input" rows={3} placeholder="Optional details" value={description} onChange={e=>setDescription(e.target.value)} style={{ resize:'none', lineHeight:1.5 }} />
+            </div>
+
+            {kind==='task' ? (
+              <>
+                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+                  <div>
+                    <div className="eyebrow" style={{ marginBottom:6 }}>Subject</div>
+                    <select className="input" style={{ fontSize:13 }} value={subject} onChange={e=>setSubject(e.target.value)}>
+                      <option value="">None</option>
+                      {Object.keys(SUBJECTS).map(s => <option key={s}>{s}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <div className="eyebrow" style={{ marginBottom:6 }}>Priority</div>
+                    <select className="input" style={{ fontSize:13 }} value={priority} onChange={e=>setPriority(e.target.value)}>
+                      {Object.keys(PRIORITY_CONFIG).map(p => <option key={p}>{p}</option>)}
+                    </select>
+                  </div>
+                </div>
+                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+                  <div>
+                    <div className="eyebrow" style={{ marginBottom:6 }}>Due date</div>
+                    <input className="input" type="date" value={dueDate} onChange={e=>setDueDate(e.target.value)} />
+                  </div>
+                  <div>
+                    <div className="eyebrow" style={{ marginBottom:6 }}>Link to goal</div>
+                    <select className="input" style={{ fontSize:13 }} value={goalId} onChange={e=>setGoalId(e.target.value)}>
+                      <option value="">No goal</option>
+                      {goals.map(g => <option key={g.id} value={g.id}>{g.title}</option>)}
+                    </select>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div>
+                <div className="eyebrow" style={{ marginBottom:6 }}>Target date</div>
+                <input className="input" type="date" value={targetDate} onChange={e=>setTargetDate(e.target.value)} />
+              </div>
+            )}
+
+            {err && <div style={{ fontSize:12, color:'var(--coral)', background:'var(--coral-100)', borderRadius:8, padding:'8px 12px' }}>{err}</div>}
+
+            <div style={{ display:'flex', justifyContent:'flex-end', gap:8, marginTop:4 }}>
+              <button className="btn" onClick={onClose}>Cancel</button>
+              <button className="btn primary" disabled={!title.trim()||saving} onClick={submit}>{saving?'Creating…':(kind==='task'?'Create task':'Create goal')}</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
 function TasksScreen({ tasks, setTasks, goals, setGoals, dataLoading, onReward }) {
   const [tab, setTab] = useState('tasks');
   const [expanded, setExpanded] = useState(null);
+  const [creating, setCreating] = useState(false);
 
   const tasksLoading = dataLoading;
   const goalsLoading = dataLoading;
@@ -401,10 +536,13 @@ function TasksScreen({ tasks, setTasks, goals, setGoals, dataLoading, onReward }
             Every task has a priority label and due date. Critical + due soon → Do First.
           </div>
         </div>
-        <div className="tabs">
-          <button className={tab === 'tasks' ? 'on' : ''} onClick={() => setTab('tasks')}>Tasks ({tasks.length})</button>
-          <button className={tab === 'goals' ? 'on' : ''} onClick={() => setTab('goals')}>Goals ({goals.length})</button>
-          <button className={tab === 'focus' ? 'on' : ''} onClick={() => setTab('focus')}>Focus</button>
+        <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+          <div className="tabs">
+            <button className={tab === 'tasks' ? 'on' : ''} onClick={() => setTab('tasks')}>Tasks ({tasks.length})</button>
+            <button className={tab === 'goals' ? 'on' : ''} onClick={() => setTab('goals')}>Goals ({goals.length})</button>
+            <button className={tab === 'focus' ? 'on' : ''} onClick={() => setTab('focus')}>Focus</button>
+          </div>
+          <button className="btn primary" onClick={() => setCreating(true)} style={{ flexShrink:0 }}><Icon name="plus" size={13} /> New</button>
         </div>
       </div>
 
@@ -454,6 +592,13 @@ function TasksScreen({ tasks, setTasks, goals, setGoals, dataLoading, onReward }
       }
 
       {tab === 'focus' && <FocusStats />}
+
+      {creating && <CreateItemModal
+        goals={goals}
+        onClose={() => setCreating(false)}
+        onTaskCreated={(t) => { setTasks(ts => [t, ...ts]); setTab('tasks'); }}
+        onGoalCreated={(g) => { setGoals(gs => [g, ...gs]); setTab('goals'); }}
+      />}
     </>);
 
 }
