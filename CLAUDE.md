@@ -91,6 +91,11 @@ Defined in styles.css as CSS variables:
 Dark mode tokens are defined under `[data-theme="dark"]` in styles.css.
 Always use CSS variables, never hardcode hex values in JSX or inline styles.
 
+## Branding & Assets
+- Logo SVGs at the web root: `logo-white.svg` (used on the login + trial-expired blue boxes), `logo-black.svg` + `logo-blue.svg` (kept for reference, currently unused). All are a single-path mark on viewBox `0 0 1024 1024`; the mark only fills ~32% of that canvas, so crop the viewBox when you need it visually larger. Source set lives in `Vantage Logo V1/` (not committed).
+- Sidebar brand box (`.brand-logo`): an INLINE cropped SVG in index.html using `fill="currentColor"`, so it auto-inverts with the theme — color is `var(--bg-elev)` (white logo on the black light-mode box, dark logo on the white dark-mode box). `.sidebar.admin .brand-logo` forces white on the coral box. Size via `.brand-logo-img` (26px in the 32px box); cropped viewBox is `190 170 645 645`.
+- Favicons: `favicon-light.svg` (blue rounded box + white mark) and `favicon-dark.svg` (white rounded box + blue mark), mark scaled to ~62% fill via the `<g transform>`. Switched with `<link rel="icon" media="(prefers-color-scheme: dark)">`; the bare no-media link is the blue/light fallback for browsers that ignore media on icons.
+
 ## Key Patterns and Conventions
 - State lives in the root App component in index.html; passed down as props.
 - Route persistence: `localStorage.getItem('vantage-route')`.
@@ -113,6 +118,7 @@ Always use CSS variables, never hardcode hex values in JSX or inline styles.
 - Profile: stat card + milestones + badges real; personal-info/interests still placeholder
 - Admin member management: live (profiles); admin analytics + members list still mock
 - Dark mode: native date/time picker icons inverted to white
+- Branding: real Vantage logo in the brand box (inline currentColor SVG, theme-inverting, enlarged) + dynamic rounded-square boxed favicons (blue for light browser UI, white for dark)
 - Deployment: Vercel auto-deploy from GitHub `main` (confirmed active this session)
 - Trial expiry enforcement: live (admin + auth flow)
 - Not yet built: gamification (points/level/streak), session recurrence instances, real chat, task subtasks, automated reminders, profile personal-info/interests editing
@@ -128,3 +134,4 @@ Always use CSS variables, never hardcode hex values in JSX or inline styles.
 <!-- Claude: append one line here after any session where a structural change is made -->
 <!-- Format: YYYY-MM-DD — [one sentence describing what changed] -->
 2026-05-24 — Fixed dashboard greeting + calendar "Today"; built real sessions backend (table + admin scheduling + member views + add-to-calendar) and Google Meet OAuth integration (3 Edge Functions); wired Wins board + collapsed Chat to one channel (`member_count()`); made profile stat card/milestones/badges real; added focus timer Save + `focus_sessions` + Focus metrics tab with heatmaps; added create Task/Goal modal + create-from-focus-picker + TickTick-style task views (fixed is_completed bug); real notifications; dark-mode date/time icons + Google-Calendar-style session time pickers.
+2026-05-24 — Replaced the placeholder "V" with the real Vantage logo (inline currentColor SVG in the sidebar brand box, theme-inverting + enlarged via viewBox crop; white logo on login/trial/admin boxes) and added dynamic rounded-square boxed favicons (favicon-light.svg blue / favicon-dark.svg white).
