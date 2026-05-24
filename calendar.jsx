@@ -268,9 +268,10 @@ function SessionDetailModal({ session, onClose, isAdmin }) {
             <div>
               <div className="eyebrow" style={{ marginBottom: 4 }}>Meeting link</div>
               {session.link ?
-              <span style={{ fontSize: 12, color: 'var(--accent)', display: 'inline-flex', alignItems: 'center', gap: 4, cursor: 'pointer' }} onClick={() => window.open(session.link, '_blank')}>
-                    Open in Zoom <Icon name="external" size={11} />
-                  </span> :
+              <a href={session.link} target="_blank" rel="noopener noreferrer"
+              style={{ fontSize: 13, color: 'var(--accent)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 4, textDecoration: 'none' }}>
+                    Join now <Icon name="external" size={11} />
+                  </a> :
               <span style={{ fontSize: 12, color: 'var(--text-3)' }}>Not set</span>
               }
             </div>
