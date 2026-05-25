@@ -47,52 +47,36 @@ function SubtaskTag({ source }) {
 }
 
 // Inline focus timer for the task detail panel (right column).
-function TaskFocusTimer({ task, onSaved }) {
+// Reads/writes the single shared timer (lives in App) so it keeps running when
+// the row is collapsed or you navigate away, and is mirrored on the Dashboard.
+function TaskFocusTimer({ task, focus }) {
   const [open, setOpen] = React.useState(false);
   const [mins, setMins] = React.useState(25);
-  const [phase, setPhase] = React.useState('setup'); // setup | running
-  const [remaining, setRemaining] = React.useState(0); // seconds
-  const [paused, setPaused] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
-  const totalRef = React.useRef(0);
 
-  React.useEffect(() => {
-    if (phase !== 'running' || paused || remaining <= 0) return;
-    const id = setInterval(() => setRemaining((r) => Math.max(0, r - 1)), 1000);
-    return () => clearInterval(id);
-  }, [phase, paused, remaining]);
+  const t = focus && focus.state;
+  const linked = t && t.linked;
+  const mine = !!t && t.running && linked && linked.kind === 'task' && String(linked.id) === String(task.id);
+  const other = !!t && t.running && !mine;
+  window.useNowTick(mine && !t.paused);
 
-  const start = () => { totalRef.current = mins * 60; setRemaining(mins * 60); setPaused(false); setPhase('running'); };
-  const elapsedSec = Math.max(0, totalRef.current - remaining);
-
-  const save = async () => {
-    if (elapsedSec <= 0 || saving) return;
-    const elapsedMin = Math.max(1, Math.round(elapsedSec / 60));
-    setSaving(true);
-    try {
-      const { data: { user } } = await window._supabase.auth.getUser();
-      await window._supabase.from('focus_sessions').insert({
-        user_id: user.id,
-        duration_minutes: elapsedMin,
-        selected_minutes: mins,
-        label: task.title,
-        subject: task.subject || null,
-        linked_id: String(task.id),
-        linked_kind: 'task',
-        started_at: new Date(Date.now() - elapsedSec * 1000).toISOString(),
-      });
-      if (onSaved) onSaved(elapsedMin);
-    } catch (e) {
-      console.error('Failed to save focus session:', e.message);
-    }
-    setSaving(false);
-    setPhase('setup'); setRemaining(0); setOpen(true);
+  const startTimer = () => {
+    focus.start({ id: task.id, label: task.title, subject: task.subject || null, kind: 'task' }, mins);
+    setOpen(false);
   };
 
-  if (phase === 'running') {
+  const save = async () => {
+    if (saving) return;
+    setSaving(true);
+    await focus.save();
+    setSaving(false);
+  };
+
+  if (mine) {
+    const remaining = window.focusTimerRemaining(t);
     const mm = String(Math.floor(remaining / 60)).padStart(2, '0');
     const ss = String(remaining % 60).padStart(2, '0');
-    const pct = totalRef.current ? (remaining / totalRef.current * 100) : 0;
+    const pct = t.totalSec ? (remaining / t.totalSec * 100) : 0;
     return (
       <div>
         <div style={{ fontFamily: 'var(--ff-mono)', fontSize: 30, fontWeight: 700, textAlign: 'center', letterSpacing: '0.02em', color: 'var(--text)' }}>{mm}:{ss}</div>
@@ -100,8 +84,8 @@ function TaskFocusTimer({ task, onSaved }) {
           <div style={{ height: '100%', width: pct + '%', background: 'var(--accent)', borderRadius: 999, transition: 'width 0.9s linear' }} />
         </div>
         <div style={{ display: 'flex', gap: 6 }}>
-          <button className="btn sm" style={{ flex: 1, justifyContent: 'center' }} onClick={() => setPaused((p) => !p)}>{paused ? 'Resume' : 'Pause'}</button>
-          <button className="btn sm" style={{ flex: 1, justifyContent: 'center', background: 'var(--teal-600)', color: '#fff', borderColor: 'var(--teal-600)', opacity: elapsedSec <= 0 ? 0.5 : 1 }} disabled={saving || elapsedSec <= 0} onClick={save}>{saving ? '…' : 'Save'}</button>
+          <button className="btn sm" style={{ flex: 1, justifyContent: 'center' }} onClick={() => t.paused ? focus.resume() : focus.pause()}>{t.paused ? 'Resume' : 'Pause'}</button>
+          <button className="btn sm" style={{ flex: 1, justifyContent: 'center', background: 'var(--teal-600)', color: '#fff', borderColor: 'var(--teal-600)' }} disabled={saving} onClick={save}>{saving ? '…' : 'Save'}</button>
         </div>
       </div>);
 
@@ -112,7 +96,10 @@ function TaskFocusTimer({ task, onSaved }) {
       {!open &&
         <button className="btn sm" style={{ width: '100%', justifyContent: 'center' }} onClick={() => setOpen(true)}>Start timer</button>
       }
-      <div style={{ maxHeight: open ? 220 : 0, opacity: open ? 1 : 0, overflow: 'hidden', transition: 'max-height 0.22s ease, opacity 0.22s ease' }}>
+      <div style={{ maxHeight: open ? 260 : 0, opacity: open ? 1 : 0, overflow: 'hidden', transition: 'max-height 0.22s ease, opacity 0.22s ease' }}>
+        {other &&
+          <div style={{ fontSize: 10, color: 'var(--text-3)', marginBottom: 8, lineHeight: 1.4 }}>A timer is running on another task — starting here replaces it.</div>
+        }
         <div className="eyebrow" style={{ marginBottom: 8 }}>Duration</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 8 }}>
           {[15, 25, 45, 60].map((m) =>
@@ -120,13 +107,13 @@ function TaskFocusTimer({ task, onSaved }) {
             style={{ justifyContent: 'center', ...(mins === m ? { background: 'var(--accent)', color: 'var(--accent-contrast)', borderColor: 'var(--accent)' } : {}) }}>{m} min</button>
           )}
         </div>
-        <button className="btn primary sm" style={{ width: '100%', justifyContent: 'center' }} onClick={start}>Start</button>
+        <button className="btn primary sm" style={{ width: '100%', justifyContent: 'center' }} onClick={startTimer}>Start</button>
       </div>
     </div>);
 
 }
 
-function TaskDetailPanel({ task, onTaskMetaChange }) {
+function TaskDetailPanel({ task, onTaskMetaChange, focus, focusTick, onEdit }) {
   const [subs, setSubs] = React.useState([]);
   const [loadingSubs, setLoadingSubs] = React.useState(true);
   const [regenCount, setRegenCount] = React.useState(task.regen_count || 0);
@@ -135,6 +122,8 @@ function TaskDetailPanel({ task, onTaskMetaChange }) {
   const [confirmRegen, setConfirmRegen] = React.useState(false);
   const [newSub, setNewSub] = React.useState('');
   const [focusTotal, setFocusTotal] = React.useState(0);
+  const [editingSubId, setEditingSubId] = React.useState(null);
+  const [editingText, setEditingText] = React.useState('');
 
   React.useEffect(() => {
     let active = true;
@@ -145,7 +134,7 @@ function TaskDetailPanel({ task, onTaskMetaChange }) {
       .eq('linked_kind', 'task').eq('linked_id', String(task.id))
       .then(({ data }) => { if (active) setFocusTotal((data || []).reduce((a, r) => a + (r.duration_minutes || 0), 0)); });
     return () => { active = false; };
-  }, [task.id]);
+  }, [task.id, focusTick]);
 
   const toggleSub = async (id) => {
     const sub = subs.find((s) => s.id === id);
@@ -163,6 +152,20 @@ function TaskDetailPanel({ task, onTaskMetaChange }) {
       task_id: task.id, user_id: user.id, text, source: 'manual', order_index: subs.length,
     }).select().single();
     if (!error && data) { setSubs((s) => [...s, data]); setNewSub(''); }
+  };
+
+  const startEditSub = (s) => { setEditingSubId(s.id); setEditingText(s.text); };
+  const saveEditSub = async () => {
+    const id = editingSubId;
+    const text = editingText.trim();
+    setEditingSubId(null);
+    if (!id || !text) return;
+    setSubs((arr) => arr.map((x) => x.id === id ? { ...x, text } : x));
+    await window._supabase.from('subtasks').update({ text }).eq('id', id);
+  };
+  const deleteSub = async (id) => {
+    setSubs((arr) => arr.filter((x) => x.id !== id));
+    await window._supabase.from('subtasks').delete().eq('id', id);
   };
 
   const generate = async (regen) => {
@@ -203,7 +206,10 @@ function TaskDetailPanel({ task, onTaskMetaChange }) {
     <div style={{ padding: '18px 20px 20px', borderTop: '1px solid var(--border)', background: 'var(--bg-sunken)', display: 'grid', gridTemplateColumns: '1fr 180px', gap: 24 }}>
       {/* Left column — Details + Subtasks */}
       <div style={{ minWidth: 0 }}>
-        <div className="eyebrow" style={{ marginBottom: 8 }}>Details</div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+          <div className="eyebrow" style={{ margin: 0 }}>Details</div>
+          <button className="btn ghost sm" onClick={() => onEdit && onEdit(task)} style={{ padding: '4px 8px' }}><Icon name="edit" size={12} /> Edit task</button>
+        </div>
         <div style={{ fontSize: 13, color: task.notes ? 'var(--text-2)' : 'var(--text-3)', lineHeight: 1.5, marginBottom: 16 }}>
           {task.notes || 'No description.'}
         </div>
@@ -215,12 +221,23 @@ function TaskDetailPanel({ task, onTaskMetaChange }) {
               {hasSubs &&
                 <div className="stack" style={{ gap: 8, marginBottom: 10 }}>
                   {subs.map((s) =>
-                    <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 8, background: 'var(--bg-elev)', border: '1px solid var(--border)' }}>
+                    <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 8, background: 'var(--bg-elev)', border: '1px solid var(--border)' }}>
                       <div className={"check" + (s.is_completed ? " on" : "")} onClick={() => toggleSub(s.id)}>
                         {s.is_completed && <Icon name="check" size={11} stroke={3} />}
                       </div>
-                      <div style={{ fontSize: 13, flex: 1, minWidth: 0, color: s.is_completed ? 'var(--text-3)' : 'var(--text)', textDecoration: s.is_completed ? 'line-through' : 'none' }}>{s.text}</div>
+                      {editingSubId === s.id
+                        ? <input className="input" value={editingText} autoFocus
+                            onChange={(e) => setEditingText(e.target.value)}
+                            onKeyDown={(e) => { if (e.key === 'Enter') saveEditSub(); if (e.key === 'Escape') setEditingSubId(null); }}
+                            onBlur={saveEditSub}
+                            style={{ flex: 1, fontSize: 13, padding: '4px 8px' }} />
+                        : <div style={{ fontSize: 13, flex: 1, minWidth: 0, color: s.is_completed ? 'var(--text-3)' : 'var(--text)', textDecoration: s.is_completed ? 'line-through' : 'none' }}>{s.text}</div>
+                      }
                       <SubtaskTag source={s.source} />
+                      {editingSubId !== s.id &&
+                        <button onClick={() => startEditSub(s)} title="Edit subtask" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-3)', padding: 2, display: 'flex', flexShrink: 0 }}><Icon name="edit" size={12} /></button>
+                      }
+                      <button onClick={() => deleteSub(s.id)} title="Delete subtask" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-3)', padding: 2, fontSize: 13, lineHeight: 1, flexShrink: 0 }}>✕</button>
                     </div>
                   )}
                 </div>
@@ -242,7 +259,7 @@ function TaskDetailPanel({ task, onTaskMetaChange }) {
       {/* Right column — Focus Timer + AI breakdown controls */}
       <div style={{ minWidth: 0 }}>
         <div className="eyebrow" style={{ marginBottom: 8 }}>Focus timer</div>
-        <TaskFocusTimer task={task} onSaved={(m) => setFocusTotal((t) => t + m)} />
+        <TaskFocusTimer task={task} focus={focus} />
         <div style={{ fontSize: 11, color: focusTotal > 0 ? 'var(--teal-600)' : 'var(--text-3)', marginTop: 10, fontWeight: focusTotal > 0 ? 600 : 400, lineHeight: 1.4 }}>
           {focusLine}
         </div>
@@ -282,12 +299,21 @@ function TaskDetailPanel({ task, onTaskMetaChange }) {
 
 }
 
-function TaskRow({ task, expanded, onToggle, onCheck, onTaskMetaChange }) {
+function TaskRow({ task, expanded, onToggle, onCheck, onTaskMetaChange, focus, focusTick, onEdit }) {
   const hasSubs = task.subtasks && task.subtasks.length > 0;
   const done = hasSubs ? task.subtasks.filter((s) => s.done).length : 0;
   const completed = !!task.is_completed;
   const pct = completed ? 100 : (hasSubs ? Math.round(done / task.subtasks.length * 100) : 0);
   const timeSpent = window.FOCUS_LOG?.[task.id] || 0;
+
+  // Live cue when this task's shared focus timer is running (visible while collapsed)
+  const ft = focus && focus.state;
+  const ftLinked = ft && ft.linked;
+  const timing = !!ft && ft.running && ftLinked && ftLinked.kind === 'task' && String(ftLinked.id) === String(task.id);
+  window.useNowTick(timing && !ft.paused);
+  const tRemain = timing ? window.focusTimerRemaining(ft) : 0;
+  const tmm = String(Math.floor(tRemain / 60)).padStart(2, '0');
+  const tss = String(tRemain % 60).padStart(2, '0');
 
   return (
     <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
@@ -309,12 +335,17 @@ function TaskRow({ task, expanded, onToggle, onCheck, onTaskMetaChange }) {
           </div>
           <div className="progress" style={{ marginTop: 10, height: 3 }}><span style={{ width: pct + '%' }} /></div>
         </div>
+        {timing &&
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 9px', borderRadius: 999, background: 'var(--accent-soft)', color: 'var(--accent)', fontFamily: 'var(--ff-mono)', fontWeight: 700, fontSize: 12, flexShrink: 0 }}>
+            {ft.paused ? '⏸' : '⏱'} {tmm}:{tss}
+          </span>
+        }
         <button className="btn ghost sm" onClick={(e) => {e.stopPropagation();onToggle();}}>
           <Icon name={expanded ? 'chevron-down' : 'chevron-right'} size={14} />
         </button>
       </div>
 
-      {expanded && <TaskDetailPanel task={task} onTaskMetaChange={onTaskMetaChange} />}
+      {expanded && <TaskDetailPanel task={task} onTaskMetaChange={onTaskMetaChange} focus={focus} focusTick={focusTick} onEdit={onEdit} />}
     </div>);
 
 }
@@ -832,12 +863,108 @@ function CreateItemModal({ goals, defaultKind, onClose, onTaskCreated, onGoalCre
   );
 }
 
-function TasksScreen({ tasks, setTasks, goals, setGoals, dataLoading, onReward }) {
+function EditTaskModal({ task, goals, onClose, onSaved }) {
+  const [title, setTitle] = React.useState(task.title || '');
+  const [description, setDescription] = React.useState(task.notes || '');
+  const [subject, setSubject] = React.useState(task.subject && SUBJECTS[task.subject] ? task.subject : '');
+  const [priority, setPriority] = React.useState(task.priority || 'Routine');
+  const [dueDate, setDueDate] = React.useState(task.due_date || '');
+  const [goalId, setGoalId] = React.useState(task.goal_id || '');
+  const [saving, setSaving] = React.useState(false);
+  const [err, setErr] = React.useState('');
+
+  const submit = async () => {
+    setErr('');
+    if (!title.trim()) { setErr('Please enter a title.'); return; }
+    setSaving(true);
+    const { data, error } = await window._supabase.from('tasks').update({
+      title: title.trim(),
+      notes: description.trim() || null,
+      subject: subject || null,
+      priority,
+      due_date: dueDate || null,
+      goal_id: goalId || null,
+    }).eq('id', task.id).select('*, roadmap_step:roadmap_steps(title, goal_id)').single();
+    setSaving(false);
+    if (error) { setErr(error.message); return; }
+    onSaved(window.mapTaskRow(data));
+    onClose();
+  };
+
+  return (
+    <>
+      <div onClick={onClose} style={{ position:'fixed', inset:0, background:'rgba(10,10,10,0.45)', zIndex:200, backdropFilter:'blur(3px)' }} />
+      <div className="card" style={{ position:'fixed', top:'50%', left:'50%', transform:'translate(-50%,-50%)', width:480, maxHeight:'86vh', overflow:'auto', zIndex:201, padding:0, boxShadow:'var(--shadow-3)' }}>
+        <div style={{ padding:'18px 22px', borderBottom:'1px solid var(--border)', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+          <div style={{ fontFamily:'var(--ff-display)', fontSize:22 }}>Edit task</div>
+          <button onClick={onClose} style={{ color:'var(--text-3)', fontSize:14, background:'none', border:'none', cursor:'pointer' }}>✕</button>
+        </div>
+        <div style={{ padding:'18px 22px' }}>
+          <div className="stack" style={{ gap:12 }}>
+            <div>
+              <div className="eyebrow" style={{ marginBottom:6 }}>Title</div>
+              <input className="input" value={title} onChange={e=>setTitle(e.target.value)} autoFocus />
+            </div>
+            <div>
+              <div className="eyebrow" style={{ marginBottom:6 }}>Description</div>
+              <textarea className="input" rows={3} placeholder="Optional details" value={description} onChange={e=>setDescription(e.target.value)} style={{ resize:'none', lineHeight:1.5 }} />
+            </div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+              <div>
+                <div className="eyebrow" style={{ marginBottom:6 }}>Subject</div>
+                <select className="input" style={{ fontSize:13 }} value={subject} onChange={e=>setSubject(e.target.value)}>
+                  <option value="">None</option>
+                  {Object.keys(SUBJECTS).map(s => <option key={s}>{s}</option>)}
+                </select>
+              </div>
+              <div>
+                <div className="eyebrow" style={{ marginBottom:6 }}>Priority</div>
+                <select className="input" style={{ fontSize:13 }} value={priority} onChange={e=>setPriority(e.target.value)}>
+                  {Object.keys(PRIORITY_CONFIG).map(p => <option key={p}>{p}</option>)}
+                </select>
+              </div>
+            </div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+              <div>
+                <div className="eyebrow" style={{ marginBottom:6 }}>Due date</div>
+                <input className="input" type="date" value={dueDate} onChange={e=>setDueDate(e.target.value)} />
+              </div>
+              <div>
+                <div className="eyebrow" style={{ marginBottom:6 }}>Link to goal</div>
+                <select className="input" style={{ fontSize:13 }} value={goalId} onChange={e=>setGoalId(e.target.value)}>
+                  <option value="">No goal</option>
+                  {goals.map(g => <option key={g.id} value={g.id}>{g.title}</option>)}
+                </select>
+              </div>
+            </div>
+
+            {err && <div style={{ fontSize:12, color:'var(--coral)', background:'var(--coral-100)', borderRadius:8, padding:'8px 12px' }}>{err}</div>}
+
+            <div style={{ display:'flex', justifyContent:'flex-end', gap:8, marginTop:4 }}>
+              <button className="btn" onClick={onClose}>Cancel</button>
+              <button className="btn primary" disabled={!title.trim()||saving} onClick={submit}>{saving?'Saving…':'Save changes'}</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+function TasksScreen({ tasks, setTasks, goals, setGoals, dataLoading, focus, focusTick, onReward }) {
   const [tab, setTab] = useState('tasks');
-  const [expanded, setExpanded] = useState(null);
+  const [expandedIds, setExpandedIds] = useState(() => new Set());
   const [creating, setCreating] = useState(false);
+  const [editingTask, setEditingTask] = useState(null);
   const [taskFilter, setTaskFilter] = useState('all');
   const [showCompleted, setShowCompleted] = useState(false);
+
+  // Panels stay open until explicitly closed (independent toggles).
+  const toggleExpanded = (id) => setExpandedIds((prev) => {
+    const n = new Set(prev);
+    if (n.has(id)) n.delete(id); else n.add(id);
+    return n;
+  });
 
   const dayDiff = (dd) => {
     if (!dd) return null;
@@ -919,10 +1046,12 @@ function TasksScreen({ tasks, setTasks, goals, setGoals, dataLoading, onReward }
                   : <div className="stack" style={{ gap: 12 }}>
                       {visibleOpen.map((t) =>
                       <TaskRow key={t.id} task={t}
-                        expanded={expanded === t.id}
-                        onToggle={() => setExpanded(expanded === t.id ? null : t.id)}
+                        expanded={expandedIds.has(t.id)}
+                        onToggle={() => toggleExpanded(t.id)}
                         onCheck={() => completeTask(t.id)}
-                        onTaskMetaChange={updateTaskMeta} />
+                        onTaskMetaChange={updateTaskMeta}
+                        focus={focus} focusTick={focusTick}
+                        onEdit={setEditingTask} />
                       )}
                     </div>
                 }
@@ -936,10 +1065,12 @@ function TasksScreen({ tasks, setTasks, goals, setGoals, dataLoading, onReward }
                   <div className="stack" style={{ gap: 12, marginTop: 10 }}>
                         {completedTasks.map((t) =>
                     <TaskRow key={t.id} task={t}
-                      expanded={expanded === t.id}
-                      onToggle={() => setExpanded(expanded === t.id ? null : t.id)}
+                      expanded={expandedIds.has(t.id)}
+                      onToggle={() => toggleExpanded(t.id)}
                       onCheck={() => completeTask(t.id)}
-                      onTaskMetaChange={updateTaskMeta} />
+                      onTaskMetaChange={updateTaskMeta}
+                      focus={focus} focusTick={focusTick}
+                      onEdit={setEditingTask} />
                     )}
                       </div>
                   }
@@ -972,6 +1103,13 @@ function TasksScreen({ tasks, setTasks, goals, setGoals, dataLoading, onReward }
         onClose={() => setCreating(false)}
         onTaskCreated={(t) => { setTasks(ts => [t, ...ts]); setTab('tasks'); }}
         onGoalCreated={(g, ts = []) => { setGoals(gs => [g, ...gs]); if (ts.length) setTasks(prev => [...ts, ...prev]); setTab('goals'); }}
+      />}
+
+      {editingTask && <EditTaskModal
+        task={editingTask}
+        goals={goals}
+        onClose={() => setEditingTask(null)}
+        onSaved={(updated) => setTasks(ts => ts.map(t => t.id === updated.id ? updated : t))}
       />}
     </>);
 

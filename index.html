@@ -606,6 +606,59 @@ function App() {
   const [upcomingSessions, setUpcomingSessions] = useState([]);
   const [dataLoading, setDataLoading] = useState(true);
 
+  // ── Shared focus timer (single active session, reflected on Dashboard + Tasks) ──
+  const [focusTimer, setFocusTimer] = useState(null);
+  const [focusTick, setFocusTick] = useState(0);
+  const focus = {
+    state: focusTimer,
+    start: (linked, minutes) => {
+      const mins = Math.max(1, minutes || 25);
+      const sec = mins * 60;
+      setFocusTimer({
+        linked: linked || null,
+        selectedMin: mins,
+        totalSec: sec,
+        endsAt: Date.now() + sec * 1000,
+        remainingSec: sec,
+        running: true,
+        paused: false,
+        startedAtMs: Date.now(),
+      });
+    },
+    pause: () => setFocusTimer(t => (t && t.running && !t.paused)
+      ? { ...t, paused: true, remainingSec: window.focusTimerRemaining(t), endsAt: null }
+      : t),
+    resume: () => setFocusTimer(t => (t && t.running && t.paused)
+      ? { ...t, paused: false, endsAt: Date.now() + (t.remainingSec || 0) * 1000 }
+      : t),
+    reset: () => setFocusTimer(null),
+    save: async () => {
+      const t = focusTimer;
+      if (!t) return null;
+      const remaining = window.focusTimerRemaining(t);
+      const elapsedSec = Math.max(0, t.totalSec - remaining);
+      if (elapsedSec <= 0) { setFocusTimer(null); return null; }
+      const elapsedMin = Math.max(1, Math.round(elapsedSec / 60));
+      try {
+        const { data: { user } } = await window._supabase.auth.getUser();
+        await window._supabase.from('focus_sessions').insert({
+          user_id: user.id,
+          duration_minutes: elapsedMin,
+          selected_minutes: t.selectedMin,
+          label: t.linked ? t.linked.label : null,
+          subject: t.linked ? t.linked.subject : null,
+          linked_id: t.linked ? String(t.linked.id) : null,
+          linked_kind: t.linked ? t.linked.kind : null,
+          started_at: new Date(t.startedAtMs).toISOString(),
+        });
+      } catch (e) { console.error('Failed to save focus session:', e.message); }
+      const linked = t.linked;
+      setFocusTimer(null);
+      setFocusTick(x => x + 1);
+      return { elapsedMin, linked };
+    },
+  };
+
   const loadUserData = async (userId) => {
     const [tasksRes, goalsRes] = await Promise.all([
       window._supabase
@@ -906,13 +959,15 @@ function App() {
     case 'dashboard':
       screen = <DashboardScreen member={member} onJoin={onJoin} onGoto={setRoute} gameMode={tw.gameMode}
         intention={intention} onClearIntention={() => setIntention(null)}
-        tasks={liveTasks} goals={liveGoals} setTasks={setLiveTasks} />;
+        tasks={liveTasks} goals={liveGoals} setTasks={setLiveTasks}
+        focus={focus} focusTick={focusTick} />;
       break;
     case 'tasks':
       screen = <TasksScreen
         tasks={liveTasks} setTasks={setLiveTasks}
         goals={liveGoals} setGoals={setLiveGoals}
         dataLoading={dataLoading}
+        focus={focus} focusTick={focusTick}
         onReward={onReward} />;
       break;
     case 'sessions': screen = <SessionsScreen onJoin={onJoin} isAdmin={false} />; break;
@@ -935,7 +990,8 @@ function App() {
     case 'admin-analytics': screen = <AdminAnalytics />; break;
     default:
       screen = <DashboardScreen member={member} onJoin={onJoin} onGoto={setRoute} gameMode={tw.gameMode}
-        intention={intention} onClearIntention={() => setIntention(null)} tasks={liveTasks} goals={liveGoals} setTasks={setLiveTasks} />;
+        intention={intention} onClearIntention={() => setIntention(null)} tasks={liveTasks} goals={liveGoals} setTasks={setLiveTasks}
+        focus={focus} focusTick={focusTick} />;
   }
 
   return (

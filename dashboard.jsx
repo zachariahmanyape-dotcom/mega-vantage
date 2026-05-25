@@ -19,7 +19,27 @@ async function fetchFocusSessions() {
 function focusYmd(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 function focusWeekStart() { const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() - ((d.getDay()+6)%7)); return d; }
 function fmtMins(m) { return `${Math.floor(m/60)}h ${m%60}m`; }
-Object.assign(window, { fetchFocusSessions, focusYmd, focusWeekStart, fmtMins });
+
+// ─── Shared focus-timer helpers (the live timer state lives in App) ────────────
+// Wall-clock remaining (seconds) for the shared timer object, so the countdown
+// stays accurate across collapse, navigation, and background-tab throttling.
+function focusTimerRemaining(t) {
+  if (!t) return 0;
+  if (t.paused) return t.remainingSec || 0;
+  if (t.endsAt == null) return t.remainingSec || 0;
+  return Math.max(0, Math.round((t.endsAt - Date.now()) / 1000));
+}
+// Forces a 1s re-render only while `active`, so per-second ticking is localised
+// to the components actually showing a countdown (not the whole app tree).
+function useNowTick(active) {
+  const [, setN] = React.useState(0);
+  React.useEffect(() => {
+    if (!active) return;
+    const id = setInterval(() => setN((n) => n + 1), 1000);
+    return () => clearInterval(id);
+  }, [active]);
+}
+Object.assign(window, { fetchFocusSessions, focusYmd, focusWeekStart, fmtMins, focusTimerRemaining, useNowTick });
 
 // ─── Focus Timer with task-linking ────────────────────────────────────────────
 function FocusTimerModal({ tasks, goals, setTasks, onStart, onClose }) {
@@ -126,93 +146,40 @@ function FocusTimerModal({ tasks, goals, setTasks, onStart, onClose }) {
   );
 }
 
-const DashPomodoro = ({ gameMode, tasks, goals, setTasks, focusRows, onSaved }) => {
-  const [running, setRunning] = useState(false);
-  const [seconds, setSeconds] = useState(25 * 60);
+const DashPomodoro = ({ gameMode, tasks, goals, setTasks, focusRows, focus }) => {
   const [durationMin, setDurationMin] = useState(25);
-  const [linkedItem, setLinkedItem] = useState(null);
+  const [linkedItem, setLinkedItem] = useState(null); // setup-only display
   const [showPicker, setShowPicker] = useState(false);
-  const [sessionDone, setSessionDone] = useState(false);
   const [saving, setSaving] = useState(false);
   const [savedNote, setSavedNote] = useState('');
 
+  const t = focus && focus.state;
+  const isRunning = !!t && t.running;
+  useNowTick(isRunning && !t.paused);
+
   const adjust = (delta) => {
-    if (running) return;
-    setDurationMin(d => {
-      const nd = Math.min(120, Math.max(5, d + delta));
-      setSeconds(nd * 60);
-      setSessionDone(false);
-      return nd;
-    });
+    if (isRunning) return;
+    setDurationMin(d => Math.min(120, Math.max(5, d + delta)));
   };
 
-  useEffect(() => {
-    if (!running) return;
-    const t = setInterval(() => {
-      setSeconds(s => {
-        if (s <= 1) { clearInterval(t); setRunning(false); setSessionDone(true); }
-        return Math.max(0, s-1);
-      });
-    }, 1000);
-    return () => clearInterval(t);
-  }, [running]);
-
-  const handleStart = (item) => {
-    setLinkedItem(item);
-    setShowPicker(false);
-    setSeconds(durationMin * 60);
-    setSessionDone(false);
-    setSavedNote('');
-    setRunning(true);
-  };
-
-  const handleStop = () => { setRunning(false); };
-
-  const resetTimer = () => {
-    setRunning(false);
-    setSeconds(durationMin * 60);
-    setLinkedItem(null);
-    setSessionDone(false);
-    setSavedNote('');
-  };
-
-  const elapsedSec = durationMin * 60 - seconds;
+  const startWith = (item) => { setLinkedItem(item); setShowPicker(false); focus.start(item, durationMin); };
 
   const handleSave = async () => {
-    if (elapsedSec <= 0 || saving) return;
-    const mins = Math.max(1, Math.round(elapsedSec / 60));
-    const item = linkedItem;
+    if (saving) return;
     setSaving(true);
-    setRunning(false);
-    try {
-      const { data: { user } } = await window._supabase.auth.getUser();
-      const { error } = await window._supabase.from('focus_sessions').insert({
-        user_id: user.id,
-        duration_minutes: mins,
-        label: item ? item.label : null,
-        subject: item ? item.subject : null,
-        linked_id: item ? String(item.id) : null,
-        linked_kind: item ? item.kind : null,
-        started_at: new Date(Date.now() - elapsedSec * 1000).toISOString(),
-      });
-      if (error) throw error;
-      setSavedNote(`✓ Saved ${mins}m${item ? ' to "' + item.label + '"' : ''}`);
-      setTimeout(() => setSavedNote(''), 4000);
-      if (onSaved) onSaved();
-    } catch (e) {
-      console.error('Failed to save focus session:', e.message);
-      setSavedNote('Could not save — please try again.');
-    }
+    const r = await focus.save();
     setSaving(false);
-    setSeconds(durationMin * 60);
     setLinkedItem(null);
-    setSessionDone(false);
+    if (r) { setSavedNote(`✓ Saved ${r.elapsedMin}m${r.linked ? ' to "' + r.linked.label + '"' : ''}`); setTimeout(() => setSavedNote(''), 4000); }
   };
 
-  const mm = String(Math.floor(seconds/60)).padStart(2,'0');
-  const ss = String(seconds%60).padStart(2,'0');
-  const pct = (1 - seconds/(durationMin*60)) * 100;
-  const fresh = elapsedSec === 0;
+  const remaining = isRunning ? window.focusTimerRemaining(t) : durationMin * 60;
+  const totalSec = isRunning ? t.totalSec : durationMin * 60;
+  const mm = String(Math.floor(remaining/60)).padStart(2,'0');
+  const ss = String(remaining%60).padStart(2,'0');
+  const pct = totalSec ? (1 - remaining/totalSec) * 100 : 0;
+  const done = isRunning && remaining <= 0;
+  const shownLink = isRunning ? t.linked : linkedItem;
   const greenBtn = { flex:1, justifyContent:'center', background:'var(--teal-600)', color:'#fff', borderColor:'var(--teal-600)' };
   const weekMin = (focusRows || []).filter(r => new Date(r.started_at || r.created_at) >= focusWeekStart()).reduce((a, r) => a + (r.duration_minutes || 0), 0);
 
@@ -223,19 +190,19 @@ const DashPomodoro = ({ gameMode, tasks, goals, setTasks, focusRows, onSaved }) 
           <div className="eyebrow">Focus timer</div>
           <div style={{ fontSize:11, color:'var(--text-3)' }}>{fmtMins(weekMin)} this week</div>
         </div>
-        {linkedItem && (
+        {shownLink && (
           <div style={{ display:'flex', alignItems:'center', gap:8, marginTop:8, padding:'6px 10px', background:'var(--accent-soft)', borderRadius:8, border:'1px solid var(--accent)' }}>
-            <Icon name={linkedItem.kind==='goal'?'target':'tasks'} size={12} style={{ color:'var(--accent)' }} />
-            <span style={{ fontSize:12, color:'var(--accent)', fontWeight:600, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', flex:1 }}>{linkedItem.label}</span>
-            {!running && <button onClick={() => setLinkedItem(null)} style={{ fontSize:11, color:'var(--text-3)', background:'none', border:'none', cursor:'pointer' }}>✕</button>}
+            <Icon name={shownLink.kind==='goal'?'target':'tasks'} size={12} style={{ color:'var(--accent)' }} />
+            <span style={{ fontSize:12, color:'var(--accent)', fontWeight:600, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', flex:1 }}>{shownLink.label}</span>
+            {!isRunning && <button onClick={() => setLinkedItem(null)} style={{ fontSize:11, color:'var(--text-3)', background:'none', border:'none', cursor:'pointer' }}>✕</button>}
           </div>
         )}
         <div style={{ display:'flex', alignItems:'baseline', gap:6, marginTop:8 }}>
           <span className="display mono" style={{ fontSize:46, letterSpacing:'0.02em' }}>{mm}:{ss}</span>
-          <span className="sub" style={{ fontSize:13, color:'var(--text-3)' }}>pomodoro</span>
+          <span className="sub" style={{ fontSize:13, color:'var(--text-3)' }}>{isRunning && t.paused ? 'paused' : 'pomodoro'}</span>
         </div>
         <div className="progress" style={{ marginTop:10 }}><span style={{ width: pct+'%' }} /></div>
-        {!running && fresh && (
+        {!isRunning && (
           <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginTop:12 }}>
             <span className="eyebrow" style={{ margin:0 }}>Session length</span>
             <div style={{ display:'flex', alignItems:'center', gap:8 }}>
@@ -245,23 +212,23 @@ const DashPomodoro = ({ gameMode, tasks, goals, setTasks, focusRows, onSaved }) 
             </div>
           </div>
         )}
-        {sessionDone && <div style={{ marginTop:8, fontSize:12, color:'var(--teal-600)', fontWeight:600 }}>✓ Session complete — save it to log your focus time</div>}
+        {done && <div style={{ marginTop:8, fontSize:12, color:'var(--teal-600)', fontWeight:600 }}>✓ Session complete — save it to log your focus time</div>}
         {savedNote && <div style={{ marginTop:8, fontSize:12, color: savedNote[0]==='✓' ? 'var(--teal-600)' : 'var(--coral)', fontWeight:600 }}>{savedNote}</div>}
         <div style={{ display:'flex', gap:8, marginTop:14 }}>
-          {running ? (
+          {isRunning ? (
             <>
-              <button className="btn coral" onClick={handleStop} style={{ justifyContent:'center' }}><Icon name="pause" size={14} /> Stop</button>
+              <button className="btn" onClick={() => t.paused ? focus.resume() : focus.pause()} style={{ justifyContent:'center' }}>
+                <Icon name={t.paused ? 'play' : 'pause'} size={14} /> {t.paused ? 'Resume' : 'Pause'}
+              </button>
               <button className="btn" onClick={handleSave} disabled={saving} style={greenBtn}><Icon name="check" size={14} /> {saving?'Saving…':'Save'}</button>
+              <button className="btn" onClick={() => { focus.reset(); setLinkedItem(null); }}>Reset</button>
             </>
-          ) : !fresh ? (
-            <button className="btn" onClick={handleSave} disabled={saving} style={greenBtn}><Icon name="check" size={14} /> {saving?'Saving…':'Save focus'}</button>
           ) : (
             <button className="btn primary" onClick={() => setShowPicker(true)} style={{ flex:1, justifyContent:'center' }}><Icon name="play" size={14} /> Start focus</button>
           )}
-          <button className="btn" onClick={resetTimer}>Reset</button>
         </div>
       </div>
-      {showPicker && <FocusTimerModal tasks={tasks} goals={goals} setTasks={setTasks} onStart={handleStart} onClose={() => setShowPicker(false)} />}
+      {showPicker && <FocusTimerModal tasks={tasks} goals={goals} setTasks={setTasks} onStart={startWith} onClose={() => setShowPicker(false)} />}
     </>
   );
 };
@@ -589,7 +556,7 @@ function buildSmartOverview({ tasks, sessions, now }) {
   return parts.join(' ');
 }
 
-function DashboardScreen({ member, onJoin, onGoto, gameMode, intention, onClearIntention, tasks, goals, setTasks }) {
+function DashboardScreen({ member, onJoin, onGoto, gameMode, intention, onClearIntention, tasks, goals, setTasks, focus, focusTick }) {
   const now = new Date();
   const today = now.toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' });
   const hr = now.getHours();
@@ -597,8 +564,8 @@ function DashboardScreen({ member, onJoin, onGoto, gameMode, intention, onClearI
   const [focusRows, setFocusRows] = useState([]);
   const [sessions, setSessions] = useState([]);
   const reloadFocus = () => fetchFocusSessions().then(setFocusRows);
+  useEffect(() => { reloadFocus(); }, [focusTick]);
   useEffect(() => {
-    reloadFocus();
     if (window.fetchListSessions) window.fetchListSessions().then(setSessions);
   }, []);
   const overview = buildSmartOverview({ tasks, sessions, now });
@@ -633,7 +600,7 @@ function DashboardScreen({ member, onJoin, onGoto, gameMode, intention, onClearI
             <DashStreak days={member.streakDays} gameMode={gameMode} />
             <DashLevel member={member} />
           </div>
-          <DashPomodoro gameMode={gameMode} tasks={tasks} goals={goals} setTasks={setTasks} focusRows={focusRows} onSaved={reloadFocus} />
+          <DashPomodoro gameMode={gameMode} tasks={tasks} goals={goals} setTasks={setTasks} focusRows={focusRows} focus={focus} />
           <DashFocusBreakdown focusRows={focusRows} />
           <DashTasksPeek tasks={tasks} onGoTasks={() => onGoto('tasks')} />
         </div>
