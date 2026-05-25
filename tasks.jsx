@@ -116,6 +116,13 @@ function TaskRow({ task, expanded, onToggle, onCheck, onSubCheck }) {
 }
 
 function GoalCard({ goal, tasks }) {
+  const [open, setOpen] = useState(true);
+  const GoalChevron = () => (
+    <button onClick={() => setOpen((o) => !o)} aria-label={open ? 'Collapse goal' : 'Expand goal'}
+      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', color: 'var(--text-3)' }}>
+      <Icon name={open ? 'chevron-down' : 'chevron-right'} size={16} />
+    </button>
+  );
   // ── Legacy hardcoded shape (taskIds present) ──────────────────────────────
   if (goal.taskIds) {
     const linked = goal.taskIds.map((id) => tasks.find((t) => t.id === id)).filter(Boolean);
@@ -127,7 +134,10 @@ function GoalCard({ goal, tasks }) {
       <div className="card" style={{ padding: 22 }}>
         <div className="row-between">
           <div style={{ flex: 1 }}>
-            <div className="eyebrow">Goal</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <GoalChevron />
+              <div className="eyebrow" style={{ margin: 0 }}>Goal</div>
+            </div>
             <div className="display" style={{ fontSize: 28, marginTop: 4, lineHeight: 1.1 }}>{goal.title}</div>
             <div style={{ fontSize: 13, color: 'var(--text-2)', marginTop: 8, maxWidth: 560, lineHeight: 1.5 }}>{goal.description}</div>
           </div>
@@ -137,6 +147,7 @@ function GoalCard({ goal, tasks }) {
             {totalTime > 0 && <div style={{ fontSize: 11, color: 'var(--teal-600)', marginTop: 4 }}>⏱ {totalTime}m total focus</div>}
           </div>
         </div>
+        {open && <>
         <div className="progress" style={{ marginTop: 14, height: 5 }}><span style={{ width: pct + '%' }} /></div>
         <div className="stack" style={{ gap: 8, marginTop: 18 }}>
           {linked.map((t) => {
@@ -156,6 +167,7 @@ function GoalCard({ goal, tasks }) {
             );
           })}
         </div>
+        </>}
       </div>
     );
   }
@@ -182,6 +194,7 @@ function GoalCard({ goal, tasks }) {
       <div className="row-between" style={{ alignItems: 'flex-start' }}>
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+            <GoalChevron />
             <div className="eyebrow" style={{ margin: 0 }}>Goal</div>
             <span style={{
               fontSize: 10, padding: '2px 8px', borderRadius: 999,
@@ -210,7 +223,7 @@ function GoalCard({ goal, tasks }) {
           </div>
         )}
       </div>
-      {totalLinked > 0 && (
+      {open && totalLinked > 0 && (
         <>
           <div className="progress" style={{ marginTop: 14, height: 5 }}><span style={{ width: pct + '%' }} /></div>
           <div className="stack" style={{ gap: 8, marginTop: 18 }}>

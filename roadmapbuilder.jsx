@@ -278,6 +278,15 @@ RULES:
 
   const regenerate = () => { setRoadmap(null); setStage('intake'); };
 
+  const resetAll = () => {
+    setMemberId(''); setMember(null);
+    setGoalTitle(''); setGoalSuccess(''); setTimeline('90 days'); setImportance(3);
+    setCurrentRole(''); setIndustry(''); setAlreadyTried(''); setObstacle('');
+    setHours(RB_HOURS[1]); setDiag({ mindset: 0, structure: 0, competence: 0 });
+    setFocus([]); setNotes('');
+    setRoadmap(null); setStage('intake');
+  };
+
   const save = async () => {
     if (!memberId || !roadmap) return;
     setSaving(true);
@@ -323,6 +332,7 @@ RULES:
         }
       }
       showToast(`Roadmap saved for ${member?.full_name || 'member'} — it's now live on their Vantage.`, 'success');
+      setStage('saved');
     } catch (e) {
       console.error('Save failed:', e);
       showToast('Save failed — ' + (e.message || 'check console'), 'error');
@@ -523,6 +533,21 @@ RULES:
             </button>
           </div>
         </>
+      )}
+
+      {stage === 'saved' && (
+        <div className="card" style={{ textAlign: 'center', padding: '52px 32px' }}>
+          <div style={{ width: 56, height: 56, borderRadius: 16, background: 'var(--teal-50)', color: 'var(--teal-600)', display: 'grid', placeItems: 'center', margin: '0 auto 18px' }}>
+            <Icon name="check" size={28} stroke={2.5} />
+          </div>
+          <div style={{ fontFamily: 'var(--ff-display)', fontSize: 30, letterSpacing: '0.02em', marginBottom: 8 }}>Roadmap saved</div>
+          <div style={{ fontSize: 14, color: 'var(--text-2)', maxWidth: 460, margin: '0 auto 24px', lineHeight: 1.5 }}>
+            {member?.full_name || 'The member'}'s roadmap is now live on their Vantage. Build another, or head back to start.
+          </div>
+          <button className="btn primary" onClick={resetAll} style={{ margin: '0 auto' }}>
+            <Icon name="plus" size={15} /> Build another roadmap
+          </button>
+        </div>
       )}
 
       {toast && (

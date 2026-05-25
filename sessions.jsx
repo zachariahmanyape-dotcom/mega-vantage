@@ -4,6 +4,7 @@ function SessionsScreen({ onJoin, isAdmin }) {
   const [view, setView] = useState('calendar');
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showPast, setShowPast] = useState(false);
 
   React.useEffect(() => {
     let active = true;
@@ -39,11 +40,11 @@ function SessionsScreen({ onJoin, isAdmin }) {
               borderRight: '1px solid var(--border)',
               background: past ? 'var(--bg-sunken)' : isTown ? 'rgba(255,107,107,0.05)' : 'var(--sapphire-100)'
             }}>
-              <div className="eyebrow" style={{ fontSize: 9, marginBottom: 4 }}>{s.date.split(',')[0]}</div>
-              <div className="display" style={{ fontSize: 30, lineHeight: 1, color: past ? 'var(--text-3)' : 'var(--text)' }}>
+              <div className="eyebrow" style={{ fontSize: 9, marginBottom: 4, color: 'var(--sapphire)' }}>{s.date.split(',')[0]}</div>
+              <div className="display" style={{ fontSize: 30, lineHeight: 1, color: 'var(--sapphire)' }}>
                 {s.dateISO.split('-')[2]}
               </div>
-              <div className="sub" style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 2 }}>
+              <div className="sub" style={{ fontSize: 11, color: 'var(--sapphire)', opacity: 0.75, marginTop: 2 }}>
                 {new Date(s.dateISO).toLocaleString('en-US', { month: 'short' })}
               </div>
             </div>
@@ -113,14 +114,26 @@ function SessionsScreen({ onJoin, isAdmin }) {
               {upcoming.map((s) => <ListCard key={s.id} s={s} />)}
             </div>
           }
-          <div className="eyebrow" style={{ marginTop: 28, marginBottom: 10 }}>Past · {past.length}</div>
-          {!loading && past.length === 0 ?
-          <div style={{ padding: '16px 0', color: 'var(--text-3)', fontSize: 13 }}>No past sessions yet.</div> :
+          <div style={{ marginTop: 28 }}>
+            {!loading && past.length === 0 ?
+            <>
+                <div className="eyebrow" style={{ marginBottom: 10 }}>Past · 0</div>
+                <div style={{ padding: '16px 0', color: 'var(--text-3)', fontSize: 13 }}>No past sessions yet.</div>
+              </> :
 
-          <div className="stack" style={{ gap: 12 }}>
-              {past.map((s) => <ListCard key={s.id} s={s} past />)}
-            </div>
-          }
+            <>
+                <button onClick={() => setShowPast((p) => !p)} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-2)', fontSize: 13, fontWeight: 600, padding: '4px 0', marginBottom: 10 }}>
+                  <Icon name={showPast ? 'chevron-down' : 'chevron-right'} size={14} />
+                  Past ({past.length})
+                </button>
+                {showPast &&
+              <div className="stack" style={{ gap: 12 }}>
+                    {past.map((s) => <ListCard key={s.id} s={s} past />)}
+                  </div>
+              }
+              </>
+            }
+          </div>
         </div>
       }
     </>);
