@@ -27,10 +27,10 @@ There are no imports between files. All components are globals on the window sco
 - `tasks` → TasksScreen (tasks.jsx) — Tasks / Goals / Focus tabs; "+ New" create modal; Today/Tomorrow/Next-7-days/All views + collapsible Completed; Focus metrics + heatmaps
 - `sessions` → SessionsScreen (sessions.jsx) — Supabase calendar + list, add-to-calendar (.ics/Google/Outlook)
 - `roadmap` → RoadmapScreen (roadmap.jsx) — member's most-recent active goal as a phased roadmap (animated progress bar, collapsible phase cards with staggered reveal, checkable tasks → `is_completed`/`completed_at`, editable `due_date`/`member_notes` save-on-blur with inline "Saved" tick, teal reflection + coral "Note from Zach" callouts, soft-dimmed locked phases, friendly empty state). Nav: between Sessions and Wins.
-- `wins` → WinsScreen (wins.jsx) — Supabase `wins` table (load + post)
-- `resources` → ResourcesScreen (resources.jsx) — still mock (RESOURCES in data.jsx)
-- `chat` → ChatScreen (chat.jsx) — single placeholder "MEGA Mentorship" channel (real member count, no messaging backend)
-- `profile` → ProfileScreen (profile.jsx) — real stat card / milestones / badges; personal-info + interests still placeholder
+- `wins` → WinsScreen (wins.jsx) — Supabase `wins` table (load + post); reactions persisted to `win_reactions` (load aggregated counts + own reacted state, optimistic toggle)
+- `resources` → ResourcesScreen (resources.jsx) — content still mock (RESOURCES in data.jsx), but opening a card logs a `resource_views` row (dedup) for badge tracking
+- `chat` → ChatScreen (chat.jsx) — single "MEGA Mentorship" channel with a real lightweight posts backend (`community_posts`): load feed + working composer (Enter to send). Author info denormalized; no threads/reactions.
+- `profile` → ProfileScreen (profile.jsx) — real stat card / milestones; full badge wall (see Badge System); editable Personal info (job_title/employment_status/field/focus_area/interests → `profiles`)
 
 ## Admin Views (route keys)
 - `admin-overview` → AdminOverview (admin.jsx)
@@ -51,17 +51,27 @@ Admin mode is triggered when `liveProfile.role === 'admin'` and route starts wit
 URL and anon key are in supabase.jsx. Client is `window._supabase`.
 
 Tables wired to live data:
-- `profiles` — member auth, role (admin/member), membership_tier ('breakthrough'/'foundations'), account_type, trial status, member_status, joined_at. Added this session: `google_connected`, `google_email`.
+- `profiles` — member auth, role (admin/member), membership_tier ('breakthrough'/'foundations'), account_type, trial status, member_status, joined_at, `google_connected`, `google_email`. Personal-info cols (editable from Profile, drive the Profile Complete badge): `job_title`, `employment_status`, `field`, `focus_area`, `interests` (text[]).
 - `tasks` — member tasks. `roadmap_step_id` is now NULLABLE (standalone tasks allowed). Added columns: `goal_id` (direct goal link), `subject`, `priority`. subtasks/points/impact are still client-side defaults (no columns); completion uses the real `is_completed` column.
 - `goals` — member goals (title, description, target_date, status).
 - `roadmap_steps` — middle layer between goals and tasks (legacy GoalCard link path via `goal_id` OR `roadmap_step.goal_id`; also the phase layer for the Roadmap feature — `phase_label`, `reflection_prompt`, `admin_notes`, `order_index`, `status`, week range stored as prefix of `description`).
 - `sessions` — 1:1s + town halls. Admin creates; members read own 1:1s (`attendee_id = auth.uid()`) + all town halls (`attendee_id` null) via RLS. Cols: type, title, session_date, start_time, end_time, mentor_name, meeting_link, recurrence, attendee_id, created_by, `google_event_id`.
 - `wins` — community Wins board (load + post). Author info denormalized onto rows (`author_name`, `author_role`, `subject`) since profiles RLS is own-row-only. `is_public` gates the feed.
 - `focus_sessions` — dashboard focus-timer "Save" writes here (duration_minutes, label, subject, linked_id, linked_kind, started_at). Read by the Focus metrics tab + dashboard "Focus this week" widgets.
+- `win_reactions` — persisted reactions on wins (win_id, user_id, emoji; unique per trio). SELECT open to authenticated (counts + Win Of The Week computable); insert/delete own. Powers Wins reactions + the Win Of The Week badge.
+- `resource_views` — one row per distinct resource a user opened (user_id, resource_id text; unique). Own-row RLS. Powers the Resources badge category. Logged via `window.logResourceView`; counted via `window.fetchResourceViewCount`.
+- `community_posts` — lightweight community feed (user_id, channel default 'mega', body, author_name/role denormalized). SELECT open to authenticated; insert own; delete own/admin. Powers the Community badge category; counted via `window.fetchCommunityPostCount`.
 - `google_tokens` — admin Google OAuth tokens. SERVICE-ROLE ONLY (RLS on, no policies); never read client-side.
 - `points_log` — exists but NOT wired (gamification unpowered).
 
 DB function: `member_count()` — SECURITY DEFINER, returns total profile count (members can't read other profiles under RLS, so this powers community/chat member counts).
+RLS helper: `is_admin()` — SECURITY DEFINER, true when the caller's profile role = 'admin'; used as the admin override across own-row policies.
+
+## Badge System (Profile badge wall)
+- Catalog + earned-state are computed on load in profile.jsx (`computeBadgeCategories`) from live data — no badges table, no persistence (most triggers are monotonic). 11 categories; the spec listed "57" but its enumerated rows sum to 58, so the UI count is dynamic ("X of N earned"), never hardcoded.
+- Data sources: focus_sessions (count + hours + Early Bird/Night Owl times), tasks (completed count), sessions (attended past), goals (set + completed), resource_views, community_posts, wins (own count) + win_reactions (Win Of The Week), profiles.joined_at (Milestones tenure), profile fields (Profile Complete). Streaks/Weekend/Perfect Week+Month derive from a combined active-day set.
+- Interpretations (in code): Win Of The Week = top-reacted win within its Mon–Sun week, attributed to its author. Perfect Month = a calendar month where every Mon–Sun week is a Perfect Week (≥4 qualifying weeks).
+- UI: compact wall shows 12 (earned first, then easiest locked) → 3 rows; "View all" opens a centered modal grouped by category. Prestige badges get a gold border + "Prestige" label (white in dark mode). BadgeTile takes a `theme` prop for the prestige label color.
 
 Edge Functions (source mirrored in `supabase/functions/`):
 - `invite-member` — member invite flow.
@@ -71,7 +81,7 @@ Edge Functions (source mirrored in `supabase/functions/`):
 - `generate-roadmap` — admin-only (verifies `role='admin'` via the caller's JWT, verify_jwt ON); relays a prompt to Anthropic (`claude-sonnet-4-6`, max_tokens 2000) and returns the text. Keeps the Anthropic key server-side. Called from roadmapbuilder.jsx via `supabase.functions.invoke`.
 Required Edge Function secrets: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI` (= the google-oauth-callback URL; must match the Authorized redirect URI in Google Cloud); `ANTHROPIC_API_KEY` (for generate-roadmap). OAuth app is under a personal GCP project in Testing mode → publish to Production to avoid the ~7-day refresh-token expiry.
 
-Still mock/placeholder (NOT wired): resources, admin analytics + members list, real chat messaging (single-channel shell), gamification (points/level/day-streak read 0), session recurrence (label only, no repeating instances), task subtasks, profile personal-info/interests, automated reminders.
+Still mock/placeholder (NOT wired): resources content (RESOURCES in data.jsx; only view-logging is real), admin analytics + members list, full chat (single-channel posts only — no threads/multi-channel/realtime), gamification (points/level/day-streak read 0), session recurrence (label only, no repeating instances), task subtasks, automated reminders.
 
 Membership tiers: `breakthrough` → "Breakthrough" plan, anything else → "Foundations" plan.
 Role values: `admin` for admin users, anything else treated as member.
@@ -115,17 +125,19 @@ Always use CSS variables, never hardcode hex values in JSX or inline styles.
 - Tasks + Goals: live (Supabase) — create UI (+ New modal, create-from-focus-picker), TickTick-style Today/Tomorrow/Next-7-days/All views + collapsible Completed; completion driven by `tasks.is_completed`
 - Sessions: live (Supabase) — admin scheduling, member calendar/list + dashboard "Next up", add-to-calendar (.ics/Google/Outlook), Google Meet auto-link + member invite on scheduling
 - Focus: live — dashboard timer (adjustable length, Save → focus_sessions), Focus metrics tab (overview, trends, by-subject, records) + heatmaps (most-focused-time histogram, weekday×hour rhythm, year grid)
-- Wins board: live (Supabase `wins`)
+- Wins board: live (Supabase `wins`) — reactions persisted (`win_reactions`)
+- Resources: content still mock; opening a card logs a view (`resource_views`) for badges
+- Badges: live + deployed — full 57+ catalog computed on load across 11 categories, "View all" modal, prestige styling; backed by `win_reactions`/`resource_views`/`community_posts`/profile fields
 - Roadmap: live + deployed — admin builds via Roadmap Builder (AI generate → edit → save) and members view/interact on the Roadmap page. `ANTHROPIC_API_KEY` Edge Function secret is set; `generate-roadmap` function deployed (verify_jwt ON). `goals` INSERT policy updated to allow `is_admin()` (matching `roadmap_steps`/`tasks`) so admins can save on a member's behalf.
 - Notifications: driven by real upcoming sessions
-- Chat: placeholder single "MEGA Mentorship" channel (real member count, no messaging backend)
-- Profile: stat card + milestones + badges real; personal-info/interests still placeholder
+- Chat: single "MEGA Mentorship" channel with real lightweight posting (`community_posts`); no threads/multi-channel/realtime
+- Profile: stat card + milestones + full badge wall real; Personal info now editable + stored (`profiles` cols)
 - Admin member management: live (profiles); admin analytics + members list still mock
 - Dark mode: native date/time picker icons inverted to white
 - Branding: real Vantage logo in the brand box (inline currentColor SVG, theme-inverting, enlarged) + dynamic rounded-square boxed favicons (blue for light browser UI, white for dark)
 - Deployment: Vercel auto-deploy from GitHub `main` (confirmed active this session)
 - Trial expiry enforcement: live (admin + auth flow)
-- Not yet built: gamification (points/level/streak), session recurrence instances, real chat, task subtasks, automated reminders, profile personal-info/interests editing
+- Not yet built: gamification (points/level/streak), session recurrence instances, full chat (threads/multi-channel/realtime), task subtasks, automated reminders, real resources content
 
 ## What Not to Change
 - Script load order in index.html
@@ -140,3 +152,4 @@ Always use CSS variables, never hardcode hex values in JSX or inline styles.
 2026-05-24 — Fixed dashboard greeting + calendar "Today"; built real sessions backend (table + admin scheduling + member views + add-to-calendar) and Google Meet OAuth integration (3 Edge Functions); wired Wins board + collapsed Chat to one channel (`member_count()`); made profile stat card/milestones/badges real; added focus timer Save + `focus_sessions` + Focus metrics tab with heatmaps; added create Task/Goal modal + create-from-focus-picker + TickTick-style task views (fixed is_completed bug); real notifications; dark-mode date/time icons + Google-Calendar-style session time pickers.
 2026-05-24 — Replaced the placeholder "V" with the real Vantage logo (inline currentColor SVG in the sidebar brand box, theme-inverting + enlarged via viewBox crop; white logo on login/trial/admin boxes) and added dynamic rounded-square boxed favicons (favicon-light.svg blue / favicon-dark.svg white).
 2026-05-25 — Built + shipped the Roadmap feature: admin RoadmapBuilder (roadmapbuilder.jsx, route admin-roadmap) and member RoadmapScreen (roadmap.jsx, route roadmap), added `roadmap` icon + nav items + routes; deployed `generate-roadmap` Edge Function (Anthropic key server-side, admin-gated, claude-sonnet-4-6) and set the `ANTHROPIC_API_KEY` secret; fixed `goals` INSERT RLS to allow `is_admin()` on-behalf saves. Committed (51fbc1a) and pushed to `main` → Vercel deploy.
+2026-05-25 — Replaced the placeholder badge wall with a real 57+ badge system (profile.jsx `computeBadgeCategories`, computed-on-load across 11 categories, "View all" modal, prestige styling, compact wall filled to 12). Added supporting backends (migration `badge_backends`): `win_reactions` (persisted Wins reactions, enables Win Of The Week), `resource_views` (logged on resource open), `community_posts` (lightweight chat posting backend), and `profiles` personal-info cols (`job_title`/`employment_status`/`field`/`focus_area`/`interests`) with an editable Profile card (drives Profile Complete). Committed (c8865a8, b84a184) and pushed to `main` → Vercel deploy. NOTE: the Claude preview sandbox lost OS read access to the Documents folder this session (getcwd "Operation not permitted"), so changes were verified via schema checks + on the deployed site, not the local preview.
