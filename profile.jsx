@@ -152,13 +152,14 @@ function computeBadgeCategories(member, sessions, focusRows, doneTasks, bd) {
   ];
 }
 
-function BadgeTile({ badge }) {
+function BadgeTile({ badge, theme }) {
   const e = badge.earned, pr = badge.prestige;
   const iconBg = !e ? 'var(--border-strong)' :
     pr ? 'linear-gradient(135deg, #E8B24C, #F5D98B)' : 'linear-gradient(135deg, var(--accent), var(--coral))';
+  const prestigeColor = e ? (theme === 'dark' ? '#FFFFFF' : '#B8860B') : 'var(--text-3)';
   return (
     <div style={{ padding:'16px 14px', borderRadius:14, border:'1px solid '+(e&&pr?'#E8B24C':'var(--border)'), background:e?'var(--bg-elev)':'var(--bg-sunken)', opacity:e?1:0.55, textAlign:'center', position:'relative' }}>
-      {pr && <span style={{ position:'absolute', top:8, right:8, fontSize:8, fontFamily:'var(--ff-sub)', letterSpacing:'0.12em', textTransform:'uppercase', color:e?'#B8860B':'var(--text-3)' }}>Prestige</span>}
+      {pr && <span style={{ position:'absolute', top:7, right:7, fontSize:7, fontFamily:'var(--ff-sub)', letterSpacing:'0.1em', textTransform:'uppercase', color:prestigeColor }}>Prestige</span>}
       <div style={{ width:52, height:52, margin:'0 auto 10px', borderRadius:14, background:iconBg, display:'grid', placeItems:'center', color:'#fff' }}>
         <Icon name={e ? (pr ? 'trophy' : 'star') : 'trophy'} size={22} />
       </div>
@@ -168,7 +169,7 @@ function BadgeTile({ badge }) {
   );
 }
 
-function BadgeModal({ categories, earnedCount, total, onClose }) {
+function BadgeModal({ categories, earnedCount, total, theme, onClose }) {
   return (
     <>
       <div onClick={onClose} style={{ position:'fixed', inset:0, background:'rgba(10,10,10,0.4)', zIndex:200, backdropFilter:'blur(3px)' }} />
@@ -191,7 +192,7 @@ function BadgeModal({ categories, earnedCount, total, onClose }) {
                 <div style={{ fontSize:11, color:'var(--text-3)' }}>{cat.badges.filter((b) => b.earned).length}/{cat.badges.length}</div>
               </div>
               <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12 }}>
-                {cat.badges.map((b) => <BadgeTile key={b.id} badge={b} />)}
+                {cat.badges.map((b) => <BadgeTile key={b.id} badge={b} theme={theme} />)}
               </div>
             </div>
           ))}
@@ -269,8 +270,8 @@ function ProfileScreen({ member, theme, setTheme, onSignOut, onProfileSaved }) {
   const categories = computeBadgeCategories(member, sessions, focusRows, doneTasks, badgeData);
   const allBadges = categories.flatMap((c) => c.badges);
   const earned = allBadges.filter((b) => b.earned).length;
-  // Compact wall: earned first, then locked, capped to two rows.
-  const compact = [...allBadges].sort((a, b) => (b.earned ? 1 : 0) - (a.earned ? 1 : 0)).slice(0, 8);
+  // Compact wall: earned first, then the easiest locked badges, capped to three rows.
+  const compact = [...allBadges].sort((a, b) => (b.earned ? 1 : 0) - (a.earned ? 1 : 0)).slice(0, 12);
 
   const startEdit = () => {
     setForm({
@@ -373,7 +374,7 @@ function ProfileScreen({ member, theme, setTheme, onSignOut, onProfileSaved }) {
             </div>
           </div>
           <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12, marginTop:16 }}>
-            {compact.map((b) => <BadgeTile key={b.id} badge={b} />)}
+            {compact.map((b) => <BadgeTile key={b.id} badge={b} theme={theme} />)}
           </div>
         </div>
 
@@ -453,7 +454,7 @@ function ProfileScreen({ member, theme, setTheme, onSignOut, onProfileSaved }) {
         </button>
       </div>
 
-      {showAllBadges && <BadgeModal categories={categories} earnedCount={earned} total={allBadges.length} onClose={() => setShowAllBadges(false)} />}
+      {showAllBadges && <BadgeModal categories={categories} earnedCount={earned} total={allBadges.length} theme={theme} onClose={() => setShowAllBadges(false)} />}
     </>
   );
 }
