@@ -295,6 +295,14 @@ function ProfileScreen({ member, theme, setTheme, onSignOut, onProfileSaved }) {
     return () => { active = false; };
   }, []);
 
+  // Award +25 for any badge that's now earned but not yet recorded (idempotent, server-side).
+  React.useEffect(() => {
+    if (!badgeData) return;
+    const cats = computeBadgeCategories(member, sessions, focusRows, doneTasks, badgeData);
+    const earnedNames = cats.flatMap((c) => c.badges).filter((b) => b.earned).map((b) => b.name);
+    if (earnedNames.length && window.syncBadges) window.syncBadges(earnedNames);
+  }, [badgeData]);
+
   const pastSessions = sessions.filter((s) => s.status === 'past');
   const upcomingCount = sessions.filter((s) => s.status === 'upcoming').length;
   const totalMin = pastSessions.reduce((a, s) => a + Math.max(0, (s.endH - s.startH) * 60), 0);
@@ -366,7 +374,7 @@ function ProfileScreen({ member, theme, setTheme, onSignOut, onProfileSaved }) {
             <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
               <span className="chip sapphire"><span className="dot"/>{member.product}</span>
               <span className="chip teal"><span className="dot"/>{member.plan}</span>
-              <span className="chip"><span className="dot" style={{ background:'var(--coral)' }}/>{member.level} · Tier {member.levelIndex+1}</span>
+              <span className="chip"><span className="dot" style={{ background:'var(--coral)' }}/>{xpTier(member.xp).name} · Tier {xpTier(member.xp).tier}/8</span>
             </div>
             <div className="display" style={{ fontSize:36, marginTop:10, lineHeight:1 }}>{member.firstName} {member.lastName}</div>
             <div style={{ fontSize:13, color:'var(--text-2)', marginTop:6 }}>
@@ -377,8 +385,8 @@ function ProfileScreen({ member, theme, setTheme, onSignOut, onProfileSaved }) {
           </div>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:20, textAlign:'right' }}>
             <div>
-              <div className="display" style={{ fontSize:32, color:'var(--accent)' }}>{member.points.toLocaleString()}</div>
-              <div className="eyebrow">Points</div>
+              <div className="display" style={{ fontSize:32, color:'var(--accent)' }}>{(member.xp || 0).toLocaleString()}</div>
+              <div className="eyebrow">XP</div>
             </div>
             <div>
               <div className="display" style={{ fontSize:32, color:'var(--coral)' }}>{member.streakDays}</div>

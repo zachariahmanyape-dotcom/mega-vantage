@@ -295,25 +295,24 @@ const DashStreak = ({ days, gameMode }) => (
 
 // ─── Level ────────────────────────────────────────────────────────────────────
 const DashLevel = ({ member }) => {
-  const pct = (member.pointsInLevel / (member.pointsInLevel + member.pointsToNext)) * 100;
-  const next = LEVELS[Math.min(member.levelIndex+1, LEVELS.length-1)];
+  const t = xpTier(member.xp);
   return (
     <div className="card" style={{ padding:20 }}>
       <div className="eyebrow">Level</div>
       <div style={{ display:'flex', alignItems:'baseline', gap:10, marginTop:2 }}>
-        <div className="display" style={{ fontSize:34 }}>{member.level}</div>
-        <div className="sub" style={{ fontSize:13, color:'var(--text-3)' }}>Tier {member.levelIndex+1} / 5</div>
+        <div className="display" style={{ fontSize:34 }}>{t.name}</div>
+        <div className="sub" style={{ fontSize:13, color:'var(--text-3)' }}>Tier {t.tier} / 8</div>
       </div>
       <div style={{ marginTop:12 }}>
         <div style={{ display:'flex', justifyContent:'space-between', fontSize:11, color:'var(--text-3)', marginBottom:6 }}>
-          <span>{member.pointsInLevel} pts</span>
-          <span>{member.pointsToNext} to {next}</span>
+          <span>{t.xp.toLocaleString()} XP</span>
+          <span>{t.isMax ? 'Max Tier Reached' : `${t.toNext.toLocaleString()} to ${t.next.name}`}</span>
         </div>
-        <div className="progress"><span style={{ width:pct+'%' }} /></div>
+        <div className="progress"><span style={{ width:t.pct+'%' }} /></div>
       </div>
-      <div style={{ display:'flex', gap:4, marginTop:14 }}>
-        {LEVELS.map((l,i) => (
-          <div key={l} style={{ flex:1, textAlign:'center', fontSize:9, letterSpacing:'0.12em', textTransform:'uppercase', fontFamily:'var(--ff-sub)', color:i<=member.levelIndex?'var(--text)':'var(--text-3)', fontWeight:i===member.levelIndex?700:500, padding:'6px 0', borderTop:i<=member.levelIndex?'2px solid var(--accent)':'2px solid var(--border)' }}>{l}</div>
+      <div style={{ display:'flex', gap:3, marginTop:14 }}>
+        {XP_TIERS.map((lt,i) => (
+          <div key={lt.tier} title={`${lt.name} · ${lt.min.toLocaleString()} XP`} style={{ flex:1, textAlign:'center', fontSize:8, letterSpacing:'0.04em', textTransform:'uppercase', fontFamily:'var(--ff-sub)', color:i<=t.index?'var(--text)':'var(--text-3)', fontWeight:i===t.index?700:500, padding:'6px 0 0', borderTop:i<=t.index?'2px solid var(--accent)':'2px solid var(--border)', overflow:'hidden', whiteSpace:'nowrap', textOverflow:'clip' }}>{lt.tier}</div>
         ))}
       </div>
     </div>
@@ -393,7 +392,7 @@ const DashUpcoming = ({ onJoin }) => {
                 <div className="eyebrow" style={{ fontSize:10 }}>Starts in</div>
                 <div style={{ fontFamily:'var(--ff-display)', fontSize:22, lineHeight:1 }}>{countdown}</div>
               </div>
-              <button className="btn primary" onClick={e=>{e.stopPropagation();onJoin();}}>Join <Icon name="arrow-right" size={14} /></button>
+              <button className="btn primary" onClick={e=>{e.stopPropagation();onJoin(s);}}>Join <Icon name="arrow-right" size={14} /></button>
             </div>
           </div>
         </div>
@@ -404,48 +403,54 @@ const DashUpcoming = ({ onJoin }) => {
 };
 
 // ─── Stats row ────────────────────────────────────────────────────────────────
-const MiniBars = ({ values, accent }) => {
-  const max = Math.max(...values, 1);
-  return (
-    <div style={{ display:'flex', alignItems:'flex-end', gap:4, height:34, marginTop:14 }}>
-      {values.map((v,i) => {
-        const isLast = i === values.length - 1;
-        return (
-          <div key={i} style={{
-            flex: 1,
-            height: ((v / max) * 100) + '%',
-            background: isLast ? accent : 'var(--border-strong)',
-            opacity: isLast ? 1 : 0.5,
-            borderRadius: 3,
-            minHeight: 4,
-            transition: 'height .4s ease'
-          }} />
-        );
-      })}
-    </div>
-  );
-};
 
-const DashStats = ({ stats }) => {
+// Activity tiles — rendered conditionally by membership plan (Section 6 of the XP brief).
+// Breakthrough sees 1:1 Sessions; Foundations sees Focus Time this week instead.
+const DashStats = ({ member, tasks, goals, focusRows }) => {
+  const [attend, setAttend] = useState({ townHall: 0, oneToOne: 0 });
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      const { data: { user } } = await window._supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await window._supabase
+        .from('points_log').select('source')
+        .eq('user_id', user.id).in('source', ['town_hall', 'one_to_one']);
+      if (!active) return;
+      const c = { townHall: 0, oneToOne: 0 };
+      (data || []).forEach((r) => { if (r.source === 'town_hall') c.townHall++; else if (r.source === 'one_to_one') c.oneToOne++; });
+      setAttend(c);
+    })();
+    return () => { active = false; };
+  }, []);
+
+  const isBreakthrough = member.plan === 'Breakthrough';
+  const tasksDone = (tasks || []).filter((t) => t.is_completed).length;
+  const goalsDone = (goals || []).filter((g) => g.status === 'completed').length;
+  const weekMin = (focusRows || [])
+    .filter((r) => new Date(r.started_at || r.created_at) >= focusWeekStart())
+    .reduce((a, r) => a + (r.duration_minutes || 0), 0);
+
+  const firstTile = isBreakthrough
+    ? { label:'1:1 Sessions', v:attend.oneToOne, sub:'completed', color:'var(--accent)' }
+    : { label:'Focus Time',   v:fmtMins(weekMin), sub:'this week', color:'var(--accent)' };
+
   const items = [
-    { label:'1:1 Sessions', v:stats.sessions, sub:'completed', trend:[2,3,2,4,3,5,4,6], color:'var(--accent)',   delta:'+18%' },
-    { label:'Modules',      v:stats.modules,  sub:'completed', trend:[1,2,4,3,5,4,6,7], color:'var(--teal-600)', delta:'+24%' },
-    { label:'Habits',       v:stats.habits,   sub:'created',   trend:[1,2,2,3,3,4,4,5], color:'var(--coral)',    delta:'+12%' },
-    { label:'Town Halls',   v:stats.townHalls,sub:'attended',  trend:[0,1,1,2,2,3,3,3], color:'#E8B24C',         delta:'+9%'  },
+    firstTile,
+    { label:'Tasks',      v:tasksDone,       sub:'completed', color:'var(--teal-600)' },
+    { label:'Goals',      v:goalsDone,       sub:'completed', color:'var(--coral)'    },
+    { label:'Town Halls', v:attend.townHall, sub:'attended',  color:'#E8B24C'         },
   ];
   return (
     <div style={{ display:'grid', gridTemplateColumns:'repeat(4, 1fr)', gap:14, minWidth:0 }}>
       {items.map((it) => (
         <div key={it.label} className="card" style={{ padding:'18px 18px 16px', borderRadius:22, minWidth:0 }}>
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', gap:4 }}>
-            <div className="eyebrow" style={{ fontSize:10, whiteSpace:'normal', overflow:'hidden', textOverflow:'ellipsis' }}>{it.label}</div>
-            <span style={{ fontSize:10, color:'var(--teal-600)', fontWeight:700, fontFamily:'var(--ff-sub)', letterSpacing:'0.04em', flexShrink:0 }}>{it.delta}</span>
-          </div>
-          <div style={{ display:'flex', alignItems:'baseline', gap:6, marginTop:8 }}>
-            <span className="display" style={{ fontSize:38, lineHeight:1 }}>{it.v}</span>
+          <div className="eyebrow" style={{ fontSize:10, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{it.label}</div>
+          <div style={{ display:'flex', alignItems:'baseline', gap:6, marginTop:10 }}>
+            <span className="display" style={{ fontSize: typeof it.v === 'string' && it.v.length > 4 ? 28 : 38, lineHeight:1 }}>{it.v}</span>
             <span style={{ fontSize:11, color:'var(--text-3)' }}>{it.sub}</span>
           </div>
-          <MiniBars values={it.trend} accent={it.color} />
+          <div style={{ height:3, borderRadius:2, marginTop:14, background:it.color, opacity:0.85 }} />
         </div>
       ))}
     </div>
@@ -591,7 +596,7 @@ function DashboardScreen({ member, onJoin, onGoto, gameMode, intention, onClearI
       <div style={{ display:'grid', gridTemplateColumns:'1.1fr 0.9fr', gap:22, minWidth:0 }}>
         <div className="stack" style={{ gap:22, minWidth:0 }}>
           <DashUpcoming onJoin={onJoin} />
-          <DashStats stats={member.stats} />
+          <DashStats member={member} tasks={tasks} goals={goals} focusRows={focusRows} />
           <DashWeeklyChart />
           <EisenhowerMatrix tasks={tasks} />
         </div>

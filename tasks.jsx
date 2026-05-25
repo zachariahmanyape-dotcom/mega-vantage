@@ -142,6 +142,7 @@ function TaskDetailPanel({ task, onTaskMetaChange, focus, focusTick, onEdit }) {
     const next = !sub.is_completed;
     setSubs((s) => s.map((x) => x.id === id ? { ...x, is_completed: next } : x));
     await window._supabase.from('subtasks').update({ is_completed: next }).eq('id', id);
+    if (next && window.awardXp) window.awardXp('subtask_complete', 5, id, true, true);
   };
 
   const addManual = async () => {
@@ -350,7 +351,7 @@ function TaskRow({ task, expanded, onToggle, onCheck, onTaskMetaChange, focus, f
 
 }
 
-function GoalCard({ goal, tasks }) {
+function GoalCard({ goal, tasks, onComplete }) {
   const [open, setOpen] = useState(true);
   const GoalChevron = () => (
     <button onClick={() => setOpen((o) => !o)} aria-label={open ? 'Collapse goal' : 'Expand goal'}
@@ -447,6 +448,11 @@ function GoalCard({ goal, tasks }) {
               <Icon name="sessions" size={12} style={{ color: 'var(--text-3)' }} />
               Target: {targetDate}
             </div>
+          )}
+          {onComplete && goal.status !== 'completed' && (
+            <button className="btn ghost sm" onClick={() => onComplete(goal.id)} style={{ marginTop: 14 }}>
+              <Icon name="check" size={12} stroke={3} /> Mark goal complete
+            </button>
           )}
         </div>
         {totalLinked > 0 && (
@@ -1001,6 +1007,16 @@ function TasksScreen({ tasks, setTasks, goals, setGoals, dataLoading, focus, foc
       })
       .eq('id', id);
     setTasks(ts => ts.map(t => t.id === id ? { ...t, is_completed: newCompleted } : t));
+    if (newCompleted && window.awardXp) window.awardXp('task_complete', 20, id, true, true);
+  };
+
+  const completeGoal = async (id) => {
+    const goal = goals.find(g => g.id === id);
+    if (!goal || goal.status === 'completed') return;
+    const { error } = await window._supabase.from('goals').update({ status: 'completed' }).eq('id', id);
+    if (error) { console.error('Failed to complete goal:', error.message); return; }
+    setGoals(gs => gs.map(g => g.id === id ? { ...g, status: 'completed' } : g));
+    if (window.awardXp) window.awardXp('goal_complete', 100, id, true, true);
   };
 
   const updateTaskMeta = (id, patch) => {
@@ -1091,7 +1107,7 @@ function TasksScreen({ tasks, setTasks, goals, setGoals, dataLoading, focus, foc
                 <div style={{ fontFamily: 'var(--ff-display)', fontSize: 22, marginBottom: 8 }}>No goals yet</div>
                 <div style={{ fontSize: 14 }}>Your growth roadmap goals will appear here.</div>
               </div>
-            : goals.map((g) => <GoalCard key={g.id} goal={g} tasks={tasks} />)
+            : goals.map((g) => <GoalCard key={g.id} goal={g} tasks={tasks} onComplete={completeGoal} />)
           }
         </div>
       }

@@ -47,6 +47,32 @@ const MEMBER = {
 
 const LEVELS = ["Beginner", "Rising", "Skilled", "Advanced", "Elite"];
 
+// ── XP tiers — tier is always derived from xp_total at read time, never stored ──
+const XP_TIERS = [
+  { tier: 1, name: "Rookie",      min: 0 },
+  { tier: 2, name: "Rising Star", min: 1000 },
+  { tier: 3, name: "Contender",   min: 2500 },
+  { tier: 4, name: "Pro",         min: 4500 },
+  { tier: 5, name: "Veteran",     min: 7000 },
+  { tier: 6, name: "All-Star",    min: 10500 },
+  { tier: 7, name: "MVP",         min: 14000 },
+  { tier: 8, name: "Icon",        min: 18500 },
+];
+
+// Derive everything the UI needs about a member's tier from their cumulative XP.
+function xpTier(total) {
+  const xp = Math.max(0, Math.floor(total || 0));
+  let i = 0;
+  for (let j = 0; j < XP_TIERS.length; j++) if (xp >= XP_TIERS[j].min) i = j;
+  const current = XP_TIERS[i];
+  const next = XP_TIERS[i + 1] || null;       // null at Icon (max tier)
+  const into = xp - current.min;              // XP earned within the current tier band
+  const span = next ? next.min - current.min : 0;
+  const toNext = next ? next.min - xp : 0;
+  const pct = next ? Math.min(100, Math.round((into / span) * 100)) : 100;
+  return { ...current, index: i, isMax: !next, next, into, span, toNext, pct, xp };
+}
+
 const TASKS = [
   {
     id: "t1",
@@ -244,4 +270,4 @@ function Icon({name, size=18, stroke=1.8, style, className}) {
 }
 
 // exports
-Object.assign(window, { Icon, SUBJECTS, MEMBER, LEVELS, TASKS, GOALS, RESOURCES, CHANNELS, CHAT_MESSAGES, ADMIN_MEMBERS });
+Object.assign(window, { Icon, SUBJECTS, MEMBER, LEVELS, XP_TIERS, xpTier, TASKS, GOALS, RESOURCES, CHANNELS, CHAT_MESSAGES, ADMIN_MEMBERS });

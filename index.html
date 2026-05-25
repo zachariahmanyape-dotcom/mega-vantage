@@ -571,6 +571,15 @@ function App() {
   const [authUser, setAuthUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [liveProfile, setLiveProfile] = useState(null);
+  // Live XP + weekday streak (seeded from the profile, then kept current by awardXp/syncBadges)
+  const [xpTotal, setXpTotal] = useState(0);
+  const [streakDays, setStreakDays] = useState(0);
+  useEffect(() => {
+    if (liveProfile) {
+      setXpTotal(liveProfile.xp_total || 0);
+      setStreakDays(liveProfile.streak_days || 0);
+    }
+  }, [liveProfile && liveProfile.id]);
 
   const [tw, setTw] = useState(() => {
     try { return { ...TWEAK_DEFAULTS, ...JSON.parse(localStorage.getItem('vantage-tweaks') || '{}') }; }
@@ -641,7 +650,7 @@ function App() {
       const elapsedMin = Math.max(1, Math.round(elapsedSec / 60));
       try {
         const { data: { user } } = await window._supabase.auth.getUser();
-        await window._supabase.from('focus_sessions').insert({
+        const { data: row, error } = await window._supabase.from('focus_sessions').insert({
           user_id: user.id,
           duration_minutes: elapsedMin,
           selected_minutes: t.selectedMin,
@@ -650,7 +659,11 @@ function App() {
           linked_id: t.linked ? String(t.linked.id) : null,
           linked_kind: t.linked ? t.linked.kind : null,
           started_at: new Date(t.startedAtMs).toISOString(),
-        });
+        }).select('id').single();
+        if (error) throw error;
+        // +10 base, plus +15 per full 30-minute block of elapsed focus time
+        const focusXp = 10 + Math.floor(elapsedMin / 30) * 15;
+        await awardXp('focus_session', focusXp, row ? row.id : null, false, true);
       } catch (e) { console.error('Failed to save focus session:', e.message); }
       const linked = t.linked;
       setFocusTimer(null);
@@ -805,7 +818,57 @@ function App() {
     setTimeout(() => setRewards(r => r.filter(x => x.id !== id)), 1700);
   };
 
-  const onJoin = () => alert('Opening meeting link…');
+  // ── XP awarding (server-side atomic via award_xp; additive only) ──
+  // qualifies=true also pings record_activity to advance the weekday streak.
+  const awardXp = async (action, xp, ref = null, once = false, qualifies = false) => {
+    try {
+      const r1 = await window._supabase.rpc('award_xp', { p_action: action, p_xp: xp, p_ref: ref || null, p_once: !!once });
+      let total = null;
+      if (!r1.error && r1.data) {
+        if ((r1.data.awarded || 0) > 0) onReward(r1.data.awarded);
+        if (r1.data.total != null) total = r1.data.total;
+      } else if (r1.error) {
+        console.error('award_xp failed:', r1.error.message);
+      }
+      if (qualifies) {
+        const d = new Date();
+        const ds = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        const r2 = await window._supabase.rpc('record_activity', { p_today: ds });
+        if (!r2.error && r2.data) {
+          if ((r2.data.bonus || 0) > 0) onReward(r2.data.bonus);
+          if (r2.data.streak != null) setStreakDays(r2.data.streak);
+          if (r2.data.total != null) total = r2.data.total;
+        }
+      }
+      if (total != null) setXpTotal(total);
+    } catch (e) { console.error('awardXp error:', e.message); }
+  };
+
+  // Award +25 for any newly-earned badges (idempotent; called from the Profile badge wall)
+  const syncBadges = async (keys) => {
+    if (!keys || !keys.length) return;
+    try {
+      const { data, error } = await window._supabase.rpc('sync_badges', { p_keys: keys });
+      if (error) { console.error('sync_badges failed:', error.message); return; }
+      if (data) {
+        if ((data.awarded || 0) > 0) onReward(data.awarded);
+        if (data.total != null) setXpTotal(data.total);
+      }
+    } catch (e) { console.error('syncBadges error:', e.message); }
+  };
+
+  // Joining a session = attendance: town hall +30 (everyone), 1:1 +50 (Breakthrough only).
+  const onJoin = (session) => {
+    if (session && session.link) window.open(session.link, '_blank', 'noopener');
+    if (session && session.id) {
+      const isTownHall = session.type === 'Town Hall' || session.isTownHall;
+      if (isTownHall) {
+        awardXp('town_hall', 30, session.id, true);
+      } else if ((liveProfile && liveProfile.membership_tier) === 'breakthrough') {
+        awardXp('one_to_one', 50, session.id, true);
+      }
+    }
+  };
   const onViewAs = member => { setViewingAs(member); setRoute('dashboard'); };
   const exitViewAs = () => { setViewingAs(null); setRoute('admin-members'); };
 
@@ -928,14 +991,10 @@ function App() {
     accountType: liveProfile.account_type || 'member',
     trialExpiresAt: liveProfile.trial_expires_at || null,
     joinedAt: liveProfile.joined_at || null,
-    points: 0,
-    level: 'Beginner',
-    levelIndex: 0,
-    pointsInLevel: 0,
-    pointsToNext: 1000,
-    streakDays: 0,
+    xp: xpTotal,
+    points: xpTotal,
+    streakDays: streakDays,
     learningThisMonth: '0h 0m',
-    stats: { sessions: 0, modules: 0, habits: 0, townHalls: 0 },
     interests: liveProfile.interests || [],
     notificationPrefs: liveProfile.notification_preferences || {},
     role: liveProfile.job_title || '',
@@ -945,6 +1004,8 @@ function App() {
     isAdmin: liveProfile.role === 'admin',
   };
   window._currentMember = member;
+  window.awardXp = awardXp;
+  window.syncBadges = syncBadges;
 
   const isRealAdmin = liveProfile.role === 'admin';
 

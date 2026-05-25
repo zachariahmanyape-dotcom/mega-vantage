@@ -184,6 +184,7 @@ function RoadmapScreen() {
       Object.keys(prev).forEach((k) => { next[k] = prev[k].map((t) => t.id === taskId ? { ...t, ...patch } : t); });
       return next;
     });
+    if (done && window.awardXp) window.awardXp('task_complete', 20, taskId, true, true);
   };
 
   const saveField = async (taskId, patch) => {

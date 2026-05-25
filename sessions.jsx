@@ -71,7 +71,7 @@ function SessionsScreen({ onJoin, isAdmin }) {
               </button>
               {!past &&
               <>
-                  <button className="btn primary" onClick={onJoin} style={{ justifyContent: 'center' }}>Join <Icon name="external" size={12} /></button>
+                  <button className="btn primary" onClick={() => onJoin(s)} style={{ justifyContent: 'center' }}>Join <Icon name="external" size={12} /></button>
                   <button className="btn ghost sm" style={{ justifyContent: 'center' }}>Reschedule</button>
                 </>
               }

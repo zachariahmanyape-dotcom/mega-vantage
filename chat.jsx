@@ -151,7 +151,21 @@ function ChatScreen() {
   const [text, setText] = React.useState('');
   const [sending, setSending] = React.useState(false);
   const [creating, setCreating] = React.useState(false);
+  const [xpByUser, setXpByUser] = React.useState({});
   const scrollRef = React.useRef(null);
+
+  // Member XP map (list_members is SECURITY DEFINER — profiles is otherwise own-row only).
+  React.useEffect(() => {
+    let active = true;
+    (async () => {
+      const { data } = await window._supabase.rpc('list_members');
+      if (!active || !data) return;
+      const map = {};
+      data.forEach((m) => { map[m.id] = m.xp_total || 0; });
+      setXpByUser(map);
+    })();
+    return () => { active = false; };
+  }, []);
 
   const isAdmin = !!(window._currentMember && window._currentMember.isAdmin);
   const selected = channels.find((c) => c.id === selectedId) || null;
@@ -311,6 +325,8 @@ function ChatScreen() {
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 3 }}>
                                 <span style={{ fontSize: 13, fontWeight: 700 }}>{p.author}</span>
+                                {xpByUser[p.userId] != null &&
+                                  <span style={{ fontSize: 11, color: 'var(--text-3)', fontFamily: 'var(--ff-sub)', letterSpacing: '0.02em' }}>· {xpByUser[p.userId].toLocaleString()}</span>}
                                 {p.isAdmin &&
                                   <span style={{ fontFamily: 'var(--ff-sub)', fontSize: 9, letterSpacing: '0.16em', textTransform: 'uppercase', background: 'var(--accent)', color: '#fff', padding: '2px 6px', borderRadius: 4 }}>MEGA</span>}
                                 {p.role && <span style={{ fontSize: 11, color: 'var(--text-3)' }}>{p.role}</span>}
