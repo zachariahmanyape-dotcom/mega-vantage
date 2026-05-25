@@ -9,7 +9,7 @@ function AdminOverview({ onPick }) {
           <div className="eyebrow">Admin · Overview</div>
           <h1 className="page-title">Mission control</h1>
           <div className="page-sub" style={{ marginTop: 8, color: 'var(--text-2)', maxWidth: 560 }}>
-            Members, tasks, sessions, resources, channels, analytics — in one view.
+            Members, tasks, sessions, resources, chat, analytics — in one view.
           </div>
         </div>
         <div style={{ display: 'flex', gap: 10 }}>

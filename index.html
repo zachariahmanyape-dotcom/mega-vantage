@@ -489,9 +489,8 @@ function SidebarWithWins({ route, setRoute, admin, isRealAdmin, unread, member, 
     { k: 'admin-tasks', label: 'Tasks & Goals', icon: 'tasks' },
     { k: 'admin-roadmap', label: 'Roadmap Builder', icon: 'roadmap' },
     { k: 'admin-sessions', label: 'Sessions', icon: 'sessions' },
-    { k: 'admin-messaging', label: 'Chat', icon: 'send' },
+    { k: 'admin-messaging', label: 'Chat', icon: 'chat' },
     { k: 'admin-resources', label: 'Resources', icon: 'resources' },
-    { k: 'admin-chat', label: 'Channels', icon: 'chat' },
     { k: 'admin-analytics', label: 'Analytics', icon: 'chart' }
   ];
 
@@ -933,7 +932,6 @@ function App() {
     case 'admin-sessions': screen = <AdminSessions />; break;
     case 'admin-messaging': screen = <BulkMessaging />; break;
     case 'admin-resources': screen = <AdminResources />; break;
-    case 'admin-chat': screen = <AdminChat />; break;
     case 'admin-analytics': screen = <AdminAnalytics />; break;
     default:
       screen = <DashboardScreen member={member} onJoin={onJoin} onGoto={setRoute} gameMode={tw.gameMode}
@@ -970,8 +968,7 @@ function App() {
       <TweaksPanel
         open={tweaksOpen} onClose={() => setTweaksOpen(false)}
         theme={tw.theme} setTheme={t => updateTweak({ theme: t })}
-        accent={tw.accent} setAccent={a => updateTweak({ accent: a })}
-        gameMode={tw.gameMode} setGameMode={g => updateTweak({ gameMode: g })} />
+        accent={tw.accent} setAccent={a => updateTweak({ accent: a })} />
 
       {tourBubble && !showOnboarding && (
         <TourBubble

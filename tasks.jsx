@@ -684,7 +684,7 @@ function TasksScreen({ tasks, setTasks, goals, setGoals, dataLoading, onReward }
           <div className="tabs">
             <button className={tab === 'tasks' ? 'on' : ''} onClick={() => setTab('tasks')}>Tasks ({tasks.length})</button>
             <button className={tab === 'goals' ? 'on' : ''} onClick={() => setTab('goals')}>Goals ({goals.length})</button>
-            <button className={tab === 'focus' ? 'on' : ''} onClick={() => setTab('focus')}>Focus</button>
+            <button className={tab === 'focus' ? 'on' : ''} onClick={() => setTab('focus')}>Focus Metrics</button>
           </div>
           <button className="btn primary" onClick={() => setCreating(true)} style={{ flexShrink:0 }}><Icon name="plus" size={13} /> New</button>
         </div>

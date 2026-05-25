@@ -106,7 +106,7 @@ function Topbar({ theme, setTheme, onOpenTweaks, notifCount, onOpenNotifs }) {
       <button className="icon-btn" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} title="Toggle theme">
         <Icon name={theme === 'dark' ? 'sun' : 'moon'} size={16} />
       </button>
-      <button className="icon-btn" onClick={onOpenTweaks} title="Tweaks"><Icon name="settings" size={16} /></button>
+      <button className="icon-btn" onClick={onOpenTweaks} title="Tweaks"><Icon name="sliders" size={16} /></button>
     </div>
   );
 }
@@ -167,7 +167,7 @@ function NotifPanel({ open, onClose, sessions }) {
 }
 
 // Tweaks panel
-function TweaksPanel({ open, onClose, theme, setTheme, accent, setAccent, gameMode, setGameMode }) {
+function TweaksPanel({ open, onClose, theme, setTheme, accent, setAccent }) {
   if (!open) return null;
   const accents = [
     { k: 'sapphire', hex: '#0F52BA', label: 'Sapphire' },
@@ -205,17 +205,8 @@ function TweaksPanel({ open, onClose, theme, setTheme, accent, setAccent, gameMo
         </div>
       </div>
 
-      <div className="tweak-row">
-        <label>Gamification</label>
-        <div className="seg">
-          <button className={gameMode==='subtle' ? 'on' : ''} onClick={() => setGameMode('subtle')}>Subtle</button>
-          <button className={gameMode==='balanced' ? 'on' : ''} onClick={() => setGameMode('balanced')}>Balanced</button>
-          <button className={gameMode==='loud' ? 'on' : ''} onClick={() => setGameMode('loud')}>Loud</button>
-        </div>
-      </div>
-
       <div style={{ fontSize:11, color:'var(--text-3)', lineHeight:1.5, marginTop:4 }}>
-        Accent overrides the primary action color site-wide. Gamification affects streak pops, level effects, and XP animations.
+        Accent overrides the primary action color site-wide.
       </div>
     </div>
   );

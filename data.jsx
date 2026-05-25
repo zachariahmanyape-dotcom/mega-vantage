@@ -238,6 +238,7 @@ function Icon({name, size=18, stroke=1.8, style, className}) {
     case "clock": return (<svg {...p}><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>);
     case "target": return (<svg {...p}><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1" fill="currentColor"/></svg>);
     case "roadmap": return (<svg {...p}><path d="M9 5 4 7v12l5-2 6 2 5-2V5l-5 2-6-2z"/><path d="M9 5v12M15 7v12"/></svg>);
+    case "sliders": return (<svg {...p}><path d="M4 6h8M16 6h4M4 12h12M4 18h4M12 18h8"/><circle cx="14" cy="6" r="2"/><circle cx="18" cy="12" r="2"/><circle cx="10" cy="18" r="2"/></svg>);
     default: return (<svg {...p}><circle cx="12" cy="12" r="9"/></svg>);
   }
 }
