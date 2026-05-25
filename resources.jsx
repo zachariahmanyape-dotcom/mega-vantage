@@ -1,5 +1,24 @@
 // Resources screen — library with folders, search, recently added
 
+// Record that the current user opened a resource (one row per distinct resource).
+async function logResourceView(resourceId) {
+  const { data: { user } } = await window._supabase.auth.getUser();
+  if (!user) return;
+  await window._supabase.from('resource_views').upsert(
+    { user_id: user.id, resource_id: String(resourceId) },
+    { onConflict: 'user_id,resource_id', ignoreDuplicates: true }
+  );
+}
+// Count of distinct resources the current user has opened (powers Resources badges).
+async function fetchResourceViewCount() {
+  const { data: { user } } = await window._supabase.auth.getUser();
+  if (!user) return 0;
+  const { count } = await window._supabase.from('resource_views')
+    .select('id', { count: 'exact', head: true }).eq('user_id', user.id);
+  return count || 0;
+}
+Object.assign(window, { logResourceView, fetchResourceViewCount });
+
 const FOLDERS = [
 { id: 'all', label: 'All resources', count: 48 },
 { id: 'found', label: 'Foundations', count: 18 },
@@ -12,10 +31,19 @@ const FOLDERS = [
 function ResourceCard({ r, compact }) {
   const color = SUBJECTS[r.subject] || '#888';
   const typeIcon = r.type === 'video' ? 'video' : r.type === 'doc' ? 'doc' : 'link';
+  const [viewed, setViewed] = useState(false);
+  const open = () => { setViewed(true); window.logResourceView(r.id); };
   return (
-    <div className="card" style={{ padding: 0, overflow: 'hidden', cursor: 'pointer', transition: 'transform .14s ease, box-shadow .14s ease' }}
+    <div className="card" onClick={open} style={{ padding: 0, overflow: 'hidden', cursor: 'pointer', position: 'relative', transition: 'transform .14s ease, box-shadow .14s ease' }}
     onMouseEnter={(e) => {e.currentTarget.style.transform = 'translateY(-2px)';e.currentTarget.style.boxShadow = 'var(--shadow-2)';}}
     onMouseLeave={(e) => {e.currentTarget.style.transform = '';e.currentTarget.style.boxShadow = '';}}>
+      {viewed &&
+      <span style={{ position: 'absolute', top: 8, left: 8, zIndex: 2, display: 'inline-flex', alignItems: 'center', gap: 4,
+        background: 'var(--teal-600)', color: '#fff', fontSize: 9, fontFamily: 'var(--ff-sub)', letterSpacing: '0.08em',
+        textTransform: 'uppercase', padding: '3px 7px', borderRadius: 6 }}>
+        <Icon name="check" size={9} /> Opened
+      </span>
+      }
       {r.type === 'video' ?
       <div className="ph-img" style={{ aspectRatio: '16/9', borderRadius: 0, border: 'none', borderBottom: '1px solid var(--border)', position: 'relative' }}>
           <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center' }}>

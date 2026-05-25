@@ -30,6 +30,7 @@ function winTimeAgo(iso) {
 function mapWinRow(r) {
   return {
     id: r.id,
+    userId: r.user_id,
     author: r.author_name || 'Member',
     initials: winInitials(r.author_name),
     color: winColor(r.author_name),
@@ -38,22 +39,32 @@ function mapWinRow(r) {
     text: r.title,
     subject: r.subject || '',
     time: winTimeAgo(r.created_at),
-    reactions: {}
+    createdAt: r.created_at
   };
 }
 
-function WinCard({ win }) {
-  const [reactions, setReactions] = useState(() => {
-    const base = {};
-    EMOJI_LABELS.forEach((e) => base[e] = win.reactions && win.reactions[e] || 0);
-    return base;
-  });
-  const [reacted, setReacted] = useState({});
+function WinCard({ win, counts, mine, userId }) {
+  const [reactions, setReactions] = useState(counts || {});
+  const [reacted, setReacted] = useState(mine || {});
 
-  const react = (emoji) => {
+  React.useEffect(() => { setReactions(counts || {}); }, [counts]);
+  React.useEffect(() => { setReacted(mine || {}); }, [mine]);
+
+  const react = async (emoji) => {
+    if (!userId) return;
     const isOn = reacted[emoji];
+    // optimistic update
     setReacted((r) => ({ ...r, [emoji]: !isOn }));
-    setReactions((r) => ({ ...r, [emoji]: r[emoji] + (isOn ? -1 : 1) }));
+    setReactions((r) => ({ ...r, [emoji]: (r[emoji] || 0) + (isOn ? -1 : 1) }));
+    const q = window._supabase.from('win_reactions');
+    const { error } = isOn ?
+      await q.delete().eq('win_id', win.id).eq('user_id', userId).eq('emoji', emoji) :
+      await q.insert({ win_id: win.id, user_id: userId, emoji });
+    if (error) {
+      // revert on failure
+      setReacted((r) => ({ ...r, [emoji]: isOn }));
+      setReactions((r) => ({ ...r, [emoji]: (r[emoji] || 0) + (isOn ? 1 : -1) }));
+    }
   };
 
   const subColor = SUBJECTS[win.subject] || '#888';
@@ -163,18 +174,36 @@ function WinsScreen() {
   const [memberCount, setMemberCount] = React.useState(0);
   const [loading, setLoading] = React.useState(true);
   const [composing, setComposing] = React.useState(false);
+  const [reactionsByWin, setReactionsByWin] = React.useState({});
+  const [myReactionsByWin, setMyReactionsByWin] = React.useState({});
+  const [userId, setUserId] = React.useState(null);
 
   React.useEffect(() => {
     let active = true;
-    Promise.all([
-    window._supabase.from('wins').select('id, title, subject, author_name, author_role, created_at').eq('is_public', true).order('created_at', { ascending: false }),
-    window._supabase.rpc('member_count')]).
-    then(([winsRes, countRes]) => {
+    (async () => {
+      const { data: { user } } = await window._supabase.auth.getUser();
+      if (active) setUserId(user?.id || null);
+      const [winsRes, countRes] = await Promise.all([
+        window._supabase.from('wins').select('id, user_id, title, subject, author_name, author_role, created_at').eq('is_public', true).order('created_at', { ascending: false }),
+        window._supabase.rpc('member_count')]);
       if (!active) return;
-      setWins((winsRes.data || []).map(mapWinRow));
+      const winRows = winsRes.data || [];
+      setWins(winRows.map(mapWinRow));
       setMemberCount(countRes.data || 0);
       setLoading(false);
-    });
+
+      const ids = winRows.map((w) => w.id);
+      if (!ids.length) return;
+      const { data: rx } = await window._supabase.from('win_reactions').select('win_id, user_id, emoji').in('win_id', ids);
+      if (!active) return;
+      const counts = {}, mine = {};
+      (rx || []).forEach((r) => {
+        (counts[r.win_id] = counts[r.win_id] || {})[r.emoji] = (counts[r.win_id][r.emoji] || 0) + 1;
+        if (user && r.user_id === user.id) (mine[r.win_id] = mine[r.win_id] || {})[r.emoji] = true;
+      });
+      setReactionsByWin(counts);
+      setMyReactionsByWin(mine);
+    })();
     return () => {active = false;};
   }, []);
 
@@ -224,7 +253,7 @@ function WinsScreen() {
               <div style={{ fontSize: 13, color: 'var(--text-3)' }}>Be the first to share a win with the community.</div>
             </div> :
 
-          wins.map((w) => <WinCard key={w.id} win={w} />)
+          wins.map((w) => <WinCard key={w.id} win={w} counts={reactionsByWin[w.id]} mine={myReactionsByWin[w.id]} userId={userId} />)
           }
         </div>
         <div style={{ position: 'sticky', top: 20 }}>

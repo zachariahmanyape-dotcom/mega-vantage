@@ -884,11 +884,11 @@ function App() {
     streakDays: 0,
     learningThisMonth: '0h 0m',
     stats: { sessions: 0, modules: 0, habits: 0, townHalls: 0 },
-    interests: [],
-    role: '',
-    status: '',
-    field: '',
-    focus: '',
+    interests: liveProfile.interests || [],
+    role: liveProfile.job_title || '',
+    status: liveProfile.employment_status || '',
+    field: liveProfile.field || '',
+    focus: liveProfile.focus_area || '',
     isAdmin: liveProfile.role === 'admin',
   };
   window._currentMember = member;
@@ -921,7 +921,7 @@ function App() {
     case 'roadmap': screen = <RoadmapScreen />; break;
     case 'resources': screen = <ResourcesScreen onStartTour={() => { setTourBubble(false); setTourActive(true); }} tourCompleted={tourCompleted} />; break;
     case 'chat': screen = <ChatScreen />; break;
-    case 'profile': screen = <ProfileScreen member={member} theme={tw.theme} setTheme={t => updateTweak({ theme: t })} onSignOut={handleSignOut} />; break;
+    case 'profile': screen = <ProfileScreen member={member} theme={tw.theme} setTheme={t => updateTweak({ theme: t })} onSignOut={handleSignOut} onProfileSaved={fields => setLiveProfile(p => ({ ...p, ...fields }))} />; break;
     case 'admin-overview': screen = <AdminOverview onPick={setRoute} />; break;
     case 'admin-members':
       screen = selectedAdminMember
