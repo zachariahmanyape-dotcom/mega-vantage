@@ -202,6 +202,21 @@ function BadgeModal({ categories, earnedCount, total, theme, onClose }) {
   );
 }
 
+const EMPLOYMENT_STATUSES = [
+  'Employed full-time', 'Employed part-time', 'Self-employed / Freelance',
+  'Business owner', 'Student', 'Between roles', 'Career break', 'Other',
+];
+
+function ProfileField({ label, help, children }) {
+  return (
+    <div>
+      <div className="eyebrow" style={{ margin:0, fontSize:10, marginBottom:5 }}>{label}</div>
+      {children}
+      {help && <div style={{ fontSize:11, color:'var(--text-3)', marginTop:5, lineHeight:1.45 }}>{help}</div>}
+    </div>
+  );
+}
+
 function ProfileScreen({ member, theme, setTheme, onSignOut, onProfileSaved }) {
   const [sessions, setSessions] = React.useState([]);
   const [focusRows, setFocusRows] = React.useState([]);
@@ -311,16 +326,7 @@ function ProfileScreen({ member, theme, setTheme, onSignOut, onProfileSaved }) {
           <div className="eyebrow">Profile</div>
           <h1 className="page-title">{member.firstName} {member.lastName}</h1>
         </div>
-        {editing ?
-          <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:8 }}>
-            <div style={{ display:'flex', gap:8 }}>
-              <button className="btn" onClick={() => { setEditing(false); setSaveErr(null); }}>Cancel</button>
-              <button className="btn primary" onClick={saveProfile} disabled={saving}>{saving ? 'Saving…' : 'Save profile'}</button>
-            </div>
-            {saveErr && <div style={{ fontSize:12, color:'var(--coral)', maxWidth:260, textAlign:'right', lineHeight:1.4 }}>{saveErr}</div>}
-          </div> :
-          <button className="btn" onClick={startEdit}><Icon name="edit" size={13} /> Edit profile</button>
-        }
+        <button className="btn" onClick={startEdit}><Icon name="edit" size={13} /> Edit profile</button>
       </div>
 
       {/* Identity card */}
@@ -389,42 +395,27 @@ function ProfileScreen({ member, theme, setTheme, onSignOut, onProfileSaved }) {
         <div className="stack" style={{ gap:20 }}>
           {/* Personal info */}
           <div className="card" style={{ padding:22 }}>
-            <div className="eyebrow" style={{ marginBottom:14 }}>Personal info</div>
-            {editing ?
-              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'12px 14px' }}>
-                <div style={{ gridColumn:'1 / -1' }}>
-                  <div className="eyebrow" style={{ fontSize:10, marginBottom:4 }}>Full name</div>
-                  <input className="input" style={{ fontSize:13 }} value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
+            <div className="row-between" style={{ marginBottom:14 }}>
+              <div className="eyebrow" style={{ margin:0 }}>Personal info</div>
+              <button onClick={startEdit} style={{ background:'none', border:'none', padding:0, cursor:'pointer', color:'var(--accent)', fontSize:12, fontWeight:600, display:'inline-flex', alignItems:'center', gap:4 }}>
+                <Icon name="edit" size={12} /> Edit
+              </button>
+            </div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'14px 18px' }}>
+              {[['Current role',member.role],['Employment status',member.status],['Industry / field',member.field],['Growth focus',member.focus]].map(([l,v]) => (
+                <div key={l}>
+                  <div className="eyebrow" style={{ fontSize:10 }}>{l}</div>
+                  <div style={{ fontSize:13, marginTop:3, fontWeight:500, color:v?'var(--text)':'var(--text-3)' }}>{v || '—'}</div>
                 </div>
-                {[['Role','role'],['Status','status'],['Field','field'],['Focus area','focus']].map(([l,k]) => (
-                  <div key={k}>
-                    <div className="eyebrow" style={{ fontSize:10, marginBottom:4 }}>{l}</div>
-                    <input className="input" style={{ fontSize:13 }} value={form[k]} onChange={(e) => setForm((f) => ({ ...f, [k]: e.target.value }))} />
-                  </div>
-                ))}
-                <div style={{ gridColumn:'1 / -1' }}>
-                  <div className="eyebrow" style={{ fontSize:10, marginBottom:4 }}>Interests <span style={{ textTransform:'none', letterSpacing:0, color:'var(--text-3)' }}>(comma-separated)</span></div>
-                  <input className="input" style={{ fontSize:13 }} value={form.interests} onChange={(e) => setForm((f) => ({ ...f, interests: e.target.value }))} placeholder="e.g. Public speaking, Running, Strategy" />
-                </div>
-              </div> :
-              <>
-                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'14px 18px' }}>
-                  {[['Role',member.role],['Status',member.status],['Field',member.field],['Focus area',member.focus]].map(([l,v]) => (
-                    <div key={l}>
-                      <div className="eyebrow" style={{ fontSize:10 }}>{l}</div>
-                      <div style={{ fontSize:13, marginTop:3, fontWeight:500, color:v?'var(--text)':'var(--text-3)' }}>{v || '—'}</div>
-                    </div>
-                  ))}
-                </div>
-                <div className="hr" />
-                <div className="eyebrow" style={{ marginBottom:8 }}>Interests</div>
-                <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
-                  {(member.interests || []).length
-                    ? member.interests.map((i) => <span key={i} className="chip">{i}</span>)
-                    : <span style={{ fontSize:13, color:'var(--text-3)' }}>No interests added yet.</span>}
-                </div>
-              </>
-            }
+              ))}
+            </div>
+            <div className="hr" />
+            <div className="eyebrow" style={{ marginBottom:8 }}>Interests</div>
+            <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
+              {(member.interests || []).length
+                ? member.interests.map((i) => <span key={i} className="chip">{i}</span>)
+                : <span style={{ fontSize:13, color:'var(--text-3)' }}>No interests added yet.</span>}
+            </div>
           </div>
 
           {/* Settings */}
@@ -467,6 +458,73 @@ function ProfileScreen({ member, theme, setTheme, onSignOut, onProfileSaved }) {
       </div>
 
       {showAllBadges && <BadgeModal categories={categories} earnedCount={earned} total={allBadges.length} theme={theme} onClose={() => setShowAllBadges(false)} />}
+
+      {editing && (() => {
+        const closeEdit = () => { setEditing(false); setSaveErr(null); };
+        const statusOpts = form.status && !EMPLOYMENT_STATUSES.includes(form.status)
+          ? [form.status, ...EMPLOYMENT_STATUSES] : EMPLOYMENT_STATUSES;
+        const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
+        return (
+          <>
+            <div onClick={closeEdit} style={{ position:'fixed', inset:0, background:'rgba(10,10,10,0.5)', zIndex:200, backdropFilter:'blur(3px)' }} />
+            <div className="card" style={{ position:'fixed', top:'50%', left:'50%', transform:'translate(-50%,-50%)', width:'min(540px, 92vw)', maxHeight:'88vh', overflow:'auto', zIndex:201, padding:0, boxShadow:'var(--shadow-3)' }}>
+              <div style={{ padding:'18px 24px', borderBottom:'1px solid var(--border)', display:'flex', justifyContent:'space-between', alignItems:'flex-start' }}>
+                <div>
+                  <div className="eyebrow">Profile</div>
+                  <div className="display" style={{ fontSize:24, marginTop:2, lineHeight:1.1 }}>Edit your profile</div>
+                </div>
+                <button onClick={closeEdit} style={{ color:'var(--text-3)', fontSize:16, background:'none', border:'none', cursor:'pointer', lineHeight:1 }}>✕</button>
+              </div>
+
+              <div style={{ padding:'20px 24px' }}>
+                <div style={{ fontSize:12.5, color:'var(--text-3)', lineHeight:1.5, marginBottom:20 }}>
+                  These details help your mentor and Vantage tailor your roadmap, sessions, and recommendations to where you are and where you're headed.
+                </div>
+
+                <div className="stack" style={{ gap:18 }}>
+                  <ProfileField label="Full name" help="How your name appears across Vantage.">
+                    <input className="input" style={{ fontSize:13 }} value={form.name} onChange={set('name')} placeholder="e.g. Amira Hassan" />
+                  </ProfileField>
+
+                  <ProfileField label="Email" help="This is your login. Contact your mentor if you need to change it.">
+                    <input className="input" style={{ fontSize:13, opacity:0.6, cursor:'not-allowed' }} value={member.email || ''} disabled />
+                  </ProfileField>
+
+                  <ProfileField label="Current role" help="Your current job title or position.">
+                    <input className="input" style={{ fontSize:13 }} value={form.role} onChange={set('role')} placeholder="e.g. Marketing Manager" />
+                  </ProfileField>
+
+                  <ProfileField label="Employment status" help="Where you are in your career right now.">
+                    <select className="input" style={{ fontSize:13 }} value={form.status} onChange={set('status')}>
+                      <option value="">Select…</option>
+                      {statusOpts.map((o) => <option key={o} value={o}>{o}</option>)}
+                    </select>
+                  </ProfileField>
+
+                  <ProfileField label="Industry / field" help="The industry or field you work in.">
+                    <input className="input" style={{ fontSize:13 }} value={form.field} onChange={set('field')} placeholder="e.g. Marketing, Finance, Technology" />
+                  </ProfileField>
+
+                  <ProfileField label="Growth focus" help="The skill or area you most want to grow through mentorship.">
+                    <input className="input" style={{ fontSize:13 }} value={form.focus} onChange={set('focus')} placeholder="e.g. Leadership, Public speaking, Strategy" />
+                  </ProfileField>
+
+                  <ProfileField label="Interests" help="Comma-separated — personal or professional. Helps spark connection.">
+                    <input className="input" style={{ fontSize:13 }} value={form.interests} onChange={set('interests')} placeholder="e.g. Public speaking, Running, Strategy" />
+                  </ProfileField>
+                </div>
+
+                {saveErr && <div style={{ marginTop:16, fontSize:12.5, color:'var(--coral)', lineHeight:1.45 }}>{saveErr}</div>}
+              </div>
+
+              <div style={{ padding:'14px 24px', borderTop:'1px solid var(--border)', display:'flex', justifyContent:'flex-end', gap:8, position:'sticky', bottom:0, background:'var(--bg-elev)' }}>
+                <button className="btn" onClick={closeEdit}>Cancel</button>
+                <button className="btn primary" onClick={saveProfile} disabled={saving}>{saving ? 'Saving…' : 'Save profile'}</button>
+              </div>
+            </div>
+          </>
+        );
+      })()}
     </>
   );
 }
