@@ -112,7 +112,7 @@ function Topbar({ theme, setTheme, onOpenTweaks, notifCount, onOpenNotifs }) {
 }
 
 // Notification drawer (simple popover) — driven by real upcoming sessions
-function NotifPanel({ open, onClose, sessions }) {
+function NotifPanel({ open, onClose, sessions, onGoToSettings }) {
   if (!open) return null;
   const items = (sessions || []).slice(0, 6);
   return (
@@ -158,9 +158,11 @@ function NotifPanel({ open, onClose, sessions }) {
             })}
           </div>
         )}
-        <div style={{ padding:'10px 18px', textAlign:'center', borderTop:'1px solid var(--border)', fontSize:12, color:'var(--text-3)' }}>
+        <button
+          onClick={() => { onClose && onClose(); onGoToSettings && onGoToSettings(); }}
+          style={{ width:'100%', padding:'10px 18px', textAlign:'center', fontSize:12, color:'var(--text-3)', background:'none', border:'none', borderTop:'1px solid var(--border)', cursor:'pointer', fontFamily:'inherit' }}>
           Manage notification preferences in <span style={{ color:'var(--accent)', fontWeight:600 }}>Profile → Settings</span>
-        </div>
+        </button>
       </div>
     </>
   );

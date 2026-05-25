@@ -937,6 +937,7 @@ function App() {
     learningThisMonth: '0h 0m',
     stats: { sessions: 0, modules: 0, habits: 0, townHalls: 0 },
     interests: liveProfile.interests || [],
+    notificationPrefs: liveProfile.notification_preferences || {},
     role: liveProfile.job_title || '',
     status: liveProfile.employment_status || '',
     field: liveProfile.field || '',
@@ -1020,7 +1021,7 @@ function App() {
         </div>
       </main>
 
-      <NotifPanel open={notifOpen} onClose={() => setNotifOpen(false)} sessions={upcomingSessions} />
+      <NotifPanel open={notifOpen} onClose={() => setNotifOpen(false)} sessions={upcomingSessions} onGoToSettings={() => setRoute('profile')} />
       <TweaksPanel
         open={tweaksOpen} onClose={() => setTweaksOpen(false)}
         theme={tw.theme} setTheme={t => updateTweak({ theme: t })}

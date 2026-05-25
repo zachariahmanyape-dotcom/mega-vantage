@@ -207,6 +207,22 @@ const EMPLOYMENT_STATUSES = [
   'Business owner', 'Student', 'Between roles', 'Career break', 'Other',
 ];
 
+const NOTIF_PREF_DEFAULTS = {
+  task_assignments_inapp: true,
+  task_assignments_email: true,
+  session_reminders_inapp: true,
+  session_reminders_email: false,
+  weekly_digest_email: true,
+};
+// [label, channel, preference key]
+const NOTIF_ROWS = [
+  ['Task assignments', 'In-app', 'task_assignments_inapp'],
+  ['Task assignments', 'Email', 'task_assignments_email'],
+  ['Session reminders', 'In-app', 'session_reminders_inapp'],
+  ['Session reminders', 'Email', 'session_reminders_email'],
+  ['Weekly digest', 'Email (Mon)', 'weekly_digest_email'],
+];
+
 function ProfileField({ label, help, children }) {
   return (
     <div>
@@ -227,6 +243,19 @@ function ProfileScreen({ member, theme, setTheme, onSignOut, onProfileSaved }) {
   const [saving, setSaving] = React.useState(false);
   const [saveErr, setSaveErr] = React.useState(null);
   const [form, setForm] = React.useState({ name:'', role:'', status:'', field:'', focus:'', interests:'' });
+  const [notifPrefs, setNotifPrefs] = React.useState({ ...NOTIF_PREF_DEFAULTS, ...(member.notificationPrefs || {}) });
+
+  const toggleNotif = async (key) => {
+    const prev = notifPrefs;
+    const next = { ...notifPrefs, [key]: !notifPrefs[key] };
+    setNotifPrefs(next); // optimistic
+    const { data: { user } } = await window._supabase.auth.getUser();
+    if (!user) { setNotifPrefs(prev); return; }
+    const { error } = await window._supabase.from('profiles')
+      .update({ notification_preferences: next }).eq('id', user.id);
+    if (error) { console.error('Failed to save notification preference:', error.message); setNotifPrefs(prev); return; }
+    if (onProfileSaved) onProfileSaved({ notification_preferences: next });
+  };
 
   React.useEffect(() => {
     let active = true;
@@ -430,17 +459,21 @@ function ProfileScreen({ member, theme, setTheme, onSignOut, onProfileSaved }) {
             </div>
             <div className="hr" />
             <div className="eyebrow" style={{ marginBottom:10 }}>Notifications</div>
-            {[['Task assignments','In-app',true],['Task assignments','Email',true],['Session reminders','In-app',true],['Session reminders','Email',false],['Weekly digest','Email (Mon)',true]].map(([l,ch,on],i) => (
-              <div key={i} className="row-between" style={{ padding:'8px 0', fontSize:13 }}>
-                <div>
-                  <div style={{ fontWeight:500 }}>{l}</div>
-                  <div style={{ fontSize:11, color:'var(--text-3)' }}>{ch}</div>
+            {NOTIF_ROWS.map(([l,ch,key]) => {
+              const on = !!notifPrefs[key];
+              return (
+                <div key={key} className="row-between" style={{ padding:'8px 0', fontSize:13 }}>
+                  <div>
+                    <div style={{ fontWeight:500 }}>{l}</div>
+                    <div style={{ fontSize:11, color:'var(--text-3)' }}>{ch}</div>
+                  </div>
+                  <button onClick={() => toggleNotif(key)} role="switch" aria-checked={on} aria-label={`${l} · ${ch}`}
+                    style={{ width:36, height:20, borderRadius:999, background:on?'var(--accent)':'var(--border-strong)', position:'relative', cursor:'pointer', transition:'background .15s', border:'none', padding:0 }}>
+                    <div style={{ position:'absolute', top:2, left:on?18:2, width:16, height:16, borderRadius:999, background:'#fff', transition:'left .15s' }} />
+                  </button>
                 </div>
-                <div style={{ width:36, height:20, borderRadius:999, background:on?'var(--accent)':'var(--border-strong)', position:'relative', cursor:'pointer', transition:'background .15s' }}>
-                  <div style={{ position:'absolute', top:2, left:on?18:2, width:16, height:16, borderRadius:999, background:'#fff', transition:'left .15s' }} />
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>
