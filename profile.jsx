@@ -458,7 +458,10 @@ function ProfileScreen({ member, theme, setTheme, onSignOut, onProfileSaved }) {
               </div>
             </div>
             <div className="hr" />
-            <div className="eyebrow" style={{ marginBottom:10 }}>Notifications</div>
+            <div className="eyebrow" style={{ marginBottom:6 }}>Notifications</div>
+            <div style={{ fontSize:11, color:'var(--text-3)', lineHeight:1.5, marginBottom:10 }}>
+              Saved to your profile — we'll use these the moment automated reminders go live.
+            </div>
             {NOTIF_ROWS.map(([l,ch,key]) => {
               const on = !!notifPrefs[key];
               return (
