@@ -35,28 +35,254 @@ function DueDateBadge({ due, dueSort }) {
 
 }
 
-function EffortImpactMatrix({ point }) {
-  const [effort, impact] = point;
-  const x = (effort - 0.5) / 4 * 100;
-  const y = 100 - (impact - 0.5) / 4 * 100;
+function SubtaskTag({ source }) {
+  const isAI = source === 'ai';
   return (
-    <div style={{ width: 140, position: 'relative' }}>
-      <div style={{ width: '100%', aspectRatio: '1/1', background: 'var(--bg-sunken)', border: '1px solid var(--border)', borderRadius: 10, position: 'relative' }}>
-        <div style={{ position: 'absolute', inset: 0, display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: '1fr 1fr' }}>
-          {[0, 1, 2, 3].map((i) =>
-          <div key={i} style={{ borderRight: i % 2 === 0 ? '1px dashed var(--border)' : 'none', borderBottom: i < 2 ? '1px dashed var(--border)' : 'none' }} />
+    <span style={{
+      fontSize: 9, lineHeight: 1, padding: '3px 6px', borderRadius: 5,
+      background: isAI ? 'var(--sapphire)' : 'var(--coral)', color: '#fff',
+      fontFamily: 'var(--ff-sub)', fontWeight: 700, letterSpacing: '0.06em', flexShrink: 0,
+    }}>{isAI ? 'AI' : 'Manual'}</span>);
+
+}
+
+// Inline focus timer for the task detail panel (right column).
+function TaskFocusTimer({ task, onSaved }) {
+  const [open, setOpen] = React.useState(false);
+  const [mins, setMins] = React.useState(25);
+  const [phase, setPhase] = React.useState('setup'); // setup | running
+  const [remaining, setRemaining] = React.useState(0); // seconds
+  const [paused, setPaused] = React.useState(false);
+  const [saving, setSaving] = React.useState(false);
+  const totalRef = React.useRef(0);
+
+  React.useEffect(() => {
+    if (phase !== 'running' || paused || remaining <= 0) return;
+    const id = setInterval(() => setRemaining((r) => Math.max(0, r - 1)), 1000);
+    return () => clearInterval(id);
+  }, [phase, paused, remaining]);
+
+  const start = () => { totalRef.current = mins * 60; setRemaining(mins * 60); setPaused(false); setPhase('running'); };
+  const elapsedSec = Math.max(0, totalRef.current - remaining);
+
+  const save = async () => {
+    if (elapsedSec <= 0 || saving) return;
+    const elapsedMin = Math.max(1, Math.round(elapsedSec / 60));
+    setSaving(true);
+    try {
+      const { data: { user } } = await window._supabase.auth.getUser();
+      await window._supabase.from('focus_sessions').insert({
+        user_id: user.id,
+        duration_minutes: elapsedMin,
+        selected_minutes: mins,
+        label: task.title,
+        subject: task.subject || null,
+        linked_id: String(task.id),
+        linked_kind: 'task',
+        started_at: new Date(Date.now() - elapsedSec * 1000).toISOString(),
+      });
+      if (onSaved) onSaved(elapsedMin);
+    } catch (e) {
+      console.error('Failed to save focus session:', e.message);
+    }
+    setSaving(false);
+    setPhase('setup'); setRemaining(0); setOpen(true);
+  };
+
+  if (phase === 'running') {
+    const mm = String(Math.floor(remaining / 60)).padStart(2, '0');
+    const ss = String(remaining % 60).padStart(2, '0');
+    const pct = totalRef.current ? (remaining / totalRef.current * 100) : 0;
+    return (
+      <div>
+        <div style={{ fontFamily: 'var(--ff-mono)', fontSize: 30, fontWeight: 700, textAlign: 'center', letterSpacing: '0.02em', color: 'var(--text)' }}>{mm}:{ss}</div>
+        <div style={{ height: 4, background: 'var(--bg-sunken)', borderRadius: 999, overflow: 'hidden', margin: '8px 0 10px' }}>
+          <div style={{ height: '100%', width: pct + '%', background: 'var(--accent)', borderRadius: 999, transition: 'width 0.9s linear' }} />
+        </div>
+        <div style={{ display: 'flex', gap: 6 }}>
+          <button className="btn sm" style={{ flex: 1, justifyContent: 'center' }} onClick={() => setPaused((p) => !p)}>{paused ? 'Resume' : 'Pause'}</button>
+          <button className="btn sm" style={{ flex: 1, justifyContent: 'center', background: 'var(--teal-600)', color: '#fff', borderColor: 'var(--teal-600)', opacity: elapsedSec <= 0 ? 0.5 : 1 }} disabled={saving || elapsedSec <= 0} onClick={save}>{saving ? '…' : 'Save'}</button>
+        </div>
+      </div>);
+
+  }
+
+  return (
+    <div>
+      {!open &&
+        <button className="btn sm" style={{ width: '100%', justifyContent: 'center' }} onClick={() => setOpen(true)}>Start timer</button>
+      }
+      <div style={{ maxHeight: open ? 220 : 0, opacity: open ? 1 : 0, overflow: 'hidden', transition: 'max-height 0.22s ease, opacity 0.22s ease' }}>
+        <div className="eyebrow" style={{ marginBottom: 8 }}>Duration</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 8 }}>
+          {[15, 25, 45, 60].map((m) =>
+          <button key={m} className="btn sm" onClick={() => setMins(m)}
+            style={{ justifyContent: 'center', ...(mins === m ? { background: 'var(--accent)', color: 'var(--accent-contrast)', borderColor: 'var(--accent)' } : {}) }}>{m} min</button>
           )}
         </div>
-        <div style={{ position: 'absolute', left: `${x}%`, top: `${y}%`, transform: 'translate(-50%,-50%)', width: 14, height: 14, borderRadius: 999, background: 'var(--accent)', boxShadow: '0 0 0 4px var(--accent-soft)' }} />
-      </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, color: 'var(--text-3)', fontFamily: 'var(--ff-sub)', letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 6 }}>
-        <span>Low effort</span><span>High effort</span>
+        <button className="btn primary sm" style={{ width: '100%', justifyContent: 'center' }} onClick={start}>Start</button>
       </div>
     </div>);
 
 }
 
-function TaskRow({ task, expanded, onToggle, onCheck, onSubCheck }) {
+function TaskDetailPanel({ task, onTaskMetaChange }) {
+  const [subs, setSubs] = React.useState([]);
+  const [loadingSubs, setLoadingSubs] = React.useState(true);
+  const [regenCount, setRegenCount] = React.useState(task.regen_count || 0);
+  const [generating, setGenerating] = React.useState(false);
+  const [genError, setGenError] = React.useState('');
+  const [confirmRegen, setConfirmRegen] = React.useState(false);
+  const [newSub, setNewSub] = React.useState('');
+  const [focusTotal, setFocusTotal] = React.useState(0);
+
+  React.useEffect(() => {
+    let active = true;
+    window._supabase.from('subtasks').select('*').eq('task_id', task.id)
+      .order('order_index', { ascending: true }).order('created_at', { ascending: true })
+      .then(({ data, error }) => { if (active) { setSubs(error ? [] : (data || [])); setLoadingSubs(false); } });
+    window._supabase.from('focus_sessions').select('duration_minutes')
+      .eq('linked_kind', 'task').eq('linked_id', String(task.id))
+      .then(({ data }) => { if (active) setFocusTotal((data || []).reduce((a, r) => a + (r.duration_minutes || 0), 0)); });
+    return () => { active = false; };
+  }, [task.id]);
+
+  const toggleSub = async (id) => {
+    const sub = subs.find((s) => s.id === id);
+    if (!sub) return;
+    const next = !sub.is_completed;
+    setSubs((s) => s.map((x) => x.id === id ? { ...x, is_completed: next } : x));
+    await window._supabase.from('subtasks').update({ is_completed: next }).eq('id', id);
+  };
+
+  const addManual = async () => {
+    const text = newSub.trim();
+    if (!text) return;
+    const { data: { user } } = await window._supabase.auth.getUser();
+    const { data, error } = await window._supabase.from('subtasks').insert({
+      task_id: task.id, user_id: user.id, text, source: 'manual', order_index: subs.length,
+    }).select().single();
+    if (!error && data) { setSubs((s) => [...s, data]); setNewSub(''); }
+  };
+
+  const generate = async (regen) => {
+    setGenError('');
+    setGenerating(true);
+    try {
+      const { data, error } = await window._supabase.functions.invoke('generate-subtasks', {
+        body: { title: task.title, description: task.notes || '' },
+      });
+      if (error || !data || !Array.isArray(data.subtasks) || data.subtasks.length < 3) throw new Error('bad response');
+      const { data: { user } } = await window._supabase.auth.getUser();
+      if (regen) await window._supabase.from('subtasks').delete().eq('task_id', task.id);
+      const rows = data.subtasks.map((text, i) => ({
+        task_id: task.id, user_id: user.id, text, source: 'ai', order_index: i,
+      }));
+      const { data: inserted, error: insErr } = await window._supabase.from('subtasks').insert(rows).select();
+      if (insErr) throw insErr;
+      setSubs(inserted || []);
+      setConfirmRegen(false);
+      if (regen) {
+        const nc = regenCount + 1;
+        setRegenCount(nc);
+        await window._supabase.from('tasks').update({ regen_count: nc }).eq('id', task.id);
+        if (onTaskMetaChange) onTaskMetaChange(task.id, { regen_count: nc });
+      }
+    } catch (e) {
+      setGenError('Could not generate subtasks. Please try again.');
+    }
+    setGenerating(false);
+  };
+
+  const hasSubs = subs.length > 0;
+  const focusLine = focusTotal > 0
+    ? `${Math.floor(focusTotal / 60)}h ${focusTotal % 60}m focused on this task`
+    : 'No focus time logged yet.';
+
+  return (
+    <div style={{ padding: '18px 20px 20px', borderTop: '1px solid var(--border)', background: 'var(--bg-sunken)', display: 'grid', gridTemplateColumns: '1fr 180px', gap: 24 }}>
+      {/* Left column — Details + Subtasks */}
+      <div style={{ minWidth: 0 }}>
+        <div className="eyebrow" style={{ marginBottom: 8 }}>Details</div>
+        <div style={{ fontSize: 13, color: task.notes ? 'var(--text-2)' : 'var(--text-3)', lineHeight: 1.5, marginBottom: 16 }}>
+          {task.notes || 'No description.'}
+        </div>
+
+        <div className="eyebrow" style={{ marginBottom: 10 }}>Subtasks</div>
+        {loadingSubs
+          ? <div style={{ fontSize: 12, color: 'var(--text-3)' }}>Loading…</div>
+          : <>
+              {hasSubs &&
+                <div className="stack" style={{ gap: 8, marginBottom: 10 }}>
+                  {subs.map((s) =>
+                    <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 8, background: 'var(--bg-elev)', border: '1px solid var(--border)' }}>
+                      <div className={"check" + (s.is_completed ? " on" : "")} onClick={() => toggleSub(s.id)}>
+                        {s.is_completed && <Icon name="check" size={11} stroke={3} />}
+                      </div>
+                      <div style={{ fontSize: 13, flex: 1, minWidth: 0, color: s.is_completed ? 'var(--text-3)' : 'var(--text)', textDecoration: s.is_completed ? 'line-through' : 'none' }}>{s.text}</div>
+                      <SubtaskTag source={s.source} />
+                    </div>
+                  )}
+                </div>
+              }
+              {!hasSubs &&
+                <div style={{ fontSize: 12, color: 'var(--text-3)', marginBottom: 10 }}>No subtasks yet — break it down or add one below.</div>
+              }
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input className="input" value={newSub} placeholder="Add a subtask…"
+                  onChange={(e) => setNewSub(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') addManual(); }}
+                  style={{ flex: 1, fontSize: 13, padding: '8px 10px' }} />
+                <button className="btn sm" onClick={addManual} disabled={!newSub.trim()} style={{ flexShrink: 0 }}>Add</button>
+              </div>
+            </>
+        }
+      </div>
+
+      {/* Right column — Focus Timer + AI breakdown controls */}
+      <div style={{ minWidth: 0 }}>
+        <div className="eyebrow" style={{ marginBottom: 8 }}>Focus timer</div>
+        <TaskFocusTimer task={task} onSaved={(m) => setFocusTotal((t) => t + m)} />
+        <div style={{ fontSize: 11, color: focusTotal > 0 ? 'var(--teal-600)' : 'var(--text-3)', marginTop: 10, fontWeight: focusTotal > 0 ? 600 : 400, lineHeight: 1.4 }}>
+          {focusLine}
+        </div>
+
+        <div style={{ borderTop: '1px solid var(--border)', margin: '14px 0 0', paddingTop: 14 }}>
+          {!hasSubs &&
+            <button className="btn primary sm" style={{ width: '100%', justifyContent: 'center' }} disabled={generating} onClick={() => generate(false)}>
+              {generating ? 'Breaking down…' : '✦ Break this down'}
+            </button>
+          }
+          {hasSubs && !confirmRegen && regenCount < 3 &&
+            <button className="btn sm" style={{ width: '100%', justifyContent: 'center' }} disabled={generating} onClick={() => setConfirmRegen(true)}>
+              {generating ? 'Regenerating…' : '↻ Regenerate'}
+            </button>
+          }
+          {hasSubs && regenCount >= 3 && !confirmRegen &&
+            <div style={{ fontSize: 11, color: 'var(--text-3)', lineHeight: 1.4 }}>Regeneration limit reached. Add subtasks manually.</div>
+          }
+          {confirmRegen &&
+            <div style={{ fontSize: 11, color: 'var(--text-2)', lineHeight: 1.45 }}>
+              Regenerating will remove all existing subtasks, including any you have completed or added manually. This cannot be undone. Are you sure?
+              <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+                <button className="btn sm" style={{ flex: 1, justifyContent: 'center', background: 'var(--coral)', color: '#fff', borderColor: 'var(--coral)' }} disabled={generating} onClick={() => generate(true)}>{generating ? '…' : 'Confirm'}</button>
+                <button className="btn sm" style={{ flex: 1, justifyContent: 'center' }} disabled={generating} onClick={() => setConfirmRegen(false)}>Cancel</button>
+              </div>
+            </div>
+          }
+          {genError &&
+            <div style={{ fontSize: 11, color: 'var(--coral)', marginTop: 8, lineHeight: 1.4 }}>{genError}</div>
+          }
+          {hasSubs && regenCount < 3 && !confirmRegen &&
+            <div style={{ fontSize: 10, color: 'var(--text-3)', marginTop: 6 }}>{3 - regenCount} regeneration{3 - regenCount === 1 ? '' : 's'} left</div>
+          }
+        </div>
+      </div>
+    </div>);
+
+}
+
+function TaskRow({ task, expanded, onToggle, onCheck, onTaskMetaChange }) {
   const hasSubs = task.subtasks && task.subtasks.length > 0;
   const done = hasSubs ? task.subtasks.filter((s) => s.done).length : 0;
   const completed = !!task.is_completed;
@@ -88,29 +314,7 @@ function TaskRow({ task, expanded, onToggle, onCheck, onSubCheck }) {
         </button>
       </div>
 
-      {expanded &&
-      <div style={{ padding: '18px 20px 20px', borderTop: '1px solid var(--border)', background: 'var(--bg-sunken)', display: 'grid', gridTemplateColumns: '1fr 180px', gap: 24 }}>
-          <div>
-            <div className="eyebrow" style={{ marginBottom: 10 }}>{hasSubs ? 'Subtasks' : 'Details'}</div>
-            {!hasSubs && <div style={{ fontSize: 13, color: 'var(--text-3)' }}>{task.notes || 'No subtasks for this task.'}</div>}
-            <div className="stack" style={{ gap: 8 }}>
-              {task.subtasks.map((s, i) =>
-            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 8, background: 'var(--bg-elev)', border: '1px solid var(--border)' }}>
-                  <div className={"check" + (s.done ? " on" : "")} onClick={() => onSubCheck(i)}>
-                    {s.done && <Icon name="check" size={11} stroke={3} />}
-                  </div>
-                  <div style={{ fontSize: 13, color: s.done ? 'var(--text-3)' : 'var(--text)', textDecoration: s.done ? 'line-through' : 'none', flex: 1 }}>{s.t}</div>
-                  {task.priority && <PriorityBadge priority={task.priority} />}
-                </div>
-            )}
-            </div>
-          </div>
-          <div>
-            <div className="eyebrow" style={{ marginBottom: 10 }}>Effort × Impact</div>
-            <EffortImpactMatrix point={task.impact} />
-          </div>
-        </div>
-      }
+      {expanded && <TaskDetailPanel task={task} onTaskMetaChange={onTaskMetaChange} />}
     </div>);
 
 }
@@ -469,7 +673,6 @@ function mapTaskRow(t) {
     subtasks: [],
     points: 50,
     subject: t.subject || 'General',
-    impact: [2.5, 2.5],
     due: t.due_date ? new Date(t.due_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : null,
     dueSort: t.due_date ? Math.ceil((new Date(t.due_date) - new Date()) / 86400000) : 999,
     priority: t.priority || 'Routine',
@@ -673,14 +876,8 @@ function TasksScreen({ tasks, setTasks, goals, setGoals, dataLoading, onReward }
     setTasks(ts => ts.map(t => t.id === id ? { ...t, is_completed: newCompleted } : t));
   };
 
-  const toggleSub = (id, idx) => {
-    setTasks((ts) => ts.map((t) => {
-      if (t.id !== id) return t;
-      const wasAllDone = t.subtasks.every((s) => s.done);
-      const newSubs = t.subtasks.map((s, i) => i === idx ? { ...s, done: !s.done } : s);
-      if (!wasAllDone && newSubs.every((s) => s.done)) onReward(t.points);
-      return { ...t, subtasks: newSubs };
-    }));
+  const updateTaskMeta = (id, patch) => {
+    setTasks((ts) => ts.map((t) => t.id === id ? { ...t, ...patch } : t));
   };
 
   return (
@@ -725,7 +922,7 @@ function TasksScreen({ tasks, setTasks, goals, setGoals, dataLoading, onReward }
                         expanded={expanded === t.id}
                         onToggle={() => setExpanded(expanded === t.id ? null : t.id)}
                         onCheck={() => completeTask(t.id)}
-                        onSubCheck={(i) => toggleSub(t.id, i)} />
+                        onTaskMetaChange={updateTaskMeta} />
                       )}
                     </div>
                 }
@@ -742,7 +939,7 @@ function TasksScreen({ tasks, setTasks, goals, setGoals, dataLoading, onReward }
                       expanded={expanded === t.id}
                       onToggle={() => setExpanded(expanded === t.id ? null : t.id)}
                       onCheck={() => completeTask(t.id)}
-                      onSubCheck={(i) => toggleSub(t.id, i)} />
+                      onTaskMetaChange={updateTaskMeta} />
                     )}
                       </div>
                   }
