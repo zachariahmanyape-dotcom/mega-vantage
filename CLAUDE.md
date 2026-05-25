@@ -26,6 +26,7 @@ There are no imports between files. All components are globals on the window sco
 - `dashboard` → DashboardScreen (dashboard.jsx) — focus timer (adjustable length + Save→focus_sessions), "Next up" + "Focus this week" from live data
 - `tasks` → TasksScreen (tasks.jsx) — Tasks / Goals / Focus tabs; "+ New" create modal; Today/Tomorrow/Next-7-days/All views + collapsible Completed; Focus metrics + heatmaps
 - `sessions` → SessionsScreen (sessions.jsx) — Supabase calendar + list, add-to-calendar (.ics/Google/Outlook)
+- `roadmap` → RoadmapScreen (roadmap.jsx) — member's most-recent active goal as a phased roadmap (animated progress bar, collapsible phase cards with staggered reveal, checkable tasks → `is_completed`/`completed_at`, editable `due_date`/`member_notes` save-on-blur with inline "Saved" tick, teal reflection + coral "Note from Zach" callouts, soft-dimmed locked phases, friendly empty state). Nav: between Sessions and Wins.
 - `wins` → WinsScreen (wins.jsx) — Supabase `wins` table (load + post)
 - `resources` → ResourcesScreen (resources.jsx) — still mock (RESOURCES in data.jsx)
 - `chat` → ChatScreen (chat.jsx) — single placeholder "MEGA Mentorship" channel (real member count, no messaging backend)
@@ -35,6 +36,7 @@ There are no imports between files. All components are globals on the window sco
 - `admin-overview` → AdminOverview (admin.jsx)
 - `admin-members` → AdminMembers (admin.jsx) — loads from Supabase `profiles` table
 - `admin-tasks` → AdminTasks (admin.jsx)
+- `admin-roadmap` → RoadmapBuilder (roadmapbuilder.jsx) — admin discovery-call tool: member selector, 5-section intake + MEGA diagnostic + focus pills, Generate (via `generate-roadmap` Edge Function), editable review panel, Save → inserts `goals` + `roadmap_steps` + `tasks` for the selected member. Nav: after Tasks & Goals.
 - `admin-sessions` → AdminSessions (admin.jsx) — live scheduling (writes `sessions`), "Connect Google" + auto Meet links, Google-Calendar-style time pickers
 - `admin-messaging` → BulkMessaging (adminplus.jsx)
 - `admin-resources` → AdminResources (admin.jsx)
@@ -52,7 +54,7 @@ Tables wired to live data:
 - `profiles` — member auth, role (admin/member), membership_tier ('breakthrough'/'foundations'), account_type, trial status, member_status, joined_at. Added this session: `google_connected`, `google_email`.
 - `tasks` — member tasks. `roadmap_step_id` is now NULLABLE (standalone tasks allowed). Added columns: `goal_id` (direct goal link), `subject`, `priority`. subtasks/points/impact are still client-side defaults (no columns); completion uses the real `is_completed` column.
 - `goals` — member goals (title, description, target_date, status).
-- `roadmap_steps` — optional middle layer between goals and tasks (legacy link path; GoalCard links via `goal_id` OR `roadmap_step.goal_id`).
+- `roadmap_steps` — middle layer between goals and tasks (legacy GoalCard link path via `goal_id` OR `roadmap_step.goal_id`; also the phase layer for the Roadmap feature — `phase_label`, `reflection_prompt`, `admin_notes`, `order_index`, `status`, week range stored as prefix of `description`).
 - `sessions` — 1:1s + town halls. Admin creates; members read own 1:1s (`attendee_id = auth.uid()`) + all town halls (`attendee_id` null) via RLS. Cols: type, title, session_date, start_time, end_time, mentor_name, meeting_link, recurrence, attendee_id, created_by, `google_event_id`.
 - `wins` — community Wins board (load + post). Author info denormalized onto rows (`author_name`, `author_role`, `subject`) since profiles RLS is own-row-only. `is_public` gates the feed.
 - `focus_sessions` — dashboard focus-timer "Save" writes here (duration_minutes, label, subject, linked_id, linked_kind, started_at). Read by the Focus metrics tab + dashboard "Focus this week" widgets.
@@ -66,7 +68,8 @@ Edge Functions (source mirrored in `supabase/functions/`):
 - `google-oauth-start` — builds Google consent URL (admin only).
 - `google-oauth-callback` — OAuth redirect target (verify_jwt OFF); exchanges code, stores tokens, sets profiles.google_connected.
 - `google-calendar-event` — creates a Calendar event with a Meet link + invites the member; writes meeting_link/google_event_id back to the session.
-Required Edge Function secrets: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI` (= the google-oauth-callback URL; must match the Authorized redirect URI in Google Cloud). OAuth app is under a personal GCP project in Testing mode → publish to Production to avoid the ~7-day refresh-token expiry.
+- `generate-roadmap` — admin-only (verifies `role='admin'` via the caller's JWT, verify_jwt ON); relays a prompt to Anthropic (`claude-sonnet-4-6`, max_tokens 2000) and returns the text. Keeps the Anthropic key server-side. Called from roadmapbuilder.jsx via `supabase.functions.invoke`.
+Required Edge Function secrets: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI` (= the google-oauth-callback URL; must match the Authorized redirect URI in Google Cloud); `ANTHROPIC_API_KEY` (for generate-roadmap). OAuth app is under a personal GCP project in Testing mode → publish to Production to avoid the ~7-day refresh-token expiry.
 
 Still mock/placeholder (NOT wired): resources, admin analytics + members list, real chat messaging (single-channel shell), gamification (points/level/day-streak read 0), session recurrence (label only, no repeating instances), task subtasks, profile personal-info/interests, automated reminders.
 
@@ -113,6 +116,7 @@ Always use CSS variables, never hardcode hex values in JSX or inline styles.
 - Sessions: live (Supabase) — admin scheduling, member calendar/list + dashboard "Next up", add-to-calendar (.ics/Google/Outlook), Google Meet auto-link + member invite on scheduling
 - Focus: live — dashboard timer (adjustable length, Save → focus_sessions), Focus metrics tab (overview, trends, by-subject, records) + heatmaps (most-focused-time histogram, weekday×hour rhythm, year grid)
 - Wins board: live (Supabase `wins`)
+- Roadmap: live — admin builds via Roadmap Builder (AI generate → edit → save) and members view/interact on the Roadmap page. Requires `ANTHROPIC_API_KEY` Edge Function secret to be set. `goals` INSERT policy updated to allow `is_admin()` (matching `roadmap_steps`/`tasks`) so admins can save on a member's behalf.
 - Notifications: driven by real upcoming sessions
 - Chat: placeholder single "MEGA Mentorship" channel (real member count, no messaging backend)
 - Profile: stat card + milestones + badges real; personal-info/interests still placeholder
@@ -135,3 +139,4 @@ Always use CSS variables, never hardcode hex values in JSX or inline styles.
 <!-- Format: YYYY-MM-DD — [one sentence describing what changed] -->
 2026-05-24 — Fixed dashboard greeting + calendar "Today"; built real sessions backend (table + admin scheduling + member views + add-to-calendar) and Google Meet OAuth integration (3 Edge Functions); wired Wins board + collapsed Chat to one channel (`member_count()`); made profile stat card/milestones/badges real; added focus timer Save + `focus_sessions` + Focus metrics tab with heatmaps; added create Task/Goal modal + create-from-focus-picker + TickTick-style task views (fixed is_completed bug); real notifications; dark-mode date/time icons + Google-Calendar-style session time pickers.
 2026-05-24 — Replaced the placeholder "V" with the real Vantage logo (inline currentColor SVG in the sidebar brand box, theme-inverting + enlarged via viewBox crop; white logo on login/trial/admin boxes) and added dynamic rounded-square boxed favicons (favicon-light.svg blue / favicon-dark.svg white).
+2026-05-25 — Built the Roadmap feature: admin RoadmapBuilder (roadmapbuilder.jsx, route admin-roadmap) and member RoadmapScreen (roadmap.jsx, route roadmap), added `roadmap` icon + nav items + routes; deployed `generate-roadmap` Edge Function (Anthropic key server-side, admin-gated, claude-sonnet-4-6); fixed `goals` INSERT RLS to allow `is_admin()` on-behalf saves. Remaining manual step: set the `ANTHROPIC_API_KEY` Edge Function secret in Supabase.

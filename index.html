@@ -298,6 +298,7 @@
 <script type="text/babel" src="tasks.jsx"></script>
 <script type="text/babel" src="sessions.jsx"></script>
 <script type="text/babel" src="wins.jsx"></script>
+<script type="text/babel" src="roadmap.jsx"></script>
 <script type="text/babel" src="resources.jsx"></script>
 <script type="text/babel" src="chat.jsx"></script>
 <script type="text/babel" src="profile.jsx"></script>
@@ -305,6 +306,7 @@
 <script type="text/babel" src="adminplus.jsx"></script>
 <script type="text/babel" src="adminchat.jsx"></script>
 <script type="text/babel" src="analytics.jsx"></script>
+<script type="text/babel" src="roadmapbuilder.jsx"></script>
 
 <script type="text/babel">
 
@@ -474,6 +476,7 @@ function SidebarWithWins({ route, setRoute, admin, isRealAdmin, unread, member, 
     { k: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
     { k: 'tasks', label: 'Tasks & Goals', icon: 'tasks' },
     { k: 'sessions', label: 'Sessions', icon: 'sessions' },
+    { k: 'roadmap', label: 'Roadmap', icon: 'roadmap' },
     { k: 'wins', label: 'Wins Board', icon: 'trophy' },
     { k: 'resources', label: 'Resources', icon: 'resources' },
     { k: 'chat', label: 'Chat', icon: 'chat', badge: unread },
@@ -484,6 +487,7 @@ function SidebarWithWins({ route, setRoute, admin, isRealAdmin, unread, member, 
     { k: 'admin-overview', label: 'Overview', icon: 'dashboard' },
     { k: 'admin-members', label: 'Members', icon: 'users' },
     { k: 'admin-tasks', label: 'Tasks & Goals', icon: 'tasks' },
+    { k: 'admin-roadmap', label: 'Roadmap Builder', icon: 'roadmap' },
     { k: 'admin-sessions', label: 'Sessions', icon: 'sessions' },
     { k: 'admin-messaging', label: 'Chat', icon: 'send' },
     { k: 'admin-resources', label: 'Resources', icon: 'resources' },
@@ -914,6 +918,7 @@ function App() {
       break;
     case 'sessions': screen = <SessionsScreen onJoin={onJoin} isAdmin={false} />; break;
     case 'wins': screen = <WinsScreen />; break;
+    case 'roadmap': screen = <RoadmapScreen />; break;
     case 'resources': screen = <ResourcesScreen onStartTour={() => { setTourBubble(false); setTourActive(true); }} tourCompleted={tourCompleted} />; break;
     case 'chat': screen = <ChatScreen />; break;
     case 'profile': screen = <ProfileScreen member={member} theme={tw.theme} setTheme={t => updateTweak({ theme: t })} onSignOut={handleSignOut} />; break;
@@ -924,6 +929,7 @@ function App() {
         : <AdminMembers onViewAs={onViewAs} onOpenDetail={m => setSelectedAdminMember(m)} />;
       break;
     case 'admin-tasks': screen = <AdminTasks />; break;
+    case 'admin-roadmap': screen = <RoadmapBuilder />; break;
     case 'admin-sessions': screen = <AdminSessions />; break;
     case 'admin-messaging': screen = <BulkMessaging />; break;
     case 'admin-resources': screen = <AdminResources />; break;

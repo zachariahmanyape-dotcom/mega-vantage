@@ -818,6 +818,41 @@ body[data-game="loud"] .level-badge { animation: levelPulse 2.4s ease-in-out inf
 .sb-divider { height: 1px; background: var(--border); margin: 6px 4px; }
 .sidebar.admin .sb-divider { background: #141A2A; }
 
+/* ---------- Roadmap (member + admin builder) ---------- */
+/* Phase cards fade/slide in on mount, staggered via inline animation-delay */
+@keyframes rmReveal {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.rm-phase { animation: rmReveal .4s ease both; }
+
+/* Builder review-header meta chips (sit on the blue gradient) */
+.rb-meta-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(255,255,255,0.16);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #fff;
+}
+
+/* Builder save/confirmation toast */
+.rb-toast {
+  position: fixed;
+  bottom: 28px; right: 28px;
+  color: #fff;
+  padding: 14px 22px;
+  border-radius: 12px;
+  font-size: 13.5px;
+  font-weight: 600;
+  display: flex; align-items: center; gap: 10px;
+  z-index: 1000;
+  max-width: 380px;
+  box-shadow: var(--shadow-3);
+  animation: rmReveal .3s ease both;
+}
+
 /* Dark mode: make native date/time picker icons white instead of black */
 [data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator,
 [data-theme="dark"] input[type="time"]::-webkit-calendar-picker-indicator {
