@@ -210,7 +210,8 @@ function ProfileScreen({ member, theme, setTheme, onSignOut, onProfileSaved }) {
   const [showAllBadges, setShowAllBadges] = React.useState(false);
   const [editing, setEditing] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
-  const [form, setForm] = React.useState({ role:'', status:'', field:'', focus:'', interests:'' });
+  const [saveErr, setSaveErr] = React.useState(null);
+  const [form, setForm] = React.useState({ name:'', role:'', status:'', field:'', focus:'', interests:'' });
 
   React.useEffect(() => {
     let active = true;
@@ -274,7 +275,9 @@ function ProfileScreen({ member, theme, setTheme, onSignOut, onProfileSaved }) {
   const compact = [...allBadges].sort((a, b) => (b.earned ? 1 : 0) - (a.earned ? 1 : 0)).slice(0, 12);
 
   const startEdit = () => {
+    setSaveErr(null);
     setForm({
+      name: [member.firstName, member.lastName].filter(Boolean).join(' '),
       role: member.role || '', status: member.status || '', field: member.field || '',
       focus: member.focus || '', interests: (member.interests || []).join(', '),
     });
@@ -283,9 +286,11 @@ function ProfileScreen({ member, theme, setTheme, onSignOut, onProfileSaved }) {
 
   const saveProfile = async () => {
     setSaving(true);
+    setSaveErr(null);
     const { data: { user } } = await window._supabase.auth.getUser();
     const interestsArr = form.interests.split(',').map((s) => s.trim()).filter(Boolean);
     const fields = {
+      full_name: form.name.trim() || null,
       job_title: form.role.trim() || null,
       employment_status: form.status.trim() || null,
       field: form.field.trim() || null,
@@ -294,7 +299,7 @@ function ProfileScreen({ member, theme, setTheme, onSignOut, onProfileSaved }) {
     };
     const { error } = await window._supabase.from('profiles').update(fields).eq('id', user.id);
     setSaving(false);
-    if (error) { console.error('Failed to save profile:', error.message); return; }
+    if (error) { setSaveErr(error.message || 'Could not save your profile. Please try again.'); return; }
     if (onProfileSaved) onProfileSaved(fields);
     setEditing(false);
   };
@@ -307,9 +312,12 @@ function ProfileScreen({ member, theme, setTheme, onSignOut, onProfileSaved }) {
           <h1 className="page-title">{member.firstName} {member.lastName}</h1>
         </div>
         {editing ?
-          <div style={{ display:'flex', gap:8 }}>
-            <button className="btn" onClick={() => setEditing(false)}>Cancel</button>
-            <button className="btn primary" onClick={saveProfile} disabled={saving}>{saving ? 'Saving…' : 'Save profile'}</button>
+          <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:8 }}>
+            <div style={{ display:'flex', gap:8 }}>
+              <button className="btn" onClick={() => { setEditing(false); setSaveErr(null); }}>Cancel</button>
+              <button className="btn primary" onClick={saveProfile} disabled={saving}>{saving ? 'Saving…' : 'Save profile'}</button>
+            </div>
+            {saveErr && <div style={{ fontSize:12, color:'var(--coral)', maxWidth:260, textAlign:'right', lineHeight:1.4 }}>{saveErr}</div>}
           </div> :
           <button className="btn" onClick={startEdit}><Icon name="edit" size={13} /> Edit profile</button>
         }
@@ -384,6 +392,10 @@ function ProfileScreen({ member, theme, setTheme, onSignOut, onProfileSaved }) {
             <div className="eyebrow" style={{ marginBottom:14 }}>Personal info</div>
             {editing ?
               <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'12px 14px' }}>
+                <div style={{ gridColumn:'1 / -1' }}>
+                  <div className="eyebrow" style={{ fontSize:10, marginBottom:4 }}>Full name</div>
+                  <input className="input" style={{ fontSize:13 }} value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
+                </div>
                 {[['Role','role'],['Status','status'],['Field','field'],['Focus area','focus']].map(([l,k]) => (
                   <div key={k}>
                     <div className="eyebrow" style={{ fontSize:10, marginBottom:4 }}>{l}</div>

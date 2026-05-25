@@ -542,20 +542,75 @@ const DashTasksPeek = ({ tasks, onGoTasks }) => {
 };
 
 // ─── Main Dashboard ───────────────────────────────────────────────────────────
+// Smart Overview — a dynamic welcome line built from the member's real
+// tasks (today / overdue), today's calendar sessions, and yesterday's wins.
+// Falls back to a small set of generic templates when the day is empty.
+function buildSmartOverview({ tasks, sessions, now }) {
+  const ymd = (d) => {
+    const x = new Date(d);
+    return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`;
+  };
+  const todayY = ymd(now);
+  const y = new Date(now); y.setDate(y.getDate() - 1);
+  const yestY = ymd(y);
+
+  const open = (tasks || []).filter((t) => !t.is_completed);
+  const dueToday = open.filter((t) => t.due_date && ymd(t.due_date) === todayY);
+  const overdue = open.filter((t) => t.due_date && ymd(t.due_date) < todayY);
+  const doneYesterday = (tasks || []).filter((t) => t.is_completed && t.completed_at && ymd(t.completed_at) === yestY);
+  const sessionsToday = (sessions || []).filter((s) => s.status === 'upcoming' && s.dateISO === todayY);
+
+  const join = (arr) =>
+    arr.length <= 1 ? (arr[0] || '') : arr.slice(0, -1).join(', ') + ' and ' + arr[arr.length - 1];
+
+  const parts = [];
+  if (doneYesterday.length) {
+    parts.push(`Nice work — you finished ${doneYesterday.length} task${doneYesterday.length > 1 ? 's' : ''} yesterday.`);
+  }
+
+  const todayBits = [];
+  if (overdue.length) todayBits.push(`${overdue.length} overdue task${overdue.length > 1 ? 's' : ''}`);
+  if (dueToday.length) todayBits.push(`${dueToday.length} task${dueToday.length > 1 ? 's' : ''} due today`);
+  if (sessionsToday.length === 1) todayBits.push(`a session at ${sessionsToday[0].time || 'today'}`);
+  else if (sessionsToday.length > 1) todayBits.push(`${sessionsToday.length} sessions`);
+
+  if (todayBits.length) {
+    parts.push(`Today you have ${join(todayBits)}.`);
+  } else if (!doneYesterday.length) {
+    const generic = [
+      'Nothing scheduled today — a clear runway to get ahead on what matters most.',
+      'Your day is open. A great chance to make progress on a bigger goal.',
+    ];
+    parts.push(generic[new Date(now).getDate() % generic.length]);
+  } else {
+    parts.push('Nothing due today — enjoy the breathing room, or get a head start on tomorrow.');
+  }
+
+  return parts.join(' ');
+}
+
 function DashboardScreen({ member, onJoin, onGoto, gameMode, intention, onClearIntention, tasks, goals, setTasks }) {
-  const today = new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' });
+  const now = new Date();
+  const today = now.toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' });
+  const hr = now.getHours();
+  const greeting = hr < 12 ? 'Good morning' : hr < 18 ? 'Good afternoon' : 'Good evening';
   const [focusRows, setFocusRows] = useState([]);
+  const [sessions, setSessions] = useState([]);
   const reloadFocus = () => fetchFocusSessions().then(setFocusRows);
-  useEffect(() => { reloadFocus(); }, []);
+  useEffect(() => {
+    reloadFocus();
+    if (window.fetchListSessions) window.fetchListSessions().then(setSessions);
+  }, []);
+  const overview = buildSmartOverview({ tasks, sessions, now });
 
   return (
     <>
       <div className="page-header" style={{ alignItems:'flex-end' }}>
         <div>
-          <div className="eyebrow">Good morning · {today}</div>
+          <div className="eyebrow">{greeting} · {today}</div>
           <h1 className="page-title">Hello, <span style={{ color:'var(--accent)' }}>{member.firstName}</span></h1>
           <div className="page-sub" style={{ marginTop:10, maxWidth:620, color:'var(--text-2)' }}>
-            You're on pace for a sharp week. One session, three tasks, and a town hall between now and Friday.
+            {overview}
           </div>
         </div>
       </div>

@@ -22,20 +22,25 @@ function dueDateStatus(due) {
   return 'upcoming';
 }
 
+// Fully automatic placement from priority + due date. No manual override.
+//   Critical/Important + (overdue OR due within 3 days) → Q1 Do Now
+//   Critical/Important + (due beyond 3 days OR no due date) → Q2 Do Next
+//   Routine/Backlog   + (overdue OR due within 3 days) → Q3 Handle Soon
+//   Routine/Backlog   + (due beyond 3 days OR no due date) → Q4 Revisit Later
+// Edge cases: no due date is treated as Not Urgent; overdue is always Urgent
+// (even Routine/Backlog → Q3). Recomputed every render so it tracks the clock.
 function getQuadrant(task) {
-  // Manual override trumps everything
-  if (task._quadrant) return task._quadrant;
-
   const p = task.priority || 'Routine';
-  const urgent = task.dueSort && task.dueSort <= 2; // within 48 hrs proxy
+  const important = p === 'Critical' || p === 'Important';
 
-  if (p === 'Critical' || p === 'Important') {
-    return urgent ? 'do' : 'schedule';
+  let urgent = false;
+  if (task.due_date) {
+    const days = Math.ceil((new Date(task.due_date) - new Date()) / 86400000);
+    urgent = days <= 3; // overdue (<= 0) or within 3 days
   }
-  if (p === 'Routine') {
-    return urgent ? 'delegate' : 'eliminate';
-  }
-  return 'eliminate'; // Backlog
+
+  if (important) return urgent ? 'do' : 'schedule';
+  return urgent ? 'delegate' : 'eliminate';
 }
 
 const QUADRANTS = [
@@ -50,7 +55,6 @@ function MatrixTaskCard({ task, compact }) {
   const pc = PRIORITY_CONFIG[p];
   const ds = dueDateStatus(task.due);
   const dc = DUE_CONFIG[ds];
-  const isAuto = !task._quadrant;
 
   if (compact) {
     return (
@@ -68,16 +72,13 @@ function MatrixTaskCard({ task, compact }) {
   return (
     <div style={{
       padding:'10px 12px', borderRadius:10, background:'var(--bg-elev)',
-      border:'1px solid var(--border)', marginBottom:6,
-      cursor:'grab'
+      border:'1px solid var(--border)', marginBottom:6
     }}>
       <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginBottom:6 }}>
         <span style={{ fontSize:9, padding:'2px 6px', borderRadius:999, background:pc.bg, color:pc.color,
           fontFamily:'var(--ff-sub)', fontWeight:700, letterSpacing:'0.08em', border:'1px solid '+pc.color+'55' }}>
           {p}
         </span>
-        {isAuto && <span style={{ fontSize:9, padding:'2px 6px', borderRadius:999, background:'var(--bg-sunken)', color:'var(--text-3)',
-          fontFamily:'var(--ff-sub)', fontWeight:700, letterSpacing:'0.08em', border:'1px solid var(--border)' }}>Auto</span>}
         {task.due && <span style={{ fontSize:9, padding:'2px 6px', borderRadius:999, background:'transparent',
           color:dc.color, fontFamily:'var(--ff-sub)', fontWeight:600 }}>📅 {task.due}</span>}
       </div>
@@ -89,22 +90,13 @@ function MatrixTaskCard({ task, compact }) {
 
 function EisenhowerMatrix({ tasks }) {
   const [expanded, setExpanded] = useState(false);
-  const [taskMap, setTaskMap] = useState({});
-  const [dragOver, setDragOver] = useState(null);
-  const [dragging, setDragging] = useState(null);
 
-  // Build quadrant map
+  // Completed tasks never appear; everything else is auto-placed by getQuadrant.
+  const activeTasks = (tasks || []).filter(t => !t.is_completed);
   const quadrantTasks = {};
   QUADRANTS.forEach(q => {
-    quadrantTasks[q.id] = tasks.filter(t => {
-      const override = taskMap[t.id];
-      return (override || getQuadrant(t)) === q.id;
-    });
+    quadrantTasks[q.id] = activeTasks.filter(t => getQuadrant(t) === q.id);
   });
-
-  const moveTask = (taskId, toQ) => {
-    setTaskMap(m => ({ ...m, [taskId]: toQ }));
-  };
 
   // Compact preview
   if (!expanded) {
@@ -163,7 +155,7 @@ function EisenhowerMatrix({ tasks }) {
           <div>
             <div className="eyebrow">Dashboard · Priority matrix</div>
             <div className="display" style={{ fontSize:36 }}>Eisenhower Matrix</div>
-            <div style={{ fontSize:13, color:'var(--text-2)', marginTop:4 }}>Drag tasks between quadrants to override auto-placement. Auto-placed tasks show an <strong>Auto</strong> badge.</div>
+            <div style={{ fontSize:13, color:'var(--text-2)', marginTop:4 }}>Tasks are placed automatically from their priority and due date. Completed tasks drop off.</div>
           </div>
           <button className="btn" onClick={() => setExpanded(false)}>✕ Close</button>
         </div>
@@ -171,14 +163,10 @@ function EisenhowerMatrix({ tasks }) {
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gridTemplateRows:'1fr 1fr', gap:16, height:'calc(100% - 120px)' }}>
           {QUADRANTS.map(q => (
             <div key={q.id}
-              onDragOver={e => { e.preventDefault(); setDragOver(q.id); }}
-              onDrop={e => { e.preventDefault(); if (dragging) moveTask(dragging, q.id); setDragOver(null); setDragging(null); }}
-              onDragLeave={() => setDragOver(null)}
               style={{
-                background: q.color + (dragOver===q.id ? '22' : '08'),
-                border:'2px solid ' + q.color + (dragOver===q.id ? 'cc' : '25'),
-                borderRadius:16, padding:18, overflow:'auto',
-                transition:'background .15s, border-color .15s'
+                background: q.color + '08',
+                border:'2px solid ' + q.color + '25',
+                borderRadius:16, padding:18, overflow:'auto'
               }}>
               <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:14 }}>
                 <div style={{ width:32, height:32, borderRadius:10, background:q.color+'22', display:'grid', placeItems:'center', color:q.color }}>
@@ -194,15 +182,11 @@ function EisenhowerMatrix({ tasks }) {
               </div>
               {quadrantTasks[q.id].length === 0 && (
                 <div style={{ textAlign:'center', color:'var(--text-3)', fontSize:12, padding:'24px 0', opacity:0.6 }}>
-                  Drop tasks here
+                  Nothing here right now
                 </div>
               )}
               {quadrantTasks[q.id].map(t => (
-                <div key={t.id} draggable
-                  onDragStart={() => setDragging(t.id)}
-                  onDragEnd={() => setDragging(null)}>
-                  <MatrixTaskCard task={{ ...t, _quadrant: taskMap[t.id] }} />
-                </div>
+                <MatrixTaskCard key={t.id} task={t} />
               ))}
             </div>
           ))}

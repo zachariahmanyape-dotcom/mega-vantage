@@ -90,7 +90,16 @@ function MembersTable({ compact, onViewAs, onOpenDetail, members = [], loading =
       setBlockedMember(m);
       return;
     }
-    if (onViewAs) onViewAs(m);
+    if (!onViewAs) return;
+    // Normalise the raw profile row to the shape the member shell expects
+    // (name / initials / color / plan) so the banner + impersonated header render.
+    onViewAs({
+      ...m,
+      name: m.full_name || 'Member',
+      initials: (m.full_name || 'M').split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2),
+      color: '#0F52BA',
+      plan: m.membership_tier ? m.membership_tier.charAt(0).toUpperCase() + m.membership_tier.slice(1) : '—',
+    });
   };
 
   if (loading) {
