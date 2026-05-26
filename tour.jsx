@@ -6,42 +6,56 @@ const TOUR_STEPS = [
     nav:    'dashboard',
     title:  'Dashboard',
     icon:   'dashboard',
-    desc:   'Your mission control. See your streak, upcoming session, focus timer, and a snapshot of every task and goal — all at a glance.',
+    desc:   'Your mission control. Your streak, XP tier, upcoming session, and a focus timer that follows you to the Tasks page — all in one view.',
   },
   {
     route:  'tasks',
     nav:    'tasks',
     title:  'Tasks & Goals',
     icon:   'tasks',
-    desc:   'Every task your mentor assigns lives here. Expand a task to see sub-tasks, effort scores, and time logged. Goals tie tasks together into outcomes.',
+    desc:   'Capture every task and goal here. Open a task to log focus time, add subtasks, or let AI break it down into smaller steps for you.',
   },
   {
     route:  'sessions',
     nav:    'sessions',
     title:  'Sessions',
     icon:   'sessions',
-    desc:   'All your 1:1 mentorship calls and town halls in one calendar. Click any session to see the agenda, join, or request a reschedule.',
+    desc:   'All your 1:1s and town halls in one calendar. Each session carries the agenda your mentor wrote, and you can add it to Google or Outlook in one click.',
+  },
+  {
+    route:  'roadmap',
+    nav:    'roadmap',
+    title:  'Your Roadmap',
+    icon:   'roadmap',
+    desc:   'A personalized growth roadmap built with your mentor — split into phases with tasks, reflection prompts, and a personal note for each stage.',
   },
   {
     route:  'wins',
     nav:    'wins',
     title:  'Wins Board',
     icon:   'trophy',
-    desc:   'The community feed. Share achievements, react to your cohort\'s wins, and build a record of everything you\'ve accomplished.',
+    desc:   'The community feed. Share achievements big or small, react to your cohort\'s wins, and build a record of everything you\'ve accomplished.',
   },
   {
     route:  'resources',
     nav:    'resources',
     title:  'Resources',
     icon:   'resources',
-    desc:   'Your mentor\'s full library — videos, worksheets, templates — organised by subject area and plan tier. Everything is searchable.',
+    desc:   'Your mentor\'s library — videos, worksheets, templates — organised by subject area and plan tier. Everything is searchable.',
   },
   {
     route:  'chat',
     nav:    'chat',
     title:  'Chat',
     icon:   'chat',
-    desc:   'Announcements, group channels, and direct messages with your mentor and cohort. Pinned posts surface the most important updates.',
+    desc:   'Talk to your cohort in shared channels, or start a private direct message with your mentor whenever you need a 1:1.',
+  },
+  {
+    route:  'profile',
+    nav:    'profile',
+    title:  'Profile & Badges',
+    icon:   'profile',
+    desc:   'Your XP tier, streak history, and the full badge wall. Every action you take in Vantage unlocks something new — climb 8 tiers from Rookie to Icon.',
   },
   {
     route:   'tasks',
@@ -55,8 +69,8 @@ const TOUR_STEPS = [
 
 // ─── Nav item order in sidebar (member view, 0-indexed) ───────────────────────
 // Matches the memberItems array order in SidebarWithWins:
-// 0: dashboard, 1: tasks, 2: sessions, 3: wins, 4: resources, 5: chat, 6: profile
-const NAV_ORDER = ['dashboard','tasks','sessions','wins','resources','chat','profile'];
+// 0: dashboard, 1: tasks, 2: sessions, 3: roadmap, 4: wins, 5: resources, 6: chat, 7: profile
+const NAV_ORDER = ['dashboard','tasks','sessions','roadmap','wins','resources','chat','profile'];
 
 // ─── Tour bubble ──────────────────────────────────────────────────────────────
 function TourBubble({ onStart, onDismiss }) {

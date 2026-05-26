@@ -43,11 +43,15 @@ function sessionIsPast(dateISO, endH) {
   return end < new Date();
 }
 async function fetchSessions() {
-  const { data, error } = await window._supabase.
-  from('sessions').
-  select('*').
-  order('session_date', { ascending: true }).
-  order('start_time', { ascending: true });
+  // Scope to the effective user — under RLS normal members already see only their own 1:1s
+  // + null-attendee town halls, but admins (incl. during View As) need an explicit filter
+  // because is_admin() opens up SELECT to all rows.
+  let q = window._supabase.from('sessions').select('*');
+  const uid = window.getActiveUserId ? await window.getActiveUserId() : null;
+  if (uid) q = q.or(`attendee_id.eq.${uid},attendee_id.is.null`);
+  const { data, error } = await q
+    .order('session_date', { ascending: true })
+    .order('start_time', { ascending: true });
   if (error) {console.error('Failed to load sessions:', error.message);return [];}
   return data || [];
 }

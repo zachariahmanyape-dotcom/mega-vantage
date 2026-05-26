@@ -260,13 +260,13 @@ function ProfileScreen({ member, theme, setTheme, onSignOut, onProfileSaved }) {
   React.useEffect(() => {
     let active = true;
     (async () => {
-      const { data: { user } } = await window._supabase.auth.getUser();
+      const uid = window.getActiveUserId ? await window.getActiveUserId() : null;
       const [sess, focus, tasksRes, goalsRes, winsMineRes, winsAllRes] = await Promise.all([
         window.fetchListSessions(),
         window.fetchFocusSessions(),
-        user ? window._supabase.from('tasks').select('id, title, is_completed, completed_at').eq('user_id', user.id).eq('is_completed', true) : Promise.resolve({ data: [] }),
-        user ? window._supabase.from('goals').select('id, status').eq('user_id', user.id) : Promise.resolve({ data: [] }),
-        user ? window._supabase.from('wins').select('id').eq('user_id', user.id) : Promise.resolve({ data: [] }),
+        uid ? window._supabase.from('tasks').select('id, title, is_completed, completed_at').eq('user_id', uid).eq('is_completed', true) : Promise.resolve({ data: [] }),
+        uid ? window._supabase.from('goals').select('id, status').eq('user_id', uid) : Promise.resolve({ data: [] }),
+        uid ? window._supabase.from('wins').select('id').eq('user_id', uid) : Promise.resolve({ data: [] }),
         window._supabase.from('wins').select('id, user_id, created_at').eq('is_public', true),
       ]);
       const [resourceCount, communityCount] = await Promise.all([
@@ -283,7 +283,7 @@ function ProfileScreen({ member, theme, setTheme, onSignOut, onProfileSaved }) {
         (rx || []).forEach((r) => { rcount[r.win_id] = (rcount[r.win_id] || 0) + 1; });
         const weekMax = {};
         allWins.forEach((w) => { const k = badgeMondayKey(w.created_at); const c = rcount[w.id] || 0; if (c > (weekMax[k] || 0)) weekMax[k] = c; });
-        wotw = allWins.some((w) => user && w.user_id === user.id && (rcount[w.id] || 0) > 0 && (rcount[w.id] || 0) === weekMax[badgeMondayKey(w.created_at)]);
+        wotw = allWins.some((w) => uid && w.user_id === uid && (rcount[w.id] || 0) > 0 && (rcount[w.id] || 0) === weekMax[badgeMondayKey(w.created_at)]);
       }
 
       if (!active) return;
@@ -293,7 +293,7 @@ function ProfileScreen({ member, theme, setTheme, onSignOut, onProfileSaved }) {
       setBadgeData({ goals: goalsRes.data || [], resourceCount, communityCount, myWinsCount: (winsMineRes.data || []).length, wotw });
     })();
     return () => { active = false; };
-  }, []);
+  }, [member.firstName]);
 
   // Award +25 for any badge that's now earned but not yet recorded (idempotent, server-side).
   React.useEffect(() => {

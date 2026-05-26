@@ -6,12 +6,12 @@ const { useState, useEffect, useRef } = React;
 if (!window.FOCUS_LOG) window.FOCUS_LOG = {}; // legacy, retained for task time refs
 
 async function fetchFocusSessions() {
-  const { data: { user } } = await window._supabase.auth.getUser();
-  if (!user) return [];
+  const uid = window.getActiveUserId ? await window.getActiveUserId() : null;
+  if (!uid) return [];
   const { data, error } = await window._supabase
     .from('focus_sessions')
     .select('id, duration_minutes, label, subject, linked_kind, started_at, created_at')
-    .eq('user_id', user.id)
+    .eq('user_id', uid)
     .order('created_at', { ascending: false });
   if (error) { console.error('Failed to load focus sessions:', error.message); return []; }
   return data || [];
@@ -411,18 +411,18 @@ const DashStats = ({ member, tasks, goals, focusRows }) => {
   useEffect(() => {
     let active = true;
     (async () => {
-      const { data: { user } } = await window._supabase.auth.getUser();
-      if (!user) return;
+      const uid = window.getActiveUserId ? await window.getActiveUserId() : null;
+      if (!uid) return;
       const { data } = await window._supabase
         .from('points_log').select('source')
-        .eq('user_id', user.id).in('source', ['town_hall', 'one_to_one']);
+        .eq('user_id', uid).in('source', ['town_hall', 'one_to_one']);
       if (!active) return;
       const c = { townHall: 0, oneToOne: 0 };
       (data || []).forEach((r) => { if (r.source === 'town_hall') c.townHall++; else if (r.source === 'one_to_one') c.oneToOne++; });
       setAttend(c);
     })();
     return () => { active = false; };
-  }, []);
+  }, [member.firstName]);
 
   const isBreakthrough = member.plan === 'Breakthrough';
   const tasksDone = (tasks || []).filter((t) => t.is_completed).length;

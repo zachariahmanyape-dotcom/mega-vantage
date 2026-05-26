@@ -147,11 +147,11 @@ function RoadmapScreen() {
   useEffect(() => {
     let active = true;
     (async () => {
-      const { data: { user } } = await window._supabase.auth.getUser();
-      if (!user) { setLoading(false); return; }
+      const uid = window.getActiveUserId ? await window.getActiveUserId() : null;
+      if (!uid) { setLoading(false); return; }
 
       const { data: goals } = await window._supabase.from('goals')
-        .select('*').eq('user_id', user.id).eq('status', 'active')
+        .select('*').eq('user_id', uid).eq('status', 'active')
         .order('created_at', { ascending: false }).limit(1);
       const g = goals && goals[0];
       if (!g) { if (active) { setGoal(null); setLoading(false); } return; }

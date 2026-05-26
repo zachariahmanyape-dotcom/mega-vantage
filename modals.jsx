@@ -199,7 +199,11 @@ function OnboardingWizard({ onComplete }) {
         {/* Step 0: Welcome */}
         {step === 0 &&
         <div style={{ textAlign: 'center', padding: '40px 0' }}>
-            <div style={{ width: 72, height: 72, borderRadius: 20, background: 'var(--text)', color: 'var(--bg)', display: 'grid', placeItems: 'center', margin: '0 auto 24px', fontFamily: 'var(--ff-display)', fontSize: 40 }}>V</div>
+            <div style={{ width: 72, height: 72, borderRadius: 20, background: 'var(--text)', color: 'var(--bg-elev)', display: 'grid', placeItems: 'center', margin: '0 auto 24px' }}>
+              <svg viewBox="190 170 645 645" style={{ width: 56, height: 56 }} xmlns="http://www.w3.org/2000/svg" aria-label="Vantage" role="img">
+                <path fill="currentColor" d="M 501.00 740.37 C484.16,737.18 467.83,727.24 458.11,714.25 C440.52,690.78 438.55,662.43 452.11,628.00 C455.04,620.54 465.42,599.58 480.57,570.50 L 485.26 561.50 L 463.00 514.50 C434.10,453.48 419.12,421.61 404.01,389.00 C397.26,374.42 383.86,345.62 374.25,325.00 C349.65,272.25 350.00,273.07 350.01,266.84 C350.02,259.03 353.55,252.10 359.65,247.88 C363.83,244.99 365.49,244.48 371.71,244.16 C377.53,243.86 379.77,244.19 383.27,245.89 C391.77,250.00 388.50,243.70 437.22,350.00 C444.41,365.67 461.52,402.80 475.26,432.50 C488.99,462.20 502.77,492.01 505.87,498.74 C508.96,505.48 511.75,510.99 512.06,510.99 C512.54,511.00 522.54,489.89 557.54,415.00 C575.25,377.12 602.39,318.51 626.04,267.10 C632.71,252.60 635.33,248.99 641.27,246.11 C649.57,242.10 662.42,244.27 668.20,250.66 C671.37,254.17 673.96,261.38 673.98,266.77 C674.00,272.50 669.17,283.42 624.78,378.00 C614.32,400.27 600.23,430.42 593.47,445.00 C586.71,459.58 572.09,490.85 560.98,514.50 C549.88,538.15 540.35,558.62 539.81,560.00 C538.95,562.18 540.81,566.43 554.22,593.00 C574.70,633.58 579.88,649.10 579.97,670.18 C580.09,701.19 561.36,727.79 532.50,737.58 C526.19,739.73 522.28,740.36 514.00,740.57 C508.23,740.72 502.38,740.63 501.00,740.37 ZM 522.14 694.91 C527.35,692.28 532.46,685.83 534.51,679.34 C538.04,668.09 534.65,654.63 521.97,629.50 C517.52,620.70 513.29,612.90 512.57,612.17 C511.49,611.06 510.40,612.43 506.25,620.17 C491.84,647.01 487.65,658.25 487.64,670.20 C487.63,676.76 488.06,678.74 490.57,683.60 C497.01,696.13 510.33,700.90 522.14,694.91 Z" />
+              </svg>
+            </div>
             <div className="display" style={{ fontSize: 64, lineHeight: 0.95, marginBottom: 16 }}>Welcome to<br /><span style={{ color: 'var(--accent)' }}>Vantage</span></div>
             <div style={{ fontFamily: 'var(--ff-sub)', fontSize: 13, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-3)', marginBottom: 12 }}>by MEGA · Middle East Growth Academy</div>
             <div style={{ fontSize: 15, color: 'var(--text-2)', lineHeight: 1.65, maxWidth: 420, margin: '0 auto 36px' }}>Your personal development command center. Every session, task, and goal in one place. Designed to make your growth feel real.
@@ -272,7 +276,7 @@ function OnboardingWizard({ onComplete }) {
             <div className="display" style={{ fontSize: 38, marginBottom: 24, textAlign: 'center' }}>How Vantage works</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16, marginBottom: 28 }}>
               {[
-            { icon: 'star', color: 'var(--coral)', title: 'Points & levels', desc: 'Earn XP by completing tasks, attending sessions, and hitting streak milestones. Progress through five tiers: Beginner → Elite.' },
+            { icon: 'star', color: 'var(--coral)', title: 'Points & levels', desc: 'Earn XP by completing tasks, attending sessions, hitting streak milestones, and unlocking badges. Climb 8 tiers from Rookie all the way to Icon — every action moves you up.' },
             { icon: 'flame', color: 'var(--coral)', title: 'Streaks', desc: 'Log in every weekday to build your streak. Weekends don\'t count. Streaks show consistency — one of the most reliable signals of growth.' },
             { icon: 'trophy', color: 'var(--accent)', title: 'Badges & milestones', desc: 'Unlock badges for first sessions, subject mastery, streak records, and goals completed. Each badge has a story.' }].
             map((c) =>
@@ -301,9 +305,9 @@ function OnboardingWizard({ onComplete }) {
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, maxWidth: 400, margin: '0 auto 32px' }}>
               {[
-            { label: 'Plan', v: MEMBER.plan },
-            { label: 'Points', v: `${MEMBER.points.toLocaleString()} XP` },
-            { label: 'Streak', v: `${MEMBER.streakDays} days` }].
+            { label: 'Plan', v: 'Foundations' },
+            { label: 'Points', v: '0 XP' },
+            { label: 'Streak', v: '0 days' }].
             map((s) =>
             <div key={s.label} style={{ padding: '12px', background: 'var(--bg-sunken)', borderRadius: 12, border: '1px solid var(--border)' }}>
                   <div className="eyebrow" style={{ fontSize: 10 }}>{s.label}</div>

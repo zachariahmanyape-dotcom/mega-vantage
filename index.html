@@ -591,9 +591,11 @@ function App() {
   const [tweaksOpen, setTweaksOpen] = useState(false);
   const [rewards, setRewards] = useState([]);
   const [viewingAs, setViewingAs] = useState(null);
+  const [viewProfile, setViewProfile] = useState(null); // impersonated member's full profile (View As)
   const [selectedAdminMember, setSelectedAdminMember] = useState(null);
 
-  const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem('vantage-onboarded'));
+  // Onboarding is now gated server-side via profiles.onboarded_at — set once the profile loads.
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const [tourActive, setTourActive] = useState(false);
   const [tourBubble, setTourBubble] = useState(() => !localStorage.getItem('vantage-tour-seen'));
   const [tourCompleted, setTourCompleted] = useState(() => !!localStorage.getItem('vantage-tour-done'));
@@ -781,6 +783,43 @@ function App() {
       loadUserData(userId);
     }
   };
+
+  // Show the onboarding wizard the first time this account ever signs in (server-side flag).
+  useEffect(() => {
+    if (liveProfile && !liveProfile.onboarded_at) setShowOnboarding(true);
+  }, [liveProfile && liveProfile.id, liveProfile && liveProfile.onboarded_at]);
+
+  // ── View As: keep an impersonated user id on window so child fetchers can scope reads
+  // to the member. Admin has is_admin() SELECT override on tasks/goals/sessions/focus/
+  // points/subtasks/wins, so explicit user_id filters by the impersonated id work under RLS.
+  useEffect(() => {
+    window._viewingAsId = viewingAs ? viewingAs.id : null;
+    window.getActiveUserId = async () => {
+      if (window._viewingAsId) return window._viewingAsId;
+      const { data: { user } } = await window._supabase.auth.getUser();
+      return user ? user.id : null;
+    };
+  }, [viewingAs && viewingAs.id]);
+
+  // Reload the dataset (profile + tasks/goals + upcoming sessions) when entering/leaving View As.
+  // window._viewingAsId is already set by the effect above, so loadUserData → fetchCalSessions
+  // and other child fetchers automatically scope to the impersonated member.
+  useEffect(() => {
+    let active = true;
+    if (viewingAs) {
+      (async () => {
+        const { data: prof } = await window._supabase
+          .from('profiles').select('*').eq('id', viewingAs.id).maybeSingle();
+        if (!active) return;
+        setViewProfile(prof || null);
+        loadUserData(viewingAs.id);
+      })();
+    } else {
+      setViewProfile(null);
+      if (authUser && authUser.id) loadUserData(authUser.id);
+    }
+    return () => { active = false; };
+  }, [viewingAs && viewingAs.id]);
 
   useEffect(() => { localStorage.setItem('vantage-tweaks', JSON.stringify(tw)); }, [tw]);
   useEffect(() => { localStorage.setItem('vantage-route', route); }, [route]);
@@ -981,28 +1020,31 @@ function App() {
   }
 
   // 4. Logged in and profile ready — build member object and show platform
+  // In View As mode, the visible profile fields come from the impersonated member (viewProfile).
+  // The real admin's identity stays on `isAdmin` so capability checks remain correct.
+  const effectiveProfile = viewProfile || liveProfile;
   const member = {
-    firstName: (liveProfile.full_name || '').split(' ')[0] || 'Member',
-    lastName: (liveProfile.full_name || '').split(' ').slice(1).join(' ') || '',
-    initials: (liveProfile.full_name || 'M').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2),
-    email: liveProfile.email || '',
+    firstName: (effectiveProfile.full_name || '').split(' ')[0] || 'Member',
+    lastName: (effectiveProfile.full_name || '').split(' ').slice(1).join(' ') || '',
+    initials: (effectiveProfile.full_name || 'M').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2),
+    email: effectiveProfile.email || '',
     avatarColor: '#0F52BA',
-    plan: liveProfile.membership_tier === 'breakthrough' ? 'Breakthrough' : 'Foundations',
+    plan: effectiveProfile.membership_tier === 'breakthrough' ? 'Breakthrough' : 'Foundations',
     product: 'Mentorship',
-    accountType: liveProfile.account_type || 'member',
-    trialExpiresAt: liveProfile.trial_expires_at || null,
-    joinedAt: liveProfile.joined_at || null,
-    xp: xpTotal,
-    points: xpTotal,
-    streakDays: streakDays,
+    accountType: effectiveProfile.account_type || 'member',
+    trialExpiresAt: effectiveProfile.trial_expires_at || null,
+    joinedAt: effectiveProfile.joined_at || null,
+    xp: viewingAs ? (effectiveProfile.xp_total || 0) : xpTotal,
+    points: viewingAs ? (effectiveProfile.xp_total || 0) : xpTotal,
+    streakDays: viewingAs ? (effectiveProfile.streak_days || 0) : streakDays,
     learningThisMonth: '0h 0m',
-    interests: liveProfile.interests || [],
-    notificationPrefs: liveProfile.notification_preferences || {},
-    role: liveProfile.job_title || '',
-    status: liveProfile.employment_status || '',
-    field: liveProfile.field || '',
-    focus: liveProfile.focus_area || '',
-    isAdmin: liveProfile.role === 'admin',
+    interests: effectiveProfile.interests || [],
+    notificationPrefs: effectiveProfile.notification_preferences || {},
+    role: effectiveProfile.job_title || '',
+    status: effectiveProfile.employment_status || '',
+    field: effectiveProfile.field || '',
+    focus: effectiveProfile.focus_area || '',
+    isAdmin: liveProfile.role === 'admin', // real admin capability — keep on real profile
   };
   window._currentMember = member;
   window.awardXp = awardXp;
@@ -1080,7 +1122,11 @@ function App() {
             theme={tw.theme} setTheme={t => updateTweak({ theme: t })}
             onOpenTweaks={() => setTweaksOpen(true)}
             notifCount={upcomingSessions.length} onOpenNotifs={() => setNotifOpen(true)} />
-          {screen}
+          {/* Keying on the effective user id forces screen remount on View As toggle,
+              so every screen-level useEffect refetches with the impersonated user. */}
+          <React.Fragment key={viewingAs ? viewingAs.id : (authUser && authUser.id) || 'anon'}>
+            {screen}
+          </React.Fragment>
         </div>
       </main>
 
@@ -1105,9 +1151,14 @@ function App() {
       )}
 
       {showOnboarding && (
-        <OnboardingWizard onComplete={() => {
+        <OnboardingWizard onComplete={async () => {
           setShowOnboarding(false);
-          localStorage.setItem('vantage-onboarded', '1');
+          const nowIso = new Date().toISOString();
+          const { data: { user } } = await window._supabase.auth.getUser();
+          if (user) {
+            await window._supabase.from('profiles').update({ onboarded_at: nowIso }).eq('id', user.id);
+            setLiveProfile(p => p ? { ...p, onboarded_at: nowIso } : p);
+          }
         }} />
       )}
       {!showOnboarding && showReflection && (

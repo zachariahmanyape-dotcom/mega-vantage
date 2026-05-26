@@ -404,6 +404,9 @@ RULES:
                 </select>
               </RbField>
               <RbField label="Importance">
+                <div style={{ fontSize: 12, color: 'var(--text-2)', lineHeight: 1.5 }}>
+                  How critical is this goal to them right now? <strong>1</strong> = a nice-to-have they could put off; <strong>5</strong> = it has to happen, no excuses.
+                </div>
                 <RbScale value={importance} onChange={setImportance} />
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 5 }}>
                   <span style={{ fontSize: 11, color: 'var(--text-3)' }}>1 = nice to have</span>

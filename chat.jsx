@@ -2,10 +2,10 @@
 
 // Count of messages the current user has posted — powers Community badges.
 async function fetchCommunityPostCount() {
-  const { data: { user } } = await window._supabase.auth.getUser();
-  if (!user) return 0;
+  const uid = window.getActiveUserId ? await window.getActiveUserId() : null;
+  if (!uid) return 0;
   const { count } = await window._supabase.from('messages')
-    .select('id', { count: 'exact', head: true }).eq('user_id', user.id);
+    .select('id', { count: 'exact', head: true }).eq('user_id', uid);
   return count || 0;
 }
 Object.assign(window, { fetchCommunityPostCount });
