@@ -178,7 +178,8 @@ function RoadmapBuilder() {
 
   const showToast = (msg, kind = 'success') => {
     setToast({ msg, kind });
-    setTimeout(() => setToast(null), 4000);
+    // Errors stay on screen until dismissed; success toasts auto-hide after 4s.
+    if (kind !== 'error') setTimeout(() => setToast(null), 4000);
   };
 
   const onPickMember = (id) => {
@@ -289,17 +290,20 @@ RULES:
   };
 
   const save = async () => {
-    if (!memberId || !roadmap) return;
+    if (!memberId) { showToast('Pick a member before saving the roadmap.', 'error'); return; }
+    if (!roadmap)  { showToast('Generate a roadmap before saving.', 'error'); return; }
     setSaving(true);
+    console.log('[RoadmapBuilder] Saving roadmap for member', memberId, 'phases:', (roadmap.phases || []).length);
     try {
-      const { data: goal, error: goalErr } = await window._supabase.from('goals').insert({
+      const goalRes = await window._supabase.from('goals').insert({
         user_id: memberId,
         title: goalTitle,
         description: goalSuccess,
         target_date: rbTargetDate(timeline),
         status: 'active',
       }).select().single();
-      if (goalErr) throw goalErr;
+      if (goalRes.error) { console.error('[RoadmapBuilder] goals insert failed:', goalRes.error); throw goalRes.error; }
+      const goal = goalRes.data;
 
       for (let pi = 0; pi < roadmap.phases.length; pi++) {
         const phase = roadmap.phases[pi];
@@ -563,9 +567,12 @@ RULES:
       )}
 
       {toast && (
-        <div className="rb-toast" style={{ background: toast.kind === 'error' ? '#7f1d1d' : toast.kind === 'success' ? '#14532d' : 'var(--black)' }}>
+        <div className="rb-toast" style={{ background: toast.kind === 'error' ? '#7f1d1d' : toast.kind === 'success' ? '#14532d' : 'var(--black)', display: 'flex', alignItems: 'center', gap: 10 }}>
           <span>{toast.kind === 'error' ? '✕' : '✓'}</span>
-          <span>{toast.msg}</span>
+          <span style={{ flex: 1 }}>{toast.msg}</span>
+          {toast.kind === 'error' && (
+            <button onClick={() => setToast(null)} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>Dismiss</button>
+          )}
         </div>
       )}
     </>
