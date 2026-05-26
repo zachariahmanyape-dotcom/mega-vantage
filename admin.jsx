@@ -1,7 +1,42 @@
 // admin.jsx — Admin views (Overview, Members+ViewAs, Tasks, Sessions, Resources, Chat)
 // AdminAnalytics is in analytics.jsx
 
+const OV_PERF_COLORS = ['#0F52BA', '#4FB7A6', '#E8B24C', '#B79BED', '#FF6B6B'];
+const OV_BAR_COLORS = ['var(--coral)', '#E8B24C', 'var(--teal-600)', 'var(--accent)', 'var(--text)', 'var(--sapphire)', 'var(--teal-600)'];
+function ovInitials(n) { return (n || 'M').trim().split(/\s+/).map((w) => w[0]).join('').toUpperCase().slice(0, 2); }
+function ovPlan(tier) { return tier ? tier.charAt(0).toUpperCase() + tier.slice(1) : 'Foundations'; }
+
 function AdminOverview({ onPick }) {
+  const [stats, setStats] = useState(null);
+  const [members, setMembers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [membersLoading, setMembersLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    window._supabase.rpc('admin_overview_stats').then(({ data, error }) => {
+      if (!active) return;
+      if (error) console.error('Overview stats failed:', error.message);
+      setStats(error ? null : data);
+      setLoading(false);
+    });
+    window._supabase.from('profiles').select('*').neq('role', 'admin').order('joined_at', { ascending: false })
+      .then(({ data }) => { if (active) { setMembers(data || []); setMembersLoading(false); } });
+    return () => { active = false; };
+  }, []);
+
+  const tiles = [
+    { label: 'Active members',          v: stats?.active_members ?? 0,    sub: (stats?.recent_signups ? `+${stats.recent_signups} in last 30 days` : 'Members') },
+    { label: 'Weekly engagement tasks', v: stats?.weekly_tasks ?? 0,      sub: 'Completed this week (Mon–Sun)' },
+    { label: 'Assigned attendance',     v: stats?.weekly_attendance ?? 0, sub: 'Sessions attended this week' },
+    { label: 'At-risk members',         v: stats?.at_risk ?? 0,           sub: 'No activity in 14 days', coral: true },
+  ];
+
+  const engagement = stats?.engagement || [];
+  const engMax = Math.max(1, ...engagement.map((e) => e.count || 0));
+  const engHasData = engagement.some((e) => (e.count || 0) > 0);
+  const performers = stats?.top_performers || [];
+
   return (
     <>
       <div className="page-header">
@@ -9,7 +44,8 @@ function AdminOverview({ onPick }) {
           <div className="eyebrow">Admin · Overview</div>
           <h1 className="page-title">Mission control</h1>
           <div className="page-sub" style={{ marginTop: 8, color: 'var(--text-2)', maxWidth: 560 }}>
-            Members, tasks, sessions, resources, chat, analytics — in one view.
+            {loading ? 'Loading live member data…'
+              : `${stats?.active_members ?? 0} active of ${stats?.total_members ?? 0} members · ${stats?.recent_signups ?? 0} joined in the last 30 days.`}
           </div>
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
@@ -19,18 +55,14 @@ function AdminOverview({ onPick }) {
       </div>
 
       <div className="card" style={{ padding: 0, marginBottom: 20 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)' }}>
-          {[
-          ['Active members', '214', '+12 this month'],
-          ['Avg. weekly engagement', '78%', '+4 pts'],
-          ['Tasks assigned this week', '96', '67 complete'],
-          ['Session attendance', '92%', 'Last 30 days'],
-          ['At-risk members', '7', 'Needs outreach']].
-          map(([l, v, s], i) =>
-          <div key={l} style={{ padding: '22px 20px', borderRight: i < 4 ? '1px solid var(--border)' : 'none' }}>
-              <div className="eyebrow" style={{ fontSize: 10 }}>{l}</div>
-              <div className="display" style={{ fontSize: 36, marginTop: 4, color: i === 4 ? 'var(--coral)' : 'var(--text)' }}>{v}</div>
-              <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 2 }}>{s}</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)' }}>
+          {tiles.map((t, i) =>
+          <div key={t.label} style={{ padding: '22px 20px', borderRight: i < 3 ? '1px solid var(--border)' : 'none' }}>
+              <div className="eyebrow" style={{ fontSize: 10 }}>{t.label}</div>
+              <div className="display" style={{ fontSize: 36, marginTop: 4, color: t.coral ? 'var(--coral)' : 'var(--text)' }}>
+                {loading ? '—' : t.v}
+              </div>
+              <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 2 }}>{t.sub}</div>
             </div>
           )}
         </div>
@@ -42,39 +74,51 @@ function AdminOverview({ onPick }) {
             <div className="eyebrow" style={{ margin: 0 }}>Members · recent activity</div>
             <button className="btn ghost sm" onClick={() => onPick('admin-members')}>View all <Icon name="arrow-right" size={12} /></button>
           </div>
-          <MembersTable compact onViewAs={() => {}} />
+          <MembersTable compact onViewAs={() => onPick('admin-members')} members={members} loading={membersLoading} />
         </div>
 
         <div className="stack" style={{ gap: 20 }}>
           <div className="card" style={{ padding: 22 }}>
-            <div className="eyebrow" style={{ marginBottom: 12 }}>Engagement distribution</div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8, alignItems: 'end', height: 120 }}>
-              {[14, 32, 58, 72, 38].map((v, i) =>
-              <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-                  <div className="bar" style={{ width: '100%', height: 100, position: 'relative' }}>
-                    <span style={{ height: v + '%', background: ['var(--coral)', '#E8B24C', 'var(--teal-600)', 'var(--accent)', 'var(--text)'][i] }} />
+            <div className="eyebrow" style={{ marginBottom: 12 }}>Activity · last 7 days</div>
+            {loading ? (
+              <div style={{ fontSize: 13, color: 'var(--text-3)', padding: '28px 0', textAlign: 'center' }}>Loading…</div>
+            ) : !engHasData ? (
+              <div style={{ fontSize: 13, color: 'var(--text-3)', padding: '28px 0', textAlign: 'center' }}>No activity yet this week.</div>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: `repeat(${engagement.length}, 1fr)`, gap: 8, alignItems: 'end', height: 120 }}>
+                {engagement.map((e, i) =>
+                <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                    <div className="bar" style={{ width: '100%', height: 100, position: 'relative' }}>
+                      <span style={{ height: ((e.count || 0) / engMax * 100) + '%', background: OV_BAR_COLORS[i % OV_BAR_COLORS.length] }} />
+                    </div>
+                    <div style={{ fontSize: 10, color: 'var(--text-3)', fontFamily: 'var(--ff-sub)' }}>{e.day}</div>
                   </div>
-                  <div style={{ fontSize: 10, color: 'var(--text-3)', fontFamily: 'var(--ff-sub)' }}>{LEVELS[i]}</div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="card" style={{ padding: 22 }}>
-            <div className="eyebrow" style={{ marginBottom: 12 }}>Top performers · this month</div>
-            <div className="stack" style={{ gap: 10 }}>
-              {[...ADMIN_MEMBERS].sort((a, b) => b.points - a.points).slice(0, 4).map((m, i) =>
-              <div key={m.name} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div className="display" style={{ fontSize: 18, color: 'var(--text-3)', width: 18 }}>{i + 1}</div>
-                  <Avatar initials={m.initials} color={m.color} size={28} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 600 }}>{m.name}</div>
-                    <div style={{ fontSize: 11, color: 'var(--text-3)' }}>{m.plan}</div>
+            <div className="eyebrow" style={{ marginBottom: 12 }}>Top performers · by XP</div>
+            {loading ? (
+              <div style={{ fontSize: 13, color: 'var(--text-3)' }}>Loading…</div>
+            ) : performers.length === 0 ? (
+              <div style={{ fontSize: 13, color: 'var(--text-3)' }}>No members yet.</div>
+            ) : (
+              <div className="stack" style={{ gap: 10 }}>
+                {performers.map((m, i) =>
+                <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div className="display" style={{ fontSize: 18, color: 'var(--text-3)', width: 18 }}>{i + 1}</div>
+                    <Avatar initials={ovInitials(m.full_name)} color={OV_PERF_COLORS[i % OV_PERF_COLORS.length]} size={28} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600 }}>{m.full_name || 'Member'}</div>
+                      <div style={{ fontSize: 11, color: 'var(--text-3)' }}>{ovPlan(m.membership_tier)}</div>
+                    </div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--accent)' }}>{(m.xp_total || 0).toLocaleString()} XP</div>
                   </div>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--accent)' }}>{m.points.toLocaleString()}</div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -540,6 +584,7 @@ function AdminSessions() {
   const [startTime, setStartTime] = React.useState('17:00');
   const [endTime, setEndTime] = React.useState('18:00');
   const [recurrence, setRecurrence] = React.useState('does-not-repeat');
+  const [agenda, setAgenda] = React.useState('');
   const [link, setLink] = React.useState('');
   const [members, setMembers] = React.useState([]);
   const [saving, setSaving] = React.useState(false);
@@ -585,7 +630,7 @@ function AdminSessions() {
   const reset = () => {
     setTitle('');setAttendeeId('');setDate('');
     setStartTime('17:00');setEndTime('18:00');
-    setRecurrence('does-not-repeat');setLink('');
+    setRecurrence('does-not-repeat');setAgenda('');setLink('');
   };
 
   const onStartChange = (v) => {
@@ -618,6 +663,7 @@ function AdminSessions() {
       mentor_name: mentorName,
       meeting_link: link.trim() || null,
       recurrence,
+      agenda: agenda.trim() || null,
       attendee_id: type === '1:1' ? attendeeId : null,
       created_by: user?.id || null
     }).select().single();
@@ -626,9 +672,11 @@ function AdminSessions() {
     // Auto-attach a Google Meet link when connected and no manual link was given.
     let meetNote = '';
     if (googleConnected && !link.trim()) {
-      const description = type === '1:1' ?
+      const baseDesc = type === '1:1' ?
       `1:1 with ${attendee?.full_name || 'member'} — via Vantage` :
       `${title.trim()} — via Vantage`;
+      const description = agenda.trim() ?
+      `${baseDesc}\n\nAgenda:\n${agenda.trim()}` : baseDesc;
       const { data: mres, error: merr } = await window._supabase.functions.invoke('google-calendar-event', {
         body: {
           sessionId: inserted.id, title: title.trim(), dateISO: date,
@@ -737,6 +785,11 @@ function AdminSessions() {
                 <option value="biweekly">Biweekly</option>
                 <option value="monthly">Monthly</option>
               </select>
+            </div>
+
+            <div>
+              <div className="eyebrow" style={{ marginBottom: 6 }}>Agenda <span style={{ textTransform: 'none', letterSpacing: 0, color: 'var(--text-3)', fontWeight: 400 }}>(optional · one bullet per line)</span></div>
+              <textarea className="input" rows={4} placeholder={"Review last session's action items\nProgress update\nKey challenge this week\nNext steps"} value={agenda} onChange={(e) => setAgenda(e.target.value)} style={{ fontSize: 13, resize: 'vertical', fontFamily: 'var(--ff-body)', lineHeight: 1.5 }} />
             </div>
 
             <input className="input" placeholder={googleConnected ? 'Meeting link (leave blank to auto-create a Google Meet)' : 'Meeting link (optional)'} value={link} onChange={(e) => setLink(e.target.value)} />

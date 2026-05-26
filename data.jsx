@@ -235,7 +235,7 @@ function Icon({name, size=18, stroke=1.8, style, className}) {
     case "admin": return (<svg {...p}><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7l8-4z"/></svg>);
     case "bell": return (<svg {...p}><path d="M6 8a6 6 0 0 1 12 0v5l2 3H4l2-3V8z"/><path d="M10 19a2 2 0 0 0 4 0"/></svg>);
     case "search": return (<svg {...p}><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>);
-    case "flame": return (<svg {...p} fill="none"><path d="M12 3c1 3 4 4 4 8a4 4 0 0 1-8 0c0-2 1-2.5 1-4 0-1-1-2-1-3 2 0 3-1 4-1z"/><path d="M10 17a2 2 0 0 0 4 0"/></svg>);
+    case "flame": return (<svg {...p}><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>);
     case "play": return (<svg {...p}><polygon points="7 4 20 12 7 20 7 4" fill="currentColor" stroke="none"/></svg>);
     case "pause": return (<svg {...p}><rect x="6" y="4" width="4" height="16" rx="1" fill="currentColor" stroke="none"/><rect x="14" y="4" width="4" height="16" rx="1" fill="currentColor" stroke="none"/></svg>);
     case "arrow-right": return (<svg {...p}><path d="M5 12h14M13 5l7 7-7 7"/></svg>);

@@ -463,9 +463,9 @@ function RemoteBanner({ member, onExit }) {
   return (
     <div className="remote-banner">
       <Icon name="admin" size={16} />
-      <span>Viewing as <strong>{member.name}</strong> — Admin Read-Only Mode</span>
-      <span style={{ opacity: 0.75, fontSize: 11, marginLeft: 4 }}>({member.plan})</span>
-      <button className="exit-btn" onClick={onExit}>✕ Exit member view</button>
+      <span>You are viewing as <strong>{member.name}</strong></span>
+      <span style={{ opacity: 0.75, fontSize: 11, marginLeft: 4 }}>({member.plan} · Admin read-only)</span>
+      <button className="exit-btn" onClick={onExit}>Exit</button>
     </div>
   );
 }
@@ -490,6 +490,7 @@ function SidebarWithWins({ route, setRoute, admin, isRealAdmin, unread, member, 
     { k: 'admin-roadmap', label: 'Roadmap Builder', icon: 'roadmap' },
     { k: 'admin-sessions', label: 'Sessions', icon: 'sessions' },
     { k: 'admin-messaging', label: 'Chat', icon: 'chat' },
+    { k: 'admin-wins', label: 'Wins Board', icon: 'trophy' },
     { k: 'admin-resources', label: 'Resources', icon: 'resources' },
     { k: 'admin-analytics', label: 'Analytics', icon: 'chart' }
   ];
@@ -1041,13 +1042,14 @@ function App() {
     case 'admin-overview': screen = <AdminOverview onPick={setRoute} />; break;
     case 'admin-members':
       screen = selectedAdminMember
-        ? <AdminMemberDetail member={selectedAdminMember} onBack={() => setSelectedAdminMember(null)} />
+        ? <AdminMemberDetail member={selectedAdminMember} onBack={() => setSelectedAdminMember(null)} onViewAs={onViewAs} />
         : <AdminMembers onViewAs={onViewAs} onOpenDetail={m => setSelectedAdminMember(m)} />;
       break;
     case 'admin-tasks': screen = <AdminTasks />; break;
     case 'admin-roadmap': screen = <RoadmapBuilder />; break;
     case 'admin-sessions': screen = <AdminSessions />; break;
     case 'admin-messaging': screen = <BulkMessaging />; break;
+    case 'admin-wins': screen = <WinsScreen />; break;
     case 'admin-resources': screen = <AdminResources />; break;
     case 'admin-analytics': screen = <AdminAnalytics />; break;
     default:

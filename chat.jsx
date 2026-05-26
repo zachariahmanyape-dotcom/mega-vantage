@@ -141,6 +141,45 @@ function NewChannelModal({ onClose, onCreated }) {
   );
 }
 
+// ── Direct-message picker (admin starts a DM with a member) ─────────
+function DmPickerModal({ directory, meId, onClose, onPick }) {
+  const [search, setSearch] = React.useState('');
+  const candidates = (directory || [])
+    .filter((m) => m.id !== meId && m.role !== 'admin')
+    .filter((m) => (m.full_name || '').toLowerCase().includes(search.trim().toLowerCase()));
+  return (
+    <>
+      <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(10,10,10,0.5)', zIndex: 200, backdropFilter: 'blur(3px)' }} />
+      <div className="card" style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 'min(460px, 92vw)', maxHeight: '86vh', overflow: 'auto', zIndex: 201, padding: 0, boxShadow: 'var(--shadow-3)' }}>
+        <div style={{ padding: '18px 24px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <div className="eyebrow">Chat</div>
+            <div className="display" style={{ fontSize: 24, marginTop: 2, lineHeight: 1.1 }}>New direct message</div>
+          </div>
+          <button onClick={onClose} style={{ color: 'var(--text-3)', fontSize: 16, background: 'none', border: 'none', cursor: 'pointer', lineHeight: 1 }}>✕</button>
+        </div>
+        <div style={{ padding: '20px 24px' }}>
+          <input className="input" style={{ fontSize: 13, marginBottom: 8 }} value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search members…" autoFocus />
+          <div style={{ maxHeight: 320, overflow: 'auto', border: '1px solid var(--border)', borderRadius: 12 }}>
+            {candidates.length === 0
+              ? <div style={{ padding: 16, fontSize: 13, color: 'var(--text-3)' }}>No members found.</div>
+              : candidates.map((m) => (
+                <div key={m.id} onClick={() => onPick(m.id)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderBottom: '1px solid var(--border)', cursor: 'pointer' }}>
+                  <Avatar initials={winInitials(m.full_name)} color={winColor(m.full_name)} size={28} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600 }}>{m.full_name || 'Member'}</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-3)' }}>{m.membership_tier ? m.membership_tier.charAt(0).toUpperCase() + m.membership_tier.slice(1) : 'Member'}</div>
+                  </div>
+                  <Icon name="arrow-right" size={13} style={{ color: 'var(--text-3)' }} />
+                </div>
+              ))}
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
 function ChatScreen() {
   const [channels, setChannels] = React.useState([]);
   const [selectedId, setSelectedId] = React.useState(null);
@@ -151,18 +190,36 @@ function ChatScreen() {
   const [text, setText] = React.useState('');
   const [sending, setSending] = React.useState(false);
   const [creating, setCreating] = React.useState(false);
+  const [dmPicker, setDmPicker] = React.useState(false);
   const [xpByUser, setXpByUser] = React.useState({});
+  const [nameById, setNameById] = React.useState({});
+  const [directory, setDirectory] = React.useState([]);
+  const [adminId, setAdminId] = React.useState(null);
+  const [meId, setMeId] = React.useState(null);
+  const [dmPartners, setDmPartners] = React.useState({}); // channelId -> other user id
   const scrollRef = React.useRef(null);
 
-  // Member XP map (list_members is SECURITY DEFINER — profiles is otherwise own-row only).
+  React.useEffect(() => {
+    let active = true;
+    window._supabase.auth.getUser().then(({ data: { user } }) => { if (active) setMeId(user?.id || null); });
+    return () => { active = false; };
+  }, []);
+
+  // Member directory (list_members is SECURITY DEFINER — profiles is otherwise own-row only).
+  // Powers the community XP line, DM partner names, and the admin lookup for member→admin DMs.
   React.useEffect(() => {
     let active = true;
     (async () => {
       const { data } = await window._supabase.rpc('list_members');
       if (!active || !data) return;
-      const map = {};
-      data.forEach((m) => { map[m.id] = m.xp_total || 0; });
-      setXpByUser(map);
+      const xp = {}, nm = {};
+      let admin = null;
+      data.forEach((m) => {
+        xp[m.id] = m.xp_total || 0;
+        nm[m.id] = m.full_name || 'Member';
+        if (m.role === 'admin' && !admin) admin = m.id;
+      });
+      setXpByUser(xp); setNameById(nm); setDirectory(data); setAdminId(admin);
     })();
     return () => { active = false; };
   }, []);
@@ -173,16 +230,39 @@ function ChatScreen() {
   // Load channels the user can see (RLS filters to default + their channels).
   const loadChannels = React.useCallback(async (preferId) => {
     const { data } = await window._supabase.from('channels')
-      .select('id, name, description, is_default, created_by')
+      .select('id, name, description, is_default, created_by, is_dm')
       .order('is_default', { ascending: false }).order('created_at', { ascending: true });
     const list = data || [];
     setChannels(list);
     setLoadingChannels(false);
-    setSelectedId((cur) => preferId || cur || (list[0] && list[0].id) || null);
+    setSelectedId((cur) => preferId || cur || (list.find((c) => !c.is_dm) || list[0] || {}).id || null);
     return list;
   }, []);
 
   React.useEffect(() => { loadChannels(); }, [loadChannels]);
+
+  // Resolve the other participant for each DM channel (so we can label DMs by person).
+  React.useEffect(() => {
+    const dmIds = channels.filter((c) => c.is_dm).map((c) => c.id);
+    if (!dmIds.length || !meId) { setDmPartners({}); return; }
+    let active = true;
+    window._supabase.from('channel_members').select('channel_id, user_id').in('channel_id', dmIds)
+      .then(({ data }) => {
+        if (!active) return;
+        const map = {};
+        (data || []).forEach((r) => { if (r.user_id !== meId) map[r.channel_id] = r.user_id; });
+        setDmPartners(map);
+      });
+    return () => { active = false; };
+  }, [channels, meId]);
+
+  const startDm = async (otherId) => {
+    if (!otherId) return;
+    const { data, error } = await window._supabase.rpc('get_or_create_dm', { p_other: otherId });
+    if (error) { console.error('Could not open direct message:', error.message); return; }
+    setDmPicker(false);
+    await loadChannels(data);
+  };
 
   // Load messages + member count for the selected channel, then poll for new ones.
   React.useEffect(() => {
@@ -244,6 +324,13 @@ function ChatScreen() {
 
   const memberLabel = `${memberCount} ${memberCount === 1 ? 'member' : 'members'}`;
 
+  const regularChannels = channels.filter((c) => !c.is_dm);
+  const dmChannels = channels.filter((c) => c.is_dm);
+  const dmTitle = (c) => nameById[dmPartners[c.id]] || 'Direct message';
+  const titleOf = (c) => (c.is_dm ? dmTitle(c) : c.name);
+  const selectedTitle = selected ? titleOf(selected) : '';
+  const adminName = nameById[adminId] || 'your mentor';
+
   return (
     <>
       <div className="page-header">
@@ -271,7 +358,7 @@ function ChatScreen() {
           <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
             {loadingChannels
               ? <div style={{ padding: '8px 10px', fontSize: 13, color: 'var(--text-3)' }}>Loading…</div>
-              : channels.map((c) => (
+              : regularChannels.map((c) => (
                 <button key={c.id} className={'sb-item' + (c.id === selectedId ? ' active' : '')} onClick={() => setSelectedId(c.id)} style={{ padding: '8px 10px', width: '100%' }}>
                   <Avatar initials={c.is_default ? 'MG' : channelInitials(c.name)} color={c.is_default ? '#0F52BA' : winColor(c.name)} size={28} />
                   <div style={{ flex: 1, textAlign: 'left', minWidth: 0 }}>
@@ -282,6 +369,35 @@ function ChatScreen() {
                   </div>
                 </button>
               ))}
+
+            <div className="row-between" style={{ padding: '14px 8px 8px' }}>
+              <div className="eyebrow" style={{ margin: 0 }}>Direct Messages</div>
+              {isAdmin
+                ? <button onClick={() => setDmPicker(true)} title="New direct message"
+                    style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'var(--accent)', display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 12, fontWeight: 600 }}>
+                    <Icon name="plus" size={13} /> New
+                  </button>
+                : (adminId && <button onClick={() => startDm(adminId)} title={`Message ${adminName}`}
+                    style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'var(--accent)', display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 12, fontWeight: 600 }}>
+                    <Icon name="plus" size={13} /> New
+                  </button>)}
+            </div>
+            {!loadingChannels && dmChannels.length === 0
+              ? <div style={{ padding: '4px 10px 8px', fontSize: 11.5, color: 'var(--text-3)', lineHeight: 1.5 }}>
+                  {isAdmin ? 'Start a private message with any member.' : `Message ${adminName} privately.`}
+                </div>
+              : dmChannels.map((c) => {
+                const nm = dmTitle(c);
+                return (
+                  <button key={c.id} className={'sb-item' + (c.id === selectedId ? ' active' : '')} onClick={() => setSelectedId(c.id)} style={{ padding: '8px 10px', width: '100%' }}>
+                    <Avatar initials={winInitials(nm)} color={winColor(nm)} size={28} />
+                    <div style={{ flex: 1, textAlign: 'left', minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{nm}</div>
+                      <div style={{ fontSize: 10, color: 'var(--text-3)', fontFamily: 'var(--ff-sub)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Direct message</div>
+                    </div>
+                  </button>
+                );
+              })}
           </div>
         </div>
 
@@ -294,11 +410,14 @@ function ChatScreen() {
           ) : (
             <>
               <div style={{ padding: '14px 22px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
-                <Avatar initials={selected.is_default ? 'MG' : channelInitials(selected.name)} color={selected.is_default ? '#0F52BA' : winColor(selected.name)} size={34} />
+                <Avatar
+                  initials={selected.is_dm ? winInitials(selectedTitle) : (selected.is_default ? 'MG' : channelInitials(selected.name))}
+                  color={selected.is_dm ? winColor(selectedTitle) : (selected.is_default ? '#0F52BA' : winColor(selected.name))}
+                  size={34} />
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 14, fontWeight: 600 }}># {selected.name}</div>
+                  <div style={{ fontSize: 14, fontWeight: 600 }}>{selected.is_dm ? selectedTitle : `# ${selected.name}`}</div>
                   <div style={{ fontSize: 11, color: 'var(--text-3)' }}>
-                    {memberLabel}{selected.description ? ` · ${selected.description}` : ''}
+                    {selected.is_dm ? 'Direct message' : `${memberLabel}${selected.description ? ` · ${selected.description}` : ''}`}
                   </div>
                 </div>
               </div>
@@ -314,7 +433,9 @@ function ChatScreen() {
                         <div>
                           <div style={{ fontSize: 16, fontWeight: 700 }}>Start the conversation</div>
                           <div style={{ fontSize: 13, color: 'var(--text-2)', marginTop: 6, maxWidth: 440, lineHeight: 1.6 }}>
-                            Be the first to post in <strong>{selected.name}</strong> — share an update, ask a question, or cheer someone on.
+                            {selected.is_dm
+                              ? <>This is the start of your private conversation with <strong>{selectedTitle}</strong>.</>
+                              : <>Be the first to post in <strong>{selected.name}</strong> — share an update, ask a question, or cheer someone on.</>}
                           </div>
                         </div>
                       </div>
@@ -345,7 +466,7 @@ function ChatScreen() {
                     value={text}
                     onChange={(e) => setText(e.target.value)}
                     onKeyDown={onKeyDown}
-                    placeholder={`Message ${selected.name}…`}
+                    placeholder={`Message ${selectedTitle}…`}
                     style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', fontSize: 13, padding: '6px 0', color: 'var(--text)' }} />
                   <button className="btn primary sm" disabled={!text.trim() || sending} onClick={send} style={{ opacity: !text.trim() || sending ? 0.5 : 1 }}>
                     <Icon name="send" size={12} /> {sending ? 'Sending…' : 'Send'}
@@ -358,6 +479,7 @@ function ChatScreen() {
       </div>
 
       {creating && <NewChannelModal onClose={() => setCreating(false)} onCreated={(ch) => { setCreating(false); loadChannels(ch.id); }} />}
+      {dmPicker && <DmPickerModal directory={directory} meId={meId} onClose={() => setDmPicker(false)} onPick={startDm} />}
     </>
   );
 }

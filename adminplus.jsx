@@ -251,7 +251,7 @@ function PrivateNotes({ memberName }) {
 }
 
 // ─── Admin Member Detail Page ──────────────────────────────────────────────────
-function AdminMemberDetail({ member, onBack }) {
+function AdminMemberDetail({ member, onBack, onViewAs }) {
   if (!member) return null;
 
   // Normalise — accept both raw Supabase rows and legacy mapped objects
@@ -342,6 +342,20 @@ function AdminMemberDetail({ member, onBack }) {
                 {resending ? 'Sending…' : 'Resend invitation'}
               </button>
             )}
+            <button className="btn" disabled={!onViewAs || ['pending','inactive'].includes(memberStatus)}
+              title={['pending','inactive'].includes(memberStatus) ? 'Member account is not active' : 'Preview the app as this member'}
+              onClick={() => {
+                if (!onViewAs || ['pending','inactive'].includes(memberStatus)) return;
+                onViewAs({
+                  ...member,
+                  name,
+                  initials: (name || 'M').split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2),
+                  color: member.color || '#0F52BA',
+                  plan,
+                });
+              }}>
+              <Icon name="arrow-right" size={13} /> View as
+            </button>
             <button className="btn"><Icon name="tasks" size={13} /> Assign task</button>
             <button className="btn primary"><Icon name="sessions" size={13} /> Schedule 1:1</button>
           </div>

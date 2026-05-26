@@ -7,22 +7,6 @@ const HOURS = Array.from({ length: HOUR_END - HOUR_START }, (_, i) => HOUR_START
 const DAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
-const DEFAULT_AGENDA = {
-  '1:1': [
-  "Review last session's action items",
-  "Progress update on current tasks",
-  "Key challenge or friction this week",
-  "Next steps and task assignments"],
-
-  'Town Hall': [
-  "Welcome and announcements",
-  "Guest speaker / feature topic",
-  "Member spotlight",
-  "Open Q&A",
-  "Closing — next session preview"]
-
-};
-
 function fmtH(h) {
   const hh = Math.floor(h);
   const mm = Math.round((h - hh) * 60);
@@ -84,6 +68,7 @@ function mapToCalSession(r) {
     status: sessionIsPast(r.session_date, endH) ? 'past' : 'upcoming',
     link: r.meeting_link || '',
     recurring: r.recurrence && r.recurrence !== 'does-not-repeat' ? r.recurrence : undefined,
+    agenda: r.agenda || '',
     isTownHall: isTH };
 
 }
@@ -106,6 +91,7 @@ function mapToListSession(r) {
     startH, endH,
     status: sessionIsPast(r.session_date, endH) ? 'past' : 'upcoming',
     link: r.meeting_link || '',
+    agenda: r.agenda || '',
     notes: null };
 
 }
@@ -128,7 +114,9 @@ function icsStamp(d) {
   return d.getUTCFullYear() + p(d.getUTCMonth() + 1) + p(d.getUTCDate()) + 'T' + p(d.getUTCHours()) + p(d.getUTCMinutes()) + '00Z';
 }
 function sessionDescription(session) {
-  return (session.mentor ? 'With ' + session.mentor + '. ' : '') + (session.link ? 'Join: ' + session.link : '');
+  const head = (session.mentor ? 'With ' + session.mentor + '. ' : '') + (session.link ? 'Join: ' + session.link : '');
+  const ag = (session.agenda || '').trim();
+  return ag ? (head ? head + '\n\nAgenda:\n' + ag : 'Agenda:\n' + ag) : head;
 }
 function googleCalUrl(session) {
   const { start, end } = sessionDateTimes(session);
@@ -211,20 +199,9 @@ function AddToCalendar({ session, compact }) {
 
 // ---------- Session Detail Modal ----------
 function SessionDetailModal({ session, onClose, isAdmin }) {
-  const [agenda, setAgenda] = useState(() =>
-  (DEFAULT_AGENDA[session.type] || []).map((t) => ({ text: t, done: false }))
-  );
-  const [newItem, setNewItem] = useState('');
   const past = session.status === 'past';
   const isTH = session.type === 'Town Hall';
-
-  const addItem = () => {
-    if (!newItem.trim()) return;
-    setAgenda((a) => [...a, { text: newItem.trim(), done: false }]);
-    setNewItem('');
-  };
-  const toggleItem = (i) => setAgenda((a) => a.map((x, j) => j === i ? { ...x, done: !x.done } : x));
-  const removeItem = (i) => setAgenda((a) => a.filter((_, j) => j !== i));
+  const agendaLines = (session.agenda || '').split('\n').map((l) => l.trim()).filter(Boolean);
 
   return (
     <>
@@ -285,33 +262,17 @@ function SessionDetailModal({ session, onClose, isAdmin }) {
           </div>
         </div>
 
-        {/* Agenda */}
+        {/* Agenda — plain text set by admin on the session; hidden entirely when empty */}
+        {agendaLines.length > 0 &&
         <div style={{ padding: '20px 24px' }}>
           <div className="eyebrow" style={{ marginBottom: 12 }}>Session agenda</div>
-          {agenda.length === 0 && <div style={{ fontSize: 13, color: 'var(--text-3)', fontStyle: 'italic', marginBottom: 12 }}>No agenda items yet. {isAdmin ? 'Add one below.' : 'Your mentor will add an agenda soon.'}</div>}
-          <div className="stack" style={{ gap: 6 }}>
-            {agenda.map((item, i) =>
-            <div key={i} style={{
-              display: 'flex', alignItems: 'center', gap: 10,
-              padding: '9px 10px', borderRadius: 9,
-              background: item.done ? 'var(--bg-sunken)' : 'var(--bg-elev)',
-              border: '1px solid var(--border)'
-            }}>
-                <div className={"check" + (item.done ? " on" : "")} onClick={() => toggleItem(i)}>
-                  {item.done && <Icon name="check" size={11} stroke={3} />}
-                </div>
-                <span style={{ fontSize: 13, flex: 1, textDecoration: item.done ? 'line-through' : 'none', color: item.done ? 'var(--text-3)' : 'var(--text)' }}>{item.text}</span>
-                {isAdmin && <button onClick={() => removeItem(i)} style={{ opacity: 0.35, fontSize: 12, color: 'var(--text-3)', background: 'none', border: 'none', cursor: 'pointer', lineHeight: 1 }}>✕</button>}
-              </div>
+          <ul style={{ margin: 0, paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {agendaLines.map((line, i) =>
+            <li key={i} style={{ fontSize: 13, color: 'var(--text)', lineHeight: 1.5 }}>{line}</li>
             )}
-          </div>
-          {isAdmin &&
-          <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-              <input className="input" placeholder="Add agenda item…" value={newItem} onChange={(e) => setNewItem(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && addItem()} style={{ flex: 1, fontSize: 13 }} />
-              <button className="btn sm" onClick={addItem} disabled={!newItem.trim()}>Add</button>
-            </div>
-          }
+          </ul>
         </div>
+        }
 
         {/* Footer */}
         {!past &&

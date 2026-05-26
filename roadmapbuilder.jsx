@@ -162,10 +162,11 @@ function RoadmapBuilder() {
   const [focus, setFocus] = useState([]);
   const [notes, setNotes] = useState('');
 
-  const [stage, setStage] = useState('intake'); // intake | loading | review
+  const [stage, setStage] = useState('intake'); // intake | loading | review | saved
   const [roadmap, setRoadmap] = useState(null);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState(null); // { msg, kind }
+  const [histKey, setHistKey] = useState(0); // bump to reload Roadmap History
 
   useEffect(() => {
     window._supabase.from('profiles')
@@ -333,6 +334,7 @@ RULES:
       }
       showToast(`Roadmap saved for ${member?.full_name || 'member'} — it's now live on their Vantage.`, 'success');
       setStage('saved');
+      setHistKey((k) => k + 1);
     } catch (e) {
       console.error('Save failed:', e);
       showToast('Save failed — ' + (e.message || 'check console'), 'error');
@@ -344,6 +346,9 @@ RULES:
     const phases = roadmap.phases.slice(); phases[pi] = p;
     setRoadmap({ ...roadmap, phases });
   };
+
+  const memberNameById = {};
+  members.forEach((m) => { memberNameById[m.id] = m.full_name; });
 
   return (
     <>
@@ -550,6 +555,10 @@ RULES:
         </div>
       )}
 
+      {(stage === 'intake' || stage === 'saved') && (
+        <RbRoadmapHistory memberNameById={memberNameById} refreshKey={histKey} />
+      )}
+
       {toast && (
         <div className="rb-toast" style={{ background: toast.kind === 'error' ? '#7f1d1d' : toast.kind === 'success' ? '#14532d' : 'var(--black)' }}>
           <span>{toast.kind === 'error' ? '✕' : '✓'}</span>
@@ -571,6 +580,123 @@ function RbSection({ num, title, sub, children }) {
         </div>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>{children}</div>
+    </div>
+  );
+}
+
+// ── Roadmap History (collapsible, lists saved roadmaps by member + date) ──────
+function RbRoadmapHistory({ memberNameById, refreshKey }) {
+  const { useState, useEffect } = React;
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [goals, setGoals] = useState([]);
+  const [expandedId, setExpandedId] = useState(null);
+  const [details, setDetails] = useState({}); // goalId -> { steps, tasksByStep }
+  const [detailLoading, setDetailLoading] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    window._supabase.from('goals')
+      .select('id, user_id, title, created_at, target_date, status, roadmap_steps(count)')
+      .order('created_at', { ascending: false })
+      .then(({ data, error }) => {
+        if (!active) return;
+        if (error) { console.error('Roadmap history load failed:', error.message); setGoals([]); setLoading(false); return; }
+        // Only goals that actually have roadmap phases count as "roadmaps"
+        const withSteps = (data || []).filter((g) => {
+          const c = Array.isArray(g.roadmap_steps) ? (g.roadmap_steps[0] && g.roadmap_steps[0].count) || 0 : 0;
+          return c > 0;
+        });
+        setGoals(withSteps);
+        setLoading(false);
+      });
+    return () => { active = false; };
+  }, [refreshKey]);
+
+  const toggleEntry = async (goalId) => {
+    if (expandedId === goalId) { setExpandedId(null); return; }
+    setExpandedId(goalId);
+    if (details[goalId]) return;
+    setDetailLoading(true);
+    const [stepsRes, tasksRes] = await Promise.all([
+      window._supabase.from('roadmap_steps')
+        .select('id, title, phase_label, reflection_prompt, admin_notes, order_index')
+        .eq('goal_id', goalId).order('order_index', { ascending: true }),
+      window._supabase.from('tasks')
+        .select('id, title, notes, roadmap_step_id, order_index')
+        .eq('goal_id', goalId).order('order_index', { ascending: true }),
+    ]);
+    const steps = stepsRes.data || [];
+    const tasksByStep = {};
+    (tasksRes.data || []).forEach((t) => {
+      (tasksByStep[t.roadmap_step_id] = tasksByStep[t.roadmap_step_id] || []).push(t);
+    });
+    setDetails((d) => ({ ...d, [goalId]: { steps, tasksByStep } }));
+    setDetailLoading(false);
+  };
+
+  const fmtDate = (iso) => iso ? new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+
+  return (
+    <div className="card" style={{ marginBottom: 20, padding: 0, overflow: 'hidden' }}>
+      <button type="button" onClick={() => setOpen((o) => !o)}
+        style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '18px 22px', background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
+        <Icon name="roadmap" size={18} style={{ color: 'var(--accent)' }} />
+        <div style={{ flex: 1 }}>
+          <div style={{ fontFamily: 'var(--ff-sub)', fontSize: 15, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text)' }}>Roadmap History</div>
+          <div style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 2 }}>Previously saved roadmaps{goals.length ? ` · ${goals.length}` : ''}</div>
+        </div>
+        <Icon name="chevron-right" size={16} style={{ color: 'var(--text-3)', transform: open ? 'rotate(90deg)' : 'none', transition: 'transform .15s' }} />
+      </button>
+
+      {open && (
+        <div style={{ borderTop: '1px solid var(--border)', padding: '4px 22px 14px' }}>
+          {loading ? (
+            <div style={{ fontSize: 13, color: 'var(--text-3)', padding: '16px 0' }}>Loading roadmaps…</div>
+          ) : goals.length === 0 ? (
+            <div style={{ fontSize: 13, color: 'var(--text-3)', padding: '16px 0' }}>No saved roadmaps yet. Build one above and it'll appear here.</div>
+          ) : (
+            goals.map((g) => {
+              const name = memberNameById[g.user_id] || 'Member';
+              const isOpen = expandedId === g.id;
+              const detail = details[g.id];
+              return (
+                <div key={g.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                  <button type="button" onClick={() => toggleEntry(g.id)}
+                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '14px 0', background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--text)' }}>{g.title}</div>
+                      <div style={{ fontSize: 11.5, color: 'var(--text-3)', marginTop: 2 }}>{name} · {fmtDate(g.created_at)}{g.status ? ` · ${g.status}` : ''}</div>
+                    </div>
+                    <Icon name="chevron-right" size={14} style={{ color: 'var(--text-3)', transform: isOpen ? 'rotate(90deg)' : 'none', transition: 'transform .15s' }} />
+                  </button>
+                  {isOpen && (
+                    <div style={{ padding: '2px 0 16px' }}>
+                      {detailLoading && !detail ? (
+                        <div style={{ fontSize: 12.5, color: 'var(--text-3)' }}>Loading…</div>
+                      ) : detail && detail.steps.length > 0 ? (
+                        detail.steps.map((s) => (
+                          <div key={s.id} style={{ marginBottom: 12, paddingLeft: 12, borderLeft: '2px solid var(--border)' }}>
+                            <div style={{ fontSize: 13, fontWeight: 700 }}>{s.phase_label ? s.phase_label + ' · ' : ''}{s.title}</div>
+                            {(detail.tasksByStep[s.id] || []).map((t) => (
+                              <div key={t.id} style={{ fontSize: 12.5, color: 'var(--text-2)', marginTop: 4, display: 'flex', gap: 6 }}>
+                                <span style={{ color: 'var(--text-3)' }}>•</span><span>{t.title}</span>
+                              </div>
+                            ))}
+                          </div>
+                        ))
+                      ) : (
+                        <div style={{ fontSize: 12.5, color: 'var(--text-3)' }}>No phases recorded for this roadmap.</div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          )}
+        </div>
+      )}
     </div>
   );
 }

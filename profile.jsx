@@ -374,7 +374,6 @@ function ProfileScreen({ member, theme, setTheme, onSignOut, onProfileSaved }) {
             <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
               <span className="chip sapphire"><span className="dot"/>{member.product}</span>
               <span className="chip teal"><span className="dot"/>{member.plan}</span>
-              <span className="chip"><span className="dot" style={{ background:'var(--coral)' }}/>{xpTier(member.xp).name} · Tier {xpTier(member.xp).tier}/8</span>
             </div>
             <div className="display" style={{ fontSize:36, marginTop:10, lineHeight:1 }}>{member.firstName} {member.lastName}</div>
             <div style={{ fontSize:13, color:'var(--text-2)', marginTop:6 }}>

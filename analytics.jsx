@@ -1,42 +1,62 @@
-// analytics.jsx — Admin analytics with 4 tabs
-
-const REVENUE_DATA = {
-  totalMRR: 186500,
-  monthly: [142000, 156000, 168000, 172000, 180000, 186500],
-  byProduct: { mentorship: 78000, management: 108500 },
-  tiers: [
-  { name: 'Mentorship · Foundations', count: 48, fee: 2500, type: 'member' },
-  { name: 'Mentorship · Breakthrough', count: 12, fee: 4500, type: 'member' },
-  { name: 'Management · Essentials', count: 3, fee: 8000, type: 'company' },
-  { name: 'Management · Advanced', count: 2, fee: 15000, type: 'company' }]
-
-};
-
-const ENGAGEMENT_DATA = ADMIN_MEMBERS.map((m, i) => ({
-  ...m,
-  avgLogins: [4.2, 3.8, 2.1, 4.5, 1.0, 3.2, 0.4, 4.8][i],
-  avgHours: [6.4, 5.9, 3.2, 7.1, 1.8, 4.6, 0.9, 7.8][i],
-  score: [84, 76, 52, 91, 23, 67, 9, 94][i],
-  daysInactive: [0, 0, 0, 1, 3, 0, 9, 0][i]
-}));
-
-function scoreColor(s) {return s >= 70 ? 'green' : s >= 40 ? 'amber' : 'red';}
-function scoreLabel(s) {return s >= 70 ? 'Healthy' : s >= 40 ? 'Moderate' : 'At risk';}
+// analytics.jsx — Admin analytics (live data via admin_analytics_stats RPC)
+// Metrics with no backing data in the schema (login frequency, composite scores,
+// reschedule/no-show tracking, revenue/billing) render honest empty states.
 
 function Sparkline({ data, color }) {
-  const max = Math.max(...data);
-  const pts = data.map((v, i) => `${i / (data.length - 1) * 76},${28 - v / max * 24}`).join(' ');
+  const arr = (data && data.length) ? data : [0, 0];
+  const max = Math.max(1, ...arr);
+  const pts = arr.map((v, i) => `${i / Math.max(arr.length - 1, 1) * 76},${28 - v / max * 24}`).join(' ');
   return (
     <svg className="sparkline" viewBox="0 0 76 28" fill="none">
       <polyline points={pts} stroke={color || 'var(--accent)'} strokeWidth="1.8" strokeLinejoin="round" fill="none" />
-      <circle cx={76} cy={28 - data[data.length - 1] / max * 24} r="2.5" fill={color || 'var(--accent)'} />
+      <circle cx={76} cy={28 - arr[arr.length - 1] / max * 24} r="2.5" fill={color || 'var(--accent)'} />
     </svg>);
-
 }
 
-// ---------- At-Risk Banner ----------
-function AtRiskBanner() {
-  const atRisk = ENGAGEMENT_DATA.filter((m) => m.daysInactive >= 7);
+const AN_COLORS = ['#0F52BA', '#4FB7A6', '#E8B24C', '#B79BED', '#FF6B6B', '#5BC0DE', '#D76C82', '#4CAF88'];
+function anColor(name) {
+  let h = 0; const s = name || '';
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  return AN_COLORS[h % AN_COLORS.length];
+}
+function anInitials(n) { return (n || 'M').trim().split(/\s+/).map((w) => w[0]).join('').toUpperCase().slice(0, 2); }
+function anTier(t) { return t ? t.charAt(0).toUpperCase() + t.slice(1) : 'Foundations'; }
+function anLastActive(iso) {
+  if (!iso) return 'Never';
+  const d = new Date(iso); const s = (Date.now() - d.getTime()) / 1000;
+  if (s < 3600) return 'Just now';
+  const h = Math.floor(s / 3600); if (h < 24) return h + 'h ago';
+  const days = Math.floor(h / 24); if (days === 1) return 'Yesterday';
+  if (days < 30) return days + 'd ago';
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+function anDaysSince(iso) {
+  if (!iso) return Infinity;
+  return (Date.now() - new Date(iso).getTime()) / 86400000;
+}
+
+function AnStat({ label, value, sub, color, loading }) {
+  return (
+    <div className="card" style={{ padding: 20 }}>
+      <div className="eyebrow">{label}</div>
+      <div className="display" style={{ fontSize: 38, marginTop: 4, lineHeight: 1, color: color || 'var(--text)' }}>
+        {loading ? '—' : value}
+      </div>
+      <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 4 }}>{sub}</div>
+    </div>);
+}
+
+function AnEmpty({ title, note }) {
+  return (
+    <div style={{ padding: '32px 22px', textAlign: 'center' }}>
+      <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 6 }}>{title}</div>
+      <div style={{ fontSize: 12.5, color: 'var(--text-3)', maxWidth: 360, margin: '0 auto', lineHeight: 1.5 }}>{note}</div>
+    </div>);
+}
+
+// ---------- At-Risk Banner (members with no activity for 7+ days) ----------
+function AtRiskBanner({ members }) {
+  const atRisk = (members || []).filter((m) => anDaysSince(m.last_active) >= 7);
   if (atRisk.length === 0) return null;
   return (
     <div className="risk-alert">
@@ -44,346 +64,253 @@ function AtRiskBanner() {
         <Icon name="bell" size={18} />
       </div>
       <div style={{ flex: 1 }}>
-        <div style={{ fontFamily: 'var(--ff-display)', fontSize: 18, color: 'var(--coral)' }}>{atRisk.length} member{atRisk.length > 1 ? 's' : ''} at risk — no login for 7+ days</div>
+        <div style={{ fontFamily: 'var(--ff-display)', fontSize: 18, color: 'var(--coral)' }}>{atRisk.length} member{atRisk.length > 1 ? 's' : ''} at risk — no activity for 7+ days</div>
         <div style={{ fontSize: 12, color: 'var(--text-2)', marginTop: 4 }}>These members need outreach before they disengage fully.</div>
         <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
           {atRisk.map((m) =>
-          <div key={m.name} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', background: 'var(--bg-elev)', borderRadius: 8, border: '1px solid var(--coral)', fontSize: 12 }}>
-              <Avatar initials={m.initials} color={m.color} size={22} />
+          <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', background: 'var(--bg-elev)', borderRadius: 8, border: '1px solid var(--coral)', fontSize: 12 }}>
+              <Avatar initials={anInitials(m.name)} color={anColor(m.name)} size={22} />
               <div>
-                <span style={{ fontWeight: 600 }}>{m.name}</span>
-                <span style={{ color: 'var(--text-3)', marginLeft: 6 }}>{m.daysInactive}d inactive</span>
+                <span style={{ fontWeight: 600 }}>{m.name || 'Member'}</span>
+                <span style={{ color: 'var(--text-3)', marginLeft: 6 }}>{m.last_active ? Math.floor(anDaysSince(m.last_active)) + 'd inactive' : 'No activity yet'}</span>
               </div>
-              <button className="btn coral sm" style={{ padding: '4px 8px', fontSize: 11 }}>Reach out</button>
             </div>
           )}
         </div>
       </div>
     </div>);
-
 }
 
 // ---------- Engagement Tab ----------
-function EngagementTab() {
+function EngagementTab({ stats, loading }) {
+  const members = stats?.members || [];
+  const sorted = [...members].sort((a, b) => (b.hours || 0) - (a.hours || 0));
   return (
     <div>
-      <AtRiskBanner />
+      <AtRiskBanner members={members} />
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16, marginBottom: 20 }}>
-        {[
-        { label: 'Avg. logins / week', v: '3.8', sub: 'Across active members', trend: '+0.4' },
-        { label: 'Avg. time / week', v: '5.7h', sub: 'On platform', trend: '+0.6h' },
-        { label: 'Composite score avg', v: '62', sub: 'Platform-wide', trend: '+5pts' }].
-        map((s) =>
-        <div key={s.label} className="card" style={{ padding: 20 }}>
-            <div className="eyebrow">{s.label}</div>
-            <div className="display" style={{ fontSize: 40, marginTop: 4, lineHeight: 1 }}>{s.v}</div>
-            <div style={{ fontSize: 11, color: 'var(--teal-600)', marginTop: 4 }}>{s.trend} this month · <span style={{ color: 'var(--text-3)' }}>{s.sub}</span></div>
-          </div>
-        )}
+        <AnStat loading={loading} label="Active members" value={stats?.active_members ?? 0} sub={`of ${stats?.total_members ?? 0} total`} />
+        <AnStat loading={loading} label="Avg. focus time / week" value={`${stats?.avg_focus_hours_week ?? 0}h`} sub="Per active member (last 4 weeks)" color="var(--accent)" />
+        <AnStat loading={loading} label="Task completion rate" value={`${stats?.completion_rate ?? 0}%`} sub="Across all members" color="var(--teal-600)" />
       </div>
 
       <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
         <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between' }}>
           <div className="eyebrow" style={{ margin: 0 }}>Member engagement health</div>
-          <span style={{ fontSize: 11, color: 'var(--text-3)' }}>Sorted by score</span>
+          <span style={{ fontSize: 11, color: 'var(--text-3)' }}>Sorted by focus time</span>
         </div>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-          <thead>
-            <tr style={{ background: 'var(--bg-sunken)' }}>
-              {['Member', 'Plan', 'Logins / wk', 'Hrs / wk', 'Streak', 'Last active', 'Score', ''].map((h) =>
-              <th key={h} style={{ textAlign: 'left', padding: '8px 16px', fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-3)', fontWeight: 600, fontFamily: 'var(--ff-sub)' }}>{h}</th>
-              )}
-            </tr>
-          </thead>
-          <tbody>
-            {[...ENGAGEMENT_DATA].sort((a, b) => b.score - a.score).map((m) =>
-            <tr key={m.name} style={{ borderTop: '1px solid var(--border)' }}>
-                <td style={{ padding: '10px 16px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <Avatar initials={m.initials} color={m.color} size={26} />
-                    <span style={{ fontWeight: 600 }}>{m.name}</span>
-                  </div>
-                </td>
-                <td style={{ padding: '10px 16px', color: 'var(--text-2)', fontSize: 12 }}>{m.plan.split(' · ')[1]}</td>
-                <td style={{ padding: '10px 16px' }}>{m.avgLogins.toFixed(1)}</td>
-                <td style={{ padding: '10px 16px' }}>{m.avgHours.toFixed(1)}h</td>
-                <td style={{ padding: '10px 16px' }}>
-                  <span style={{ color: m.streak > 0 ? 'var(--coral)' : 'var(--text-3)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                    <Icon name="flame" size={12} />{m.streak}
-                  </span>
-                </td>
-                <td style={{ padding: '10px 16px', color: 'var(--text-3)', fontSize: 12 }}>{m.lastActive}</td>
-                <td style={{ padding: '10px 16px' }}>
-                  <span className={"score-badge " + scoreColor(m.score)}>
-                    <span style={{ width: 6, height: 6, borderRadius: 999, background: 'currentColor' }} />
-                    {m.score} · {scoreLabel(m.score)}
-                  </span>
-                </td>
-                <td style={{ padding: '10px 16px' }}>
-                  <button className="btn ghost sm">Nudge</button>
-                </td>
+        {loading ? (
+          <div style={{ padding: '28px 20px', fontSize: 13, color: 'var(--text-3)' }}>Loading…</div>
+        ) : sorted.length === 0 ? (
+          <AnEmpty title="No member activity yet" note="Engagement metrics will appear here as members complete tasks and log focus time." />
+        ) : (
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+            <thead>
+              <tr style={{ background: 'var(--bg-sunken)' }}>
+                {['Member', 'Plan', 'Focus / wk', 'Streak', 'Tasks done', 'Last active'].map((h) =>
+                <th key={h} style={{ textAlign: 'left', padding: '8px 16px', fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-3)', fontWeight: 600, fontFamily: 'var(--ff-sub)' }}>{h}</th>
+                )}
               </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {sorted.map((m) =>
+              <tr key={m.id} style={{ borderTop: '1px solid var(--border)' }}>
+                  <td style={{ padding: '10px 16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Avatar initials={anInitials(m.name)} color={anColor(m.name)} size={26} />
+                      <span style={{ fontWeight: 600 }}>{m.name || 'Member'}</span>
+                    </div>
+                  </td>
+                  <td style={{ padding: '10px 16px', color: 'var(--text-2)', fontSize: 12 }}>{anTier(m.tier)}</td>
+                  <td style={{ padding: '10px 16px' }}>{(m.hours || 0)}h</td>
+                  <td style={{ padding: '10px 16px' }}>
+                    <span style={{ color: m.streak > 0 ? 'var(--coral)' : 'var(--text-3)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                      <Icon name="flame" size={12} />{m.streak || 0}
+                    </span>
+                  </td>
+                  <td style={{ padding: '10px 16px' }}>{m.tasks_done || 0}</td>
+                  <td style={{ padding: '10px 16px', color: 'var(--text-3)', fontSize: 12 }}>{anLastActive(m.last_active)}</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        )}
+        <div style={{ padding: '10px 16px', borderTop: '1px solid var(--border)', fontSize: 11, color: 'var(--text-3)' }}>
+          Login frequency and composite engagement scores aren't tracked yet — focus time and task activity stand in as the engagement signal.
+        </div>
       </div>
     </div>);
-
 }
 
 // ---------- Tasks & Goals Tab ----------
-const SUBJECT_COMPLETION = [
-{ s: 'Personal Branding', pct: 82 }, { s: 'Time Management', pct: 74 },
-{ s: 'Professional Communication', pct: 71 }, { s: 'Growth Mindset', pct: 68 },
-{ s: 'CV Development', pct: 63 }, { s: 'Early Career Development', pct: 59 },
-{ s: 'Habit Tracking', pct: 54 }, { s: 'Public Speaking & Presentation', pct: 48 },
-{ s: 'Project Management', pct: 44 }, { s: 'Consulting', pct: 38 },
-{ s: 'Strategic Sales', pct: 34 }, { s: 'Data Management', pct: 31 },
-{ s: 'Personal Financial Management', pct: 28 }];
-
-
-function TasksGoalsTab() {
+function TasksGoalsTab({ stats, loading }) {
+  const subjects = stats?.subject_completion || [];
+  const volume = stats?.weekly_task_volume || [];
+  const volMax = Math.max(1, ...volume.map((w) => w.count || 0));
+  const goalsTotal = Math.max(1, stats?.goals_total ?? 0);
+  const goalRows = [
+    { label: 'In progress', v: stats?.goals_active ?? 0, color: 'var(--accent)' },
+    { label: 'Stalled', v: stats?.goals_stalled ?? 0, color: 'var(--coral)' },
+    { label: 'Completed', v: stats?.goals_completed ?? 0, color: 'var(--teal-600)' },
+  ];
   return (
     <div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 20 }}>
-        {[
-        { label: 'Avg. completion rate', v: '72%', sub: 'Across all members', color: 'var(--teal-600)' },
-        { label: 'Avg. time to complete', v: '3.4d', sub: 'From assignment to done', color: 'var(--accent)' },
-        { label: 'Goals in progress', v: '38', sub: 'Across all members' },
-        { label: 'Goals stalled', v: '7', sub: '>5 days no activity', color: 'var(--coral)' }].
-        map((s) =>
-        <div key={s.label} className="card" style={{ padding: 20 }}>
-            <div className="eyebrow">{s.label}</div>
-            <div className="display" style={{ fontSize: 36, marginTop: 4, lineHeight: 1, color: s.color || 'var(--text)' }}>{s.v}</div>
-            <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 4 }}>{s.sub}</div>
-          </div>
-        )}
+        <AnStat loading={loading} label="Completion rate" value={`${stats?.completion_rate ?? 0}%`} sub={`${stats?.done_tasks ?? 0} of ${stats?.total_tasks ?? 0} tasks`} color="var(--teal-600)" />
+        <AnStat loading={loading} label="Avg. time to complete" value={`${stats?.avg_days_to_complete ?? 0}d`} sub="From created to done" color="var(--accent)" />
+        <AnStat loading={loading} label="Goals in progress" value={stats?.goals_active ?? 0} sub="Across all members" />
+        <AnStat loading={loading} label="Goals stalled" value={stats?.goals_stalled ?? 0} sub=">7 days no completion" color="var(--coral)" />
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 20 }}>
         <div className="card" style={{ padding: 22 }}>
-          <div className="eyebrow" style={{ marginBottom: 14 }}>Subject area completion heatmap</div>
-          <div className="stack" style={{ gap: 10 }}>
-            {SUBJECT_COMPLETION.map((s, i) =>
-            <div key={s.s} style={{ display: 'grid', gridTemplateColumns: '1fr 120px 36px', gap: 12, alignItems: 'center' }}>
-                <div style={{ fontSize: 12, fontWeight: i < 3 ? 600 : 500, color: i < 3 ? 'var(--text)' : 'var(--text-2)' }}>{s.s}</div>
-                <div style={{ height: 6, background: 'var(--bg-sunken)', borderRadius: 999, overflow: 'hidden' }}>
-                  <div style={{ height: '100%', width: s.pct + '%', borderRadius: 999, background: s.pct >= 65 ? 'var(--teal-600)' : s.pct >= 45 ? 'var(--accent)' : 'var(--coral)', transition: 'width .4s ease' }} />
+          <div className="eyebrow" style={{ marginBottom: 14 }}>Subject area completion</div>
+          {loading ? (
+            <div style={{ fontSize: 13, color: 'var(--text-3)' }}>Loading…</div>
+          ) : subjects.length === 0 ? (
+            <AnEmpty title="No tagged tasks yet" note="Tag tasks with a subject to see completion rates broken down by area." />
+          ) : (
+            <div className="stack" style={{ gap: 10 }}>
+              {subjects.map((s, i) =>
+              <div key={s.s} style={{ display: 'grid', gridTemplateColumns: '1fr 120px 60px', gap: 12, alignItems: 'center' }}>
+                  <div style={{ fontSize: 12, fontWeight: i < 3 ? 600 : 500, color: i < 3 ? 'var(--text)' : 'var(--text-2)' }}>{s.s}</div>
+                  <div style={{ height: 6, background: 'var(--bg-sunken)', borderRadius: 999, overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: s.pct + '%', borderRadius: 999, background: s.pct >= 65 ? 'var(--teal-600)' : s.pct >= 45 ? 'var(--accent)' : 'var(--coral)', transition: 'width .4s ease' }} />
+                  </div>
+                  <div style={{ fontSize: 12, textAlign: 'right', color: 'var(--text-3)', fontWeight: 600 }}>{s.pct}% · {s.total}</div>
                 </div>
-                <div style={{ fontSize: 12, textAlign: 'right', color: 'var(--text-3)', fontWeight: 600 }}>{s.pct}%</div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="stack" style={{ gap: 16 }}>
           <div className="card" style={{ padding: 22 }}>
             <div className="eyebrow" style={{ marginBottom: 12 }}>Goals status breakdown</div>
-            {[
-            { label: 'In progress', v: 38, color: 'var(--accent)' },
-            { label: 'Stalled', v: 7, color: 'var(--coral)' },
-            { label: 'Completed', v: 51, color: 'var(--teal-600)' }].
-            map((g) =>
-            <div key={g.label} style={{ marginBottom: 12 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 5 }}>
-                  <span style={{ fontWeight: 600 }}>{g.label}</span>
-                  <span style={{ color: 'var(--text-3)' }}>{g.v} goals</span>
+            {loading ? (
+              <div style={{ fontSize: 13, color: 'var(--text-3)' }}>Loading…</div>
+            ) : (stats?.goals_total ?? 0) === 0 ? (
+              <AnEmpty title="No goals yet" note="Goals set by members will be summarised here." />
+            ) : (
+              goalRows.map((g) =>
+              <div key={g.label} style={{ marginBottom: 12 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 5 }}>
+                    <span style={{ fontWeight: 600 }}>{g.label}</span>
+                    <span style={{ color: 'var(--text-3)' }}>{g.v} goal{g.v === 1 ? '' : 's'}</span>
+                  </div>
+                  <div className="progress" style={{ height: 5 }}>
+                    <span style={{ width: g.v / goalsTotal * 100 + '%', background: g.color }} />
+                  </div>
                 </div>
-                <div className="progress" style={{ height: 5 }}>
-                  <span style={{ width: g.v / 96 * 100 + '%', background: g.color }} />
-                </div>
-              </div>
+              )
             )}
           </div>
 
           <div className="card" style={{ padding: 22 }}>
             <div className="eyebrow" style={{ marginBottom: 12 }}>Task assignment volume</div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 8, height: 80, alignItems: 'end' }}>
-              {[34, 41, 38, 46, 52, 48, 60].slice(-4).map((v, i) =>
-              <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                  <div className="bar" style={{ width: '100%', height: 60 }}>
-                    <span style={{ height: v / 60 * 100 + '%', background: i === 3 ? 'var(--accent)' : 'var(--border-strong)' }} />
-                  </div>
-                  <div style={{ fontSize: 10, color: 'var(--text-3)' }}>W{i + 1}</div>
+            {loading ? (
+              <div style={{ fontSize: 13, color: 'var(--text-3)' }}>Loading…</div>
+            ) : volume.length === 0 ? (
+              <AnEmpty title="No tasks created yet" note="Weekly task creation volume will appear here." />
+            ) : (
+              <>
+                <div style={{ display: 'grid', gridTemplateColumns: `repeat(${volume.length},1fr)`, gap: 8, height: 80, alignItems: 'end' }}>
+                  {volume.map((w, i) =>
+                  <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                      <div className="bar" style={{ width: '100%', height: 60 }}>
+                        <span style={{ height: (w.count || 0) / volMax * 100 + '%', background: i === volume.length - 1 ? 'var(--accent)' : 'var(--border-strong)' }} />
+                      </div>
+                      <div style={{ fontSize: 9, color: 'var(--text-3)' }}>{w.week}</div>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-            <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 8 }}>60 tasks assigned this week · +25% vs last</div>
+                <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 8 }}>{volume[volume.length - 1]?.count || 0} tasks created this week</div>
+              </>
+            )}
           </div>
         </div>
       </div>
     </div>);
-
 }
 
 // ---------- Sessions Tab ----------
-function SessionMetricsTab() {
+function SessionMetricsTab({ stats, loading }) {
+  const th = stats?.townhall_attendance ?? 0;
+  const oto = stats?.onetoone_attendance ?? 0;
   return (
     <div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 20 }}>
-        {[
-        { label: '1:1 attendance rate', v: '96%', sub: 'Last 30 days', color: 'var(--accent)' },
-        { label: 'Town hall attendance', v: '88%', sub: 'Last 3 town halls', color: 'var(--coral)' },
-        { label: 'Reschedule requests', v: '14', sub: 'This month' },
-        { label: 'No-show rate', v: '4%', sub: 'Across all sessions' }].
-        map((s) =>
-        <div key={s.label} className="card" style={{ padding: 20 }}>
-            <div className="eyebrow">{s.label}</div>
-            <div className="display" style={{ fontSize: 36, marginTop: 4, color: s.color || 'var(--text)' }}>{s.v}</div>
-            <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 4 }}>{s.sub}</div>
-          </div>
-        )}
+        <AnStat loading={loading} label="1:1 attendances" value={oto} sub="Confirmed all-time" color="var(--accent)" />
+        <AnStat loading={loading} label="Town hall attendances" value={th} sub="Confirmed all-time" color="var(--coral)" />
+        <AnStat loading={loading} label="Reschedule requests" value="—" sub="Not tracked yet" />
+        <AnStat loading={loading} label="No-show rate" value="—" sub="Not tracked yet" />
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
         <div className="card" style={{ padding: 22 }}>
-          <div className="eyebrow" style={{ marginBottom: 14 }}>Reschedule requests — by member</div>
-          <div className="stack" style={{ gap: 8 }}>
-            {[
-            { name: 'Khalid Hassan', count: 3, initials: 'KH', color: '#FF6B6B' },
-            { name: 'Omar Farouk', count: 2, initials: 'OF', color: '#E8B24C' },
-            { name: 'Amira Khaled', count: 1, initials: 'AK', color: '#0F52BA' },
-            { name: 'Fatima Al-Riyami', count: 1, initials: 'FA', color: '#5BC0DE' },
-            { name: 'Noura Al-Mansouri', count: 0, initials: 'NA', color: '#4FB7A6' }].
-            map((m) =>
-            <div key={m.name} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderTop: '1px solid var(--border)' }}>
-                <Avatar initials={m.initials} color={m.color} size={26} />
-                <span style={{ flex: 1, fontSize: 13 }}>{m.name}</span>
-                <div style={{ display: 'flex', gap: 4 }}>
-                  {Array.from({ length: Math.max(m.count, 0) }).map((_, i) =>
-                <span key={i} style={{ width: 8, height: 8, borderRadius: 999, background: 'var(--coral)' }} />
-                )}
-                  {m.count === 0 && <span style={{ fontSize: 11, color: 'var(--teal-600)' }}>✓ None</span>}
+          <div className="eyebrow" style={{ marginBottom: 14 }}>Attendance by type</div>
+          {loading ? (
+            <div style={{ fontSize: 13, color: 'var(--text-3)' }}>Loading…</div>
+          ) : (th + oto) === 0 ? (
+            <AnEmpty title="No attendance logged yet" note="Confirmed 1:1 and town hall attendances will be summarised here." />
+          ) : (
+            <div className="stack" style={{ gap: 14 }}>
+              {[{ label: '1:1 sessions', v: oto, color: 'var(--accent)' }, { label: 'Town halls', v: th, color: 'var(--coral)' }].map((r) =>
+              <div key={r.label}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 5 }}>
+                    <span style={{ fontWeight: 600 }}>{r.label}</span>
+                    <span style={{ color: 'var(--text-3)' }}>{r.v}</span>
+                  </div>
+                  <div className="progress" style={{ height: 6 }}>
+                    <span style={{ width: r.v / Math.max(1, th + oto) * 100 + '%', background: r.color }} />
+                  </div>
                 </div>
-                <span style={{ fontSize: 12, color: 'var(--text-3)', minWidth: 20, textAlign: 'right' }}>{m.count}</span>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="card" style={{ padding: 22 }}>
-          <div className="eyebrow" style={{ marginBottom: 14 }}>Attendance trend — last 6 sessions</div>
-          <div style={{ display: 'flex', gap: 10, height: 120, alignItems: 'end', marginBottom: 8 }}>
-            {[91, 94, 88, 92, 96, 88].map((v, i) =>
-            <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-                <div style={{ fontSize: 10, color: 'var(--text-3)', fontFamily: 'var(--ff-sub)' }}>{v}%</div>
-                <div className="bar" style={{ width: '100%', height: 90 }}>
-                  <span style={{ height: v + '%', background: i === 4 ? 'var(--accent)' : i % 2 === 0 ? 'var(--teal-600)' : 'var(--coral)' }} />
-                </div>
-                <div style={{ fontSize: 9, color: 'var(--text-3)' }}>S{i + 1}</div>
-              </div>
-            )}
-          </div>
-          <div style={{ fontSize: 11, color: 'var(--text-3)', textAlign: 'center' }}>S = session (alternates 1:1 / Town Hall)</div>
-        </div>
-      </div>
-    </div>);
-
-}
-
-// ---------- Revenue Tab ----------
-const MEMBER_REVENUE = [
-{ name: 'Yasmine Bakr', plan: 'Management · Advanced', fee: 15000, months: 8, color: '#B79BED', initials: 'YB', trend: [10000, 12000, 13500, 15000, 15000, 15000] },
-{ name: 'Lina Haddad', plan: 'Management · Advanced (RTA)', fee: 15000, months: 6, color: '#D76C82', initials: 'LH', trend: [15000, 15000, 15000, 15000, 15000, 15000] },
-{ name: 'Fatima Al-Riyami', plan: 'Management · Essentials', fee: 8000, months: 5, color: '#5BC0DE', initials: 'FA', trend: [8000, 8000, 8000, 8000, 8000] },
-{ name: 'Amira Khaled', plan: 'Mentorship · Breakthrough', fee: 4500, months: 3, color: '#0F52BA', initials: 'AK', trend: [4500, 4500, 4500] },
-{ name: 'Noura Al-Mansouri', plan: 'Mentorship · Breakthrough', fee: 4500, months: 4, color: '#4FB7A6', initials: 'NA', trend: [4500, 4500, 4500, 4500] },
-{ name: 'Omar Farouk', plan: 'Mentorship · Foundations', fee: 2500, months: 6, color: '#E8B24C', initials: 'OF', trend: [2500, 2500, 2500, 2500, 2500, 2500] }];
-
-
-function RevenueMemberCard({ m }) {
-  const total = m.fee * m.months;
-  const clv = m.fee * 12 * 1.6; // rough 12-month CLV estimate
-  return (
-    <div className="rev-card">
-      <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 12 }}>
-        <Avatar initials={m.initials} color={m.color} size={32} />
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 13, fontWeight: 700 }}>{m.name}</div>
-          <div style={{ fontSize: 11, color: 'var(--text-3)' }}>{m.plan}</div>
-        </div>
-        <div style={{ textAlign: 'right' }}>
-          <div style={{ fontSize: 10, color: 'var(--text-3)', fontFamily: 'var(--ff-sub)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Monthly</div>
-          <div style={{ fontFamily: 'var(--ff-display)', fontSize: 18, lineHeight: 1 }}>AED {m.fee.toLocaleString()}</div>
-        </div>
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
-        <div style={{ padding: '8px 10px', background: 'var(--bg-sunken)', borderRadius: 8, border: '1px solid var(--border)' }}>
-          <div className="eyebrow" style={{ fontSize: 9 }}>Total to date</div>
-          <div style={{ fontFamily: 'var(--ff-display)', fontSize: 18, color: 'var(--accent)' }}>AED {total.toLocaleString()}</div>
-        </div>
-        <div style={{ padding: '8px 10px', background: 'var(--bg-sunken)', borderRadius: 8, border: '1px solid var(--border)' }}>
-          <div className="eyebrow" style={{ fontSize: 9 }}>Est. CLV (12mo)</div>
-          <div style={{ fontFamily: 'var(--ff-display)', fontSize: 18, color: 'var(--teal-600)' }}>AED {clv.toLocaleString()}</div>
-        </div>
-      </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-        <div style={{ fontSize: 11, color: 'var(--text-3)' }}>{m.months} month{m.months > 1 ? 's' : ''} active</div>
-        <Sparkline data={m.trend} color={m.color} />
-      </div>
-    </div>);
-
-}
-
-function RevenueTab() {
-  const mrr = REVENUE_DATA.totalMRR;
-  return (
-    <div>
-      {/* Platform summary */}
-      <div className="card" style={{ padding: 0, marginBottom: 20, overflow: 'hidden' }}>
-        <div style={{ padding: '22px 28px 20px', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr auto', gap: 24, alignItems: 'start' }}>
-          <div>
-            <div className="eyebrow">Total MRR</div>
-            <div className="display" style={{ fontSize: 46, marginTop: 4, lineHeight: 1 }}>AED {(mrr / 1000).toFixed(0)}k</div>
-            <div style={{ fontSize: 11, color: 'var(--teal-600)', marginTop: 4 }}>+7.2% month-over-month</div>
-          </div>
-          <div>
-            <div className="eyebrow">Mentorship</div>
-            <div className="display" style={{ fontSize: 32, marginTop: 4, color: 'var(--accent)' }}>AED {(REVENUE_DATA.byProduct.mentorship / 1000).toFixed(0)}k</div>
-            <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 4 }}>{Math.round(REVENUE_DATA.byProduct.mentorship / mrr * 100)}% of total</div>
-          </div>
-          <div>
-            <div className="eyebrow">Management</div>
-            <div className="display" style={{ fontSize: 32, marginTop: 4, color: 'var(--coral)' }}>AED {(REVENUE_DATA.byProduct.management / 1000).toFixed(0)}k</div>
-            <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 4 }}>{Math.round(REVENUE_DATA.byProduct.management / mrr * 100)}% of total</div>
-          </div>
-          <div>
-            <div className="eyebrow" style={{ marginBottom: 8 }}>6-month trend</div>
-            <Sparkline data={REVENUE_DATA.monthly} color="var(--teal-600)" />
-          </div>
-        </div>
-
-        {/* Tier breakdown */}
-        <div style={{ borderTop: '1px solid var(--border)', display: 'grid', gridTemplateColumns: 'repeat(4,1fr)' }}>
-          {REVENUE_DATA.tiers.map((t, i) =>
-          <div key={t.name} style={{ padding: '16px 20px', borderRight: i < 3 ? '1px solid var(--border)' : 'none' }}>
-              <div className="eyebrow" style={{ fontSize: 9 }}>{t.name}</div>
-              <div style={{ fontSize: 18, fontWeight: 700, marginTop: 4 }}>AED {(t.fee * t.count).toLocaleString()}</div>
-              <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 2 }}>{t.count} {t.type}{t.count > 1 ? 's' : ''} · AED {t.fee.toLocaleString()} each</div>
+              )}
             </div>
           )}
         </div>
-      </div>
 
-      {/* Per-member cards */}
-      <div className="eyebrow" style={{ marginBottom: 12 }}>Per-member revenue</div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16 }}>
-        {MEMBER_REVENUE.map((m) => <RevenueMemberCard key={m.name} m={m} />)}
+        <div className="card" style={{ padding: 0, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <AnEmpty title="Reschedule & no-show analytics" note="These aren't tracked yet — sessions don't record reschedule requests or attendance no-shows. This will light up once that data is captured." />
+        </div>
       </div>
     </div>);
+}
 
+// ---------- Revenue Tab (no billing data in the schema) ----------
+function RevenueTab() {
+  return (
+    <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+      <AnEmpty
+        title="Revenue & CLV tracking isn't connected"
+        note="Vantage doesn't store billing, subscription, or fee data yet, so there's nothing to report here. Once payments/plans are wired to the backend, MRR, per-member revenue, and CLV will populate automatically." />
+    </div>);
 }
 
 // ---------- Main AdminAnalytics ----------
 function AdminAnalytics() {
   const [tab, setTab] = useState('engagement');
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    window._supabase.rpc('admin_analytics_stats').then(({ data, error }) => {
+      if (!active) return;
+      if (error) console.error('Analytics stats failed:', error.message);
+      setStats(error ? null : data);
+      setLoading(false);
+    });
+    return () => { active = false; };
+  }, []);
+
   return (
     <>
       <div className="page-header">
         <div>
           <div className="eyebrow">Admin · Analytics</div>
           <h1 className="page-title">The numbers</h1>
-          <div className="page-sub" style={{ marginTop: 8, color: 'var(--text-2)', maxWidth: 560 }}>Engagement, tasks, sessions, and revenue — across all members and products.</div>
+          <div className="page-sub" style={{ marginTop: 8, color: 'var(--text-2)', maxWidth: 560 }}>Engagement, tasks, and sessions across all members — pulled live from the platform.</div>
         </div>
       </div>
 
@@ -394,12 +321,11 @@ function AdminAnalytics() {
         <button className={tab === 'revenue' ? 'on' : ''} onClick={() => setTab('revenue')}>Revenue & CLV</button>
       </div>
 
-      {tab === 'engagement' && <EngagementTab />}
-      {tab === 'tasks' && <TasksGoalsTab />}
-      {tab === 'sessions' && <SessionMetricsTab />}
+      {tab === 'engagement' && <EngagementTab stats={stats} loading={loading} />}
+      {tab === 'tasks' && <TasksGoalsTab stats={stats} loading={loading} />}
+      {tab === 'sessions' && <SessionMetricsTab stats={stats} loading={loading} />}
       {tab === 'revenue' && <RevenueTab />}
     </>);
-
 }
 
 Object.assign(window, { AdminAnalytics });
