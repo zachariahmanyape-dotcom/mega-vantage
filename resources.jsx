@@ -275,8 +275,9 @@ function ResourceCard({ r, state, onOpen, onLocked }) {
 
 }
 
-function ResourcesScreen({ member, onStartTour, tourCompleted }) {
-  const userType = resUserType(member);
+function ResourcesScreen({ member, adminAll, onStartTour, tourCompleted }) {
+  // Admins (when not impersonating) see every folder + full access to all cards.
+  const userType = adminAll ? 'mega_management' : resUserType(member);
   const visibleFolders = resVisibleFolders(userType);
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
