@@ -813,7 +813,150 @@ function AdminSessions() {
 
 }
 
+// Upload / edit panel for a single resource.
+function ResourceFormModal({ resource, onClose, onSaved }) {
+  const editing = !!(resource && resource.id);
+  const [title, setTitle] = React.useState(resource ? resource.title || '' : '');
+  const [description, setDescription] = React.useState(resource ? resource.description || '' : '');
+  const [contentType, setContentType] = React.useState(resource ? resource.content_type || 'video' : 'video');
+  const [folder, setFolder] = React.useState(resource ? resource.folder || 'foundations' : 'foundations');
+  const [subjectArea, setSubjectArea] = React.useState(resource ? resource.subject_area || '' : '');
+  const [accessTier, setAccessTier] = React.useState(resource ? resource.access_tier || 'foundations' : 'foundations');
+  const [url, setUrl] = React.useState(resource ? resource.url || '' : '');
+  const [thumbnailUrl, setThumbnailUrl] = React.useState(resource ? resource.thumbnail_url || '' : '');
+  const [duration, setDuration] = React.useState(resource && resource.duration_minutes != null ? String(resource.duration_minutes) : '');
+  const [published, setPublished] = React.useState(resource ? resource.published !== false : true);
+  const [saving, setSaving] = React.useState(false);
+  const [err, setErr] = React.useState('');
+
+  const submit = async () => {
+    setErr('');
+    if (!title.trim()) {setErr('Please enter a title.');return;}
+    if (!url.trim()) {setErr('Please enter a resource URL.');return;}
+    setSaving(true);
+    const payload = {
+      title: title.trim(),
+      description: description.trim() || null,
+      content_type: contentType,
+      folder,
+      subject_area: subjectArea || null,
+      access_tier: accessTier,
+      url: url.trim(),
+      thumbnail_url: thumbnailUrl.trim() || null,
+      duration_minutes: contentType === 'video' && duration ? parseInt(duration, 10) : null,
+      published };
+
+    const q = editing ?
+    window._supabase.from('resources').update(payload).eq('id', resource.id) :
+    window._supabase.from('resources').insert(payload);
+    const { error } = await q;
+    setSaving(false);
+    if (error) {setErr(error.message);return;}
+    onSaved();
+    onClose();
+  };
+
+  const field = (label, node) =>
+  <div>
+      <div className="eyebrow" style={{ marginBottom: 6 }}>{label}</div>
+      {node}
+    </div>;
+
+
+  return (
+    <>
+      <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(10,10,10,0.45)', zIndex: 200, backdropFilter: 'blur(3px)' }} />
+      <div className="card" style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 520, maxHeight: '88vh', overflow: 'auto', zIndex: 201, padding: 0, boxShadow: 'var(--shadow-3)' }}>
+        <div style={{ padding: '18px 22px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ fontFamily: 'var(--ff-display)', fontSize: 22 }}>{editing ? 'Edit resource' : 'Upload resource'}</div>
+          <button onClick={onClose} style={{ color: 'var(--text-3)', fontSize: 14, background: 'none', border: 'none', cursor: 'pointer' }}>✕</button>
+        </div>
+        <div style={{ padding: '18px 22px' }}>
+          <div className="stack" style={{ gap: 12 }}>
+            {field('Title', <input className="input" value={title} onChange={(e) => setTitle(e.target.value)} autoFocus />)}
+            {field('Description', <textarea className="input" rows={3} placeholder="Optional" value={description} onChange={(e) => setDescription(e.target.value)} style={{ resize: 'none', lineHeight: 1.5 }} />)}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              {field('Content type',
+              <select className="input" style={{ fontSize: 13 }} value={contentType} onChange={(e) => setContentType(e.target.value)}>
+                  {RES_TYPES.map((t) => <option key={t.key} value={t.key}>{t.label}</option>)}
+                </select>)}
+              {field('Folder',
+              <select className="input" style={{ fontSize: 13 }} value={folder} onChange={(e) => setFolder(e.target.value)}>
+                  {RES_FOLDERS.map((f) => <option key={f.key} value={f.key}>{f.label}</option>)}
+                </select>)}
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              {field('Subject area',
+              <select className="input" style={{ fontSize: 13 }} value={subjectArea} onChange={(e) => setSubjectArea(e.target.value)}>
+                  <option value="">None</option>
+                  {RES_SUBJECTS.map((s) => <option key={s}>{s}</option>)}
+                </select>)}
+              {field('Access tier',
+              <select className="input" style={{ fontSize: 13 }} value={accessTier} onChange={(e) => setAccessTier(e.target.value)}>
+                  <option value="foundations">Foundations and Breakthrough</option>
+                  <option value="breakthrough">Breakthrough only</option>
+                  <option value="mega_management">MEGA Management only</option>
+                </select>)}
+            </div>
+            {field('Resource URL', <input className="input" placeholder="https://…" value={url} onChange={(e) => setUrl(e.target.value)} />)}
+            {field('Thumbnail URL', <input className="input" placeholder="Optional" value={thumbnailUrl} onChange={(e) => setThumbnailUrl(e.target.value)} />)}
+            {contentType === 'video' && field('Duration (minutes)',
+            <input className="input" type="number" min="0" placeholder="Optional" value={duration} onChange={(e) => setDuration(e.target.value)} />)}
+
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 600 }}>Published</div>
+                <div style={{ fontSize: 11, color: 'var(--text-3)' }}>{published ? 'Visible to members' : 'Hidden from members'}</div>
+              </div>
+              <button onClick={() => setPublished((p) => !p)} role="switch" aria-checked={published}
+              style={{ width: 36, height: 20, borderRadius: 999, background: published ? 'var(--accent)' : 'var(--border-strong)', position: 'relative', cursor: 'pointer', transition: 'background .15s', border: 'none', padding: 0 }}>
+                <div style={{ position: 'absolute', top: 2, left: published ? 18 : 2, width: 16, height: 16, borderRadius: 999, background: '#fff', transition: 'left .15s' }} />
+              </button>
+            </div>
+
+            {err && <div style={{ fontSize: 12, color: 'var(--coral)', background: 'var(--coral-100)', borderRadius: 8, padding: '8px 12px' }}>{err}</div>}
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 4 }}>
+              <button className="btn" onClick={onClose}>Cancel</button>
+              <button className="btn primary" disabled={!title.trim() || !url.trim() || saving} onClick={submit}>{saving ? 'Saving…' : editing ? 'Save changes' : 'Upload'}</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>);
+
+}
+
 function AdminResources() {
+  const [rows, setRows] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+  const [modal, setModal] = React.useState(null); // null | {} (new) | row (edit)
+  const [copiedId, setCopiedId] = React.useState(null);
+  const [err, setErr] = React.useState('');
+
+  const load = React.useCallback(async () => {
+    setLoading(true);
+    const { data, error } = await window._supabase.
+    from('resources').select('*').order('created_at', { ascending: false });
+    if (error) setErr(error.message); else setRows(data || []);
+    setLoading(false);
+  }, []);
+
+  React.useEffect(() => {load();}, [load]);
+
+  const copyLink = (r) => {
+    navigator.clipboard.writeText(r.url);
+    setCopiedId(r.id);
+    setTimeout(() => setCopiedId((c) => c === r.id ? null : c), 1500);
+  };
+
+  const del = async (r) => {
+    if (!window.confirm(`Delete "${r.title}"? This cannot be undone.`)) return;
+    const { error } = await window._supabase.from('resources').delete().eq('id', r.id);
+    if (error) {setErr(error.message);return;}
+    load();
+  };
+
   return (
     <>
       <div className="page-header">
@@ -821,8 +964,11 @@ function AdminResources() {
           <div className="eyebrow">Admin · Resources</div>
           <h1 className="page-title">Resource manager.</h1>
         </div>
-        <button className="btn primary"><Icon name="plus" size={13} /> Upload resource</button>
+        <button className="btn primary" onClick={() => setModal({})}><Icon name="plus" size={13} /> Upload resource</button>
       </div>
+
+      {err && <div style={{ fontSize: 12, color: 'var(--coral)', background: 'var(--coral-100)', borderRadius: 8, padding: '8px 12px', marginBottom: 12 }}>{err}</div>}
+
       <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
           <thead>
@@ -833,24 +979,43 @@ function AdminResources() {
             </tr>
           </thead>
           <tbody>
-            {RESOURCES.map((r) =>
+            {rows.map((r) =>
             <tr key={r.id} style={{ borderTop: '1px solid var(--border)' }}>
-                <td style={{ padding: '12px 16px', fontWeight: 600 }}>{r.title}</td>
-                <td style={{ padding: '12px 16px', color: 'var(--text-2)' }}>{r.folder}</td>
-                <td style={{ padding: '12px 16px' }}>
-                  <span className="chip"><Icon name={r.type === 'video' ? 'video' : r.type === 'doc' ? 'doc' : 'link'} size={11} /> {r.type}</span>
+                <td style={{ padding: '12px 16px', fontWeight: 600 }}>
+                  {r.title}
+                  {r.published === false && <span className="chip coral" style={{ marginLeft: 8, fontSize: 9 }}>Draft</span>}
                 </td>
-                <td style={{ padding: '12px 16px' }}><span className="chip teal">{r.plan}</span></td>
-                <td style={{ padding: '12px 16px' }}><SubjectTag subject={r.subject} /></td>
-                <td style={{ padding: '12px 16px', color: 'var(--text-3)' }}>{r.addedDays}d ago</td>
+                <td style={{ padding: '12px 16px', color: 'var(--text-2)' }}>{RES_FOLDER_LABEL[r.folder] || r.folder}</td>
                 <td style={{ padding: '12px 16px' }}>
-                  <button className="btn ghost sm"><Icon name="link" size={11} /> Copy link</button>
+                  <span className="chip"><Icon name={(RES_TYPE_META[r.content_type] || {}).icon || 'link'} size={11} /> {(RES_TYPE_META[r.content_type] || {}).label || r.content_type}</span>
+                </td>
+                <td style={{ padding: '12px 16px' }}><span className={'chip ' + (RES_ACCESS_CHIP[r.access_tier] || '')}>{RES_ACCESS_LABEL[r.access_tier] || r.access_tier}</span></td>
+                <td style={{ padding: '12px 16px' }}>{r.subject_area ? <SubjectTag subject={r.subject_area} /> : <span style={{ color: 'var(--text-3)' }}>—</span>}</td>
+                <td style={{ padding: '12px 16px', color: 'var(--text-3)' }}>{resRelTime(r.created_at)}</td>
+                <td style={{ padding: '12px 16px' }}>
+                  <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
+                    <button className="btn ghost sm" onClick={() => copyLink(r)}>
+                      <Icon name={copiedId === r.id ? 'check' : 'link'} size={11} /> {copiedId === r.id ? 'Copied' : 'Copy link'}
+                    </button>
+                    <button className="btn ghost sm" onClick={() => setModal(r)}><Icon name="edit" size={11} /> Edit</button>
+                    <button className="btn ghost sm" onClick={() => del(r)} style={{ color: 'var(--coral)' }}><Icon name="trash" size={11} /></button>
+                  </div>
                 </td>
               </tr>
             )}
           </tbody>
         </table>
+        {!loading && rows.length === 0 &&
+        <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-3)' }}>
+            No resources yet. Click <strong>Upload resource</strong> to add the first one.
+          </div>
+        }
+        {loading &&
+        <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-3)' }}>Loading…</div>
+        }
       </div>
+
+      {modal && <ResourceFormModal resource={modal.id ? modal : null} onClose={() => setModal(null)} onSaved={load} />}
     </>);
 
 }

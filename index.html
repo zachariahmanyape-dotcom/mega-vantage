@@ -1030,6 +1030,7 @@ function App() {
     email: effectiveProfile.email || '',
     avatarColor: '#0F52BA',
     plan: effectiveProfile.membership_tier === 'breakthrough' ? 'Breakthrough' : 'Foundations',
+    membershipTier: effectiveProfile.membership_tier || 'foundations',
     product: 'Mentorship',
     accountType: effectiveProfile.account_type || 'member',
     trialExpiresAt: effectiveProfile.trial_expires_at || null,
@@ -1078,7 +1079,7 @@ function App() {
     case 'sessions': screen = <SessionsScreen onJoin={onJoin} isAdmin={false} />; break;
     case 'wins': screen = <WinsScreen />; break;
     case 'roadmap': screen = <RoadmapScreen />; break;
-    case 'resources': screen = <ResourcesScreen onStartTour={() => { setTourBubble(false); setTourActive(true); }} tourCompleted={tourCompleted} />; break;
+    case 'resources': screen = <ResourcesScreen member={member} onStartTour={() => { setTourBubble(false); setTourActive(true); }} tourCompleted={tourCompleted} />; break;
     case 'chat': screen = <ChatScreen />; break;
     case 'profile': screen = <ProfileScreen member={member} theme={tw.theme} setTheme={t => updateTweak({ theme: t })} onSignOut={handleSignOut} onProfileSaved={fields => setLiveProfile(p => ({ ...p, ...fields }))} />; break;
     case 'admin-overview': screen = <AdminOverview onPick={setRoute} />; break;
