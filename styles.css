@@ -553,6 +553,12 @@ input, textarea, select { font: inherit; color: inherit; }
 [data-theme="dark"] .chip.coral { background: rgba(255,107,107,0.12); color: var(--coral); border-color: rgba(255,107,107,0.3); }
 [data-theme="dark"] .chip.sapphire { background: rgba(79,134,230,0.12); color: #8BB1F0; border-color: rgba(79,134,230,0.3); }
 
+/* Friday/Weekly reflection modal header — theme-aware teal banner */
+.reflection-header { background: var(--teal-50); }
+.refl-accent { color: var(--teal-600); }
+[data-theme="dark"] .reflection-header { background: rgba(79,183,166,0.16); }
+[data-theme="dark"] .refl-accent { color: var(--teal); }
+
 /* ---------- Progress ---------- */
 .progress {
   height: 4px;

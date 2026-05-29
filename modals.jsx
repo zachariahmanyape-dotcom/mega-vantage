@@ -108,10 +108,10 @@ function ReflectionModal({ onSubmit, onLater }) {
         borderRadius: 24, overflow: 'hidden', boxShadow: 'var(--shadow-3)', zIndex: 301
       }}>
         {/* Header */}
-        <div style={{ padding: '28px 32px 20px', borderBottom: '1px solid var(--border)', background: 'var(--teal-50)' }}>
+        <div className="reflection-header" style={{ padding: '28px 32px 20px', borderBottom: '1px solid var(--border)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-            <Icon name="star" size={18} stroke={1.8} style={{ color: 'var(--teal-600)' }} />
-            <span style={{ fontFamily: 'var(--ff-sub)', fontSize: 11, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--teal-600)' }}>Friday reflection</span>
+            <Icon name="star" size={18} stroke={1.8} className="refl-accent" />
+            <span className="refl-accent" style={{ fontFamily: 'var(--ff-sub)', fontSize: 11, letterSpacing: '0.2em', textTransform: 'uppercase' }}>Friday reflection</span>
           </div>
           <div style={{ fontFamily: 'var(--ff-display)', fontSize: 34, lineHeight: 1, color: 'var(--text)', marginBottom: 6 }}>Weekly Reflection</div>
           <div style={{ fontSize: 13, color: 'var(--text-2)', lineHeight: 1.5 }}>Two minutes to close the week well.</div>
