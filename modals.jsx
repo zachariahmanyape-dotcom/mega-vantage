@@ -323,6 +323,74 @@ function OnboardingWizard({ onComplete }) {
 
 }
 
+// ─── Legal Consent Modal (gates app entry until user accepts) ─────────────────
+function LegalConsentModal({ onAccept }) {
+  const [agreed, setAgreed] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const accept = async () => {
+    if (!agreed || saving) return;
+    setSaving(true);
+    try { await onAccept(); }
+    finally { setSaving(false); }
+  };
+
+  return (<>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(10,10,10,0.6)', zIndex: 400, backdropFilter: 'blur(4px)' }} />
+    <div style={{
+      position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)',
+      width: 'min(480px, calc(100vw - 32px))', maxHeight: 'calc(100vh - 32px)', overflowY: 'auto',
+      background: 'var(--bg-elev)', border: '1px solid var(--border)', borderRadius: 16,
+      padding: 28, zIndex: 401, boxShadow: '0 20px 60px rgba(0,0,0,0.35)'
+    }}>
+      <div style={{ fontFamily: 'var(--ff-display)', fontSize: 26, letterSpacing: '0.02em', color: 'var(--text)', marginBottom: 8 }}>
+        Before you continue
+      </div>
+      <div style={{ fontSize: 14, color: 'var(--text-dim)', lineHeight: 1.6, marginBottom: 20 }}>
+        To use Vantage, please review and accept our legal terms. They cover how we handle your data and the rules for using the platform.
+      </div>
+
+      <label style={{
+        display: 'flex', alignItems: 'flex-start', gap: 12,
+        padding: 16, background: 'var(--bg)', border: '1px solid var(--border)',
+        borderRadius: 12, cursor: 'pointer', userSelect: 'none', marginBottom: 20
+      }}>
+        <input
+          type="checkbox"
+          checked={agreed}
+          onChange={e => setAgreed(e.target.checked)}
+          style={{ marginTop: 3, width: 18, height: 18, accentColor: 'var(--sapphire)', cursor: 'pointer', flexShrink: 0 }}
+        />
+        <span style={{ fontSize: 14, color: 'var(--text)', lineHeight: 1.55 }}>
+          I have read and agree to the{' '}
+          <a href="/legal" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--sapphire)', fontWeight: 600, textDecoration: 'underline' }}>Privacy Policy</a>
+          {' '}and{' '}
+          <a href="/legal" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--sapphire)', fontWeight: 600, textDecoration: 'underline' }}>Terms of Use</a>.
+        </span>
+      </label>
+
+      <button
+        onClick={accept}
+        disabled={!agreed || saving}
+        style={{
+          width: '100%', padding: '12px 16px', borderRadius: 10, border: 'none',
+          background: agreed ? 'var(--sapphire)' : 'var(--border)',
+          color: agreed ? '#fff' : 'var(--text-dim)',
+          fontFamily: 'var(--ff-body)', fontSize: 15, fontWeight: 600,
+          cursor: agreed && !saving ? 'pointer' : 'not-allowed',
+          transition: 'background 0.15s'
+        }}
+      >
+        {saving ? 'Saving…' : 'Accept and continue'}
+      </button>
+
+      <div style={{ marginTop: 14, fontSize: 12, color: 'var(--text-dim)', textAlign: 'center' }}>
+        You must accept to continue using Vantage.
+      </div>
+    </div>
+  </>);
+}
+
 // ─── Pinned Intention Card (dashboard) ────────────────────────────────────────
 function PinnedIntentionCard({ intention, onClear }) {
   return (

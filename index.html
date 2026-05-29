@@ -596,6 +596,8 @@ function App() {
 
   // Onboarding is now gated server-side via profiles.onboarded_at — set once the profile loads.
   const [showOnboarding, setShowOnboarding] = useState(false);
+  // Legal consent gate — server-side via profiles.legal_accepted_at. Blocks app entry until accepted.
+  const [showLegalConsent, setShowLegalConsent] = useState(false);
   const [tourActive, setTourActive] = useState(false);
   const [tourBubble, setTourBubble] = useState(() => !localStorage.getItem('vantage-tour-seen'));
   const [tourCompleted, setTourCompleted] = useState(() => !!localStorage.getItem('vantage-tour-done'));
@@ -788,6 +790,21 @@ function App() {
   useEffect(() => {
     if (liveProfile && !liveProfile.onboarded_at) setShowOnboarding(true);
   }, [liveProfile && liveProfile.id, liveProfile && liveProfile.onboarded_at]);
+
+  // Legal consent gate: show until profiles.legal_accepted_at is set. Blocks the onboarding wizard too.
+  useEffect(() => {
+    if (liveProfile && !liveProfile.legal_accepted_at) setShowLegalConsent(true);
+    else setShowLegalConsent(false);
+  }, [liveProfile && liveProfile.id, liveProfile && liveProfile.legal_accepted_at]);
+
+  const acceptLegal = async () => {
+    const nowIso = new Date().toISOString();
+    const { data: { user } } = await window._supabase.auth.getUser();
+    if (!user) return;
+    await window._supabase.from('profiles').update({ legal_accepted_at: nowIso }).eq('id', user.id);
+    setLiveProfile(p => p ? { ...p, legal_accepted_at: nowIso } : p);
+    setShowLegalConsent(false);
+  };
 
   // ── View As: keep an impersonated user id on window so child fetchers can scope reads
   // to the member. Admin has is_admin() SELECT override on tasks/goals/sessions/focus/
@@ -1137,7 +1154,7 @@ function App() {
         theme={tw.theme} setTheme={t => updateTweak({ theme: t })}
         accent={tw.accent} setAccent={a => updateTweak({ accent: a })} />
 
-      {tourBubble && !showOnboarding && (
+      {tourBubble && !showOnboarding && !showLegalConsent && (
         <TourBubble
           onStart={() => { setTourBubble(false); localStorage.setItem('vantage-tour-seen', '1'); setTourActive(true); }}
           onDismiss={() => { setTourBubble(false); localStorage.setItem('vantage-tour-seen', '1'); }}
@@ -1151,7 +1168,11 @@ function App() {
         />
       )}
 
-      {showOnboarding && (
+      {showLegalConsent && (
+        <LegalConsentModal onAccept={acceptLegal} />
+      )}
+
+      {!showLegalConsent && showOnboarding && (
         <OnboardingWizard onComplete={async () => {
           setShowOnboarding(false);
           const nowIso = new Date().toISOString();
@@ -1162,10 +1183,10 @@ function App() {
           }
         }} />
       )}
-      {!showOnboarding && showReflection && (
+      {!showLegalConsent && !showOnboarding && showReflection && (
         <ReflectionModal onSubmit={submitReflection} onLater={() => setShowReflection(false)} />
       )}
-      {!showOnboarding && !showReflection && showIntention && (
+      {!showLegalConsent && !showOnboarding && !showReflection && showIntention && (
         <IntentionModal tasks={liveTasks} goals={liveGoals} onSet={setIntentionHandler} onSkip={skipIntention} />
       )}
 
