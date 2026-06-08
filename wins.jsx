@@ -211,7 +211,7 @@ function WinsScreen() {
     if (!text) return;
     const m = window._currentMember;
     const { data: { user } } = await window._supabase.auth.getUser();
-    const author_name = m ? `${m.firstName} ${m.lastName}`.trim() : 'Member';
+    const author_name = m?.isAdmin ? 'Zachariah Manyapye' : m ? `${m.firstName} ${m.lastName}`.trim() : 'Member';
     const author_role = m?.isAdmin ? 'Founder, MEGA' : m?.plan || 'Member';
     const { data, error } = await window._supabase.from('wins').insert({
       user_id: user.id,
