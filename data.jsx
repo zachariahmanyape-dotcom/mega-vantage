@@ -226,11 +226,11 @@ function Icon({name, size=18, stroke=1.8, style, className}) {
     stroke: "currentColor", strokeWidth: stroke, strokeLinecap: "round", strokeLinejoin: "round",
     style, className };
   switch(name) {
-    case "dashboard": return (<svg {...p}><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>);
-    case "tasks": return (<svg {...p}><path d="M8 6h12M8 12h12M8 18h12"/><circle cx="4" cy="6" r="1.5"/><circle cx="4" cy="12" r="1.5"/><circle cx="4" cy="18" r="1.5"/></svg>);
-    case "sessions": return (<svg {...p}><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>);
-    case "resources": return (<svg {...p}><path d="M3 6a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6z"/></svg>);
-    case "chat": return (<svg {...p}><path d="M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H9l-5 4V6a1 1 0 0 1 1-1z"/></svg>);
+    case "dashboard": return (<svg {...p}><rect x="4" y="4" width="6" height="8" rx="1"/><rect x="4" y="16" width="6" height="4" rx="1"/><rect x="14" y="12" width="6" height="8" rx="1"/><rect x="14" y="4" width="6" height="4" rx="1"/></svg>);
+    case "tasks": return (<svg {...p}><path d="M3.5 5.5l1.5 1.5 3-3M3.5 11.5l1.5 1.5 3-3M3.5 17.5l1.5 1.5 3-3M11 6h9M11 12h9M11 18h9"/></svg>);
+    case "sessions": return (<svg {...p}><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M16 3v4M8 3v4M4 11h16"/><circle cx="16" cy="16" r="1" fill="currentColor" stroke="none"/></svg>);
+    case "resources": return (<svg {...p}><path d="M3 19V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v14"/><path d="M3 19a2 2 0 0 1 2-2h12a2 2 0 0 1 2 0"/><path d="M3 19a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2"/><path d="M17 3v16"/></svg>);
+    case "chat": return (<svg {...p}><path d="M3 12a9 9 0 1 0 3.5 7.1L3 21l1.9-3.5A9 9 0 0 0 3 12z"/></svg>);
     case "profile": return (<svg {...p}><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4.5-6 8-6s7 2 8 6"/></svg>);
     case "admin": return (<svg {...p}><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7l8-4z"/></svg>);
     case "bell": return (<svg {...p}><path d="M6 8a6 6 0 0 1 12 0v5l2 3H4l2-3V8z"/><path d="M10 19a2 2 0 0 0 4 0"/></svg>);
@@ -255,7 +255,7 @@ function Icon({name, size=18, stroke=1.8, style, className}) {
     case "edit": return (<svg {...p}><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>);
     case "chevron-right": return (<svg {...p}><path d="M9 6l6 6-6 6"/></svg>);
     case "chevron-down": return (<svg {...p}><path d="M6 9l6 6 6-6"/></svg>);
-    case "trophy": return (<svg {...p}><path d="M8 4h8v4a4 4 0 0 1-8 0V4z"/><path d="M4 5h4v3a2 2 0 0 1-4 0V5zM16 5h4v3a2 2 0 0 1-4 0V5zM9 14h6v3l1 4H8l1-4v-3z"/></svg>);
+    case "trophy": return (<svg {...p}><path d="M8 21h8M12 17v4M7 4h10v3a5 5 0 0 1-10 0V4z"/><path d="M17 4h1a2 2 0 0 1 0 4h-1M7 4H6a2 2 0 0 0 0 4h1M12 12v5"/></svg>);
     case "star": return (<svg {...p}><path d="M12 3l2.6 6 6.4.5-4.8 4.3 1.4 6.2L12 16.8 6.4 20l1.4-6.2L3 9.5l6.4-.5L12 3z"/></svg>);
     case "users": return (<svg {...p}><circle cx="9" cy="8" r="3.5"/><circle cx="17" cy="9" r="2.5"/><path d="M2 20c.8-3.5 3.8-5 7-5s6.2 1.5 7 5M15 15c2.5.2 4.4 1.5 5 5"/></svg>);
     case "chart": return (<svg {...p}><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg>);
@@ -263,7 +263,7 @@ function Icon({name, size=18, stroke=1.8, style, className}) {
     case "external": return (<svg {...p}><path d="M7 17L17 7M9 7h8v8"/></svg>);
     case "clock": return (<svg {...p}><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>);
     case "target": return (<svg {...p}><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1" fill="currentColor"/></svg>);
-    case "roadmap": return (<svg {...p}><path d="M9 5 4 7v12l5-2 6 2 5-2V5l-5 2-6-2z"/><path d="M9 5v12M15 7v12"/></svg>);
+    case "roadmap": return (<svg {...p}><circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><path d="M12 19h4.5a3.5 3.5 0 0 0 0-7h-9a3.5 3.5 0 0 1 0-7H12"/></svg>);
     case "sliders": return (<svg {...p}><path d="M4 6h8M16 6h4M4 12h12M4 18h4M12 18h8"/><circle cx="14" cy="6" r="2"/><circle cx="18" cy="12" r="2"/><circle cx="10" cy="18" r="2"/></svg>);
     case "lock": return (<svg {...p}><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>);
     case "trash": return (<svg {...p}><path d="M4 7h16M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M6 7l1 13a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-13"/></svg>);
