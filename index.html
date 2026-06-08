@@ -302,6 +302,7 @@
 <script type="text/babel" src="resources.jsx"></script>
 <script type="text/babel" src="chat.jsx"></script>
 <script type="text/babel" src="profile.jsx"></script>
+<script type="text/babel" src="corporate-radar.jsx"></script>
 <script type="text/babel" src="admin.jsx"></script>
 <script type="text/babel" src="adminplus.jsx"></script>
 <script type="text/babel" src="adminchat.jsx"></script>
@@ -483,6 +484,10 @@ function SidebarWithWins({ route, setRoute, admin, isRealAdmin, unread, member, 
     { k: 'profile', label: 'Profile', icon: 'profile' }
   ];
 
+  const careerItems = [
+    { k: 'corporate-radar', label: 'Corporate Radar', icon: 'radar' }
+  ];
+
   const adminItems = [
     { k: 'admin-overview', label: 'Overview', icon: 'dashboard' },
     { k: 'admin-members', label: 'Members', icon: 'users' },
@@ -519,6 +524,16 @@ function SidebarWithWins({ route, setRoute, admin, isRealAdmin, unread, member, 
           {it.badge ? <span className="sb-badge">{it.badge}</span> : null}
         </button>
       )}
+
+      {!admin && <>
+        <div className="sb-section" style={{ marginTop: 8 }}>Career</div>
+        {careerItems.map(it =>
+          <button key={it.k} className={"sb-item" + (route === it.k ? " active" : "")} onClick={() => setRoute(it.k)}>
+            <span className="sb-icon"><Icon name={it.icon} size={18} /></span>
+            <span>{it.label}</span>
+          </button>
+        )}
+      </>}
 
       <div className="sb-spacer" />
       <div className="sb-divider" />
@@ -1098,6 +1113,7 @@ function App() {
     case 'roadmap': screen = <RoadmapScreen />; break;
     case 'resources': screen = <ResourcesScreen member={member} adminAll={isRealAdmin && !viewingAs} onStartTour={() => { setTourBubble(false); setTourActive(true); }} tourCompleted={tourCompleted} />; break;
     case 'chat': screen = <ChatScreen />; break;
+    case 'corporate-radar': screen = <CorporateRadarScreen member={member} />; break;
     case 'profile': screen = <ProfileScreen member={member} theme={tw.theme} setTheme={t => updateTweak({ theme: t })} onSignOut={handleSignOut} onProfileSaved={fields => setLiveProfile(p => ({ ...p, ...fields }))} />; break;
     case 'admin-overview': screen = <AdminOverview onPick={setRoute} />; break;
     case 'admin-members':

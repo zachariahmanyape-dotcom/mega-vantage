@@ -267,6 +267,7 @@ function Icon({name, size=18, stroke=1.8, style, className}) {
     case "sliders": return (<svg {...p}><path d="M4 6h8M16 6h4M4 12h12M4 18h4M12 18h8"/><circle cx="14" cy="6" r="2"/><circle cx="18" cy="12" r="2"/><circle cx="10" cy="18" r="2"/></svg>);
     case "lock": return (<svg {...p}><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>);
     case "trash": return (<svg {...p}><path d="M4 7h16M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M6 7l1 13a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-13"/></svg>);
+    case "radar": return (<svg {...p}><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49M7.76 16.24a6 6 0 0 1 0-8.49"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 19.07a10 10 0 0 1 0-14.14"/></svg>);
     default: return (<svg {...p}><circle cx="12" cy="12" r="9"/></svg>);
   }
 }
