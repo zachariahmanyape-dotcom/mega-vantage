@@ -230,7 +230,7 @@ function Icon({name, size=18, stroke=1.8, style, className}) {
     case "tasks": return (<svg {...p}><path d="M3.5 5.5l1.5 1.5 3-3M3.5 11.5l1.5 1.5 3-3M3.5 17.5l1.5 1.5 3-3M11 6h9M11 12h9M11 18h9"/></svg>);
     case "sessions": return (<svg {...p}><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M16 3v4M8 3v4M4 11h16"/><circle cx="16" cy="16" r="1" fill="currentColor" stroke="none"/></svg>);
     case "resources": return (<svg {...p}><path d="M3 19V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v14"/><path d="M3 19a2 2 0 0 1 2-2h12a2 2 0 0 1 2 0"/><path d="M3 19a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2"/><path d="M17 3v16"/></svg>);
-    case "chat": return (<svg {...p}><path d="M3 12a9 9 0 1 0 3.5 7.1L3 21l1.9-3.5A9 9 0 0 0 3 12z"/></svg>);
+    case "chat": return (<svg {...p}><path d="M3 20l1.3-3.9a9 8 0 1 1 3.4 2.9z"/></svg>);
     case "profile": return (<svg {...p}><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4.5-6 8-6s7 2 8 6"/></svg>);
     case "admin": return (<svg {...p}><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7l8-4z"/></svg>);
     case "bell": return (<svg {...p}><path d="M6 8a6 6 0 0 1 12 0v5l2 3H4l2-3V8z"/><path d="M10 19a2 2 0 0 0 4 0"/></svg>);
@@ -267,7 +267,7 @@ function Icon({name, size=18, stroke=1.8, style, className}) {
     case "sliders": return (<svg {...p}><path d="M4 6h8M16 6h4M4 12h12M4 18h4M12 18h8"/><circle cx="14" cy="6" r="2"/><circle cx="18" cy="12" r="2"/><circle cx="10" cy="18" r="2"/></svg>);
     case "lock": return (<svg {...p}><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>);
     case "trash": return (<svg {...p}><path d="M4 7h16M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M6 7l1 13a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-13"/></svg>);
-    case "radar": return (<svg {...p}><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49M7.76 16.24a6 6 0 0 1 0-8.49"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 19.07a10 10 0 0 1 0-14.14"/></svg>);
+    case "radar": return (<svg {...p}><circle cx="12" cy="12" r="2"/><circle cx="12" cy="12" r="6" fill="none"/><circle cx="12" cy="12" r="10" fill="none"/></svg>);
     default: return (<svg {...p}><circle cx="12" cy="12" r="9"/></svg>);
   }
 }
