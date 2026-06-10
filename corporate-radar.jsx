@@ -17,6 +17,32 @@ const CR_SECTORS = [
 
 const CR_SIZES = ['1-50', '51-200', '201-1000', '1000+'];
 
+const CR_SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
+const CR_THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
+
+/* ── Debounce helper ── */
+function crDebounce(fn, ms) {
+  let timer;
+  return function(...args) {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn.apply(this, args), ms);
+  };
+}
+
+/* ── Date helpers ── */
+function crDaysAgo(dateStr) {
+  if (!dateStr) return null;
+  const days = Math.floor((Date.now() - new Date(dateStr).getTime()) / (24 * 60 * 60 * 1000));
+  if (days === 0) return 'Updated today';
+  if (days === 1) return 'Updated 1 day ago';
+  return 'Updated ' + days + ' days ago';
+}
+
+function crFormatRefreshDate(dateStr) {
+  if (!dateStr) return 'Awaiting first refresh';
+  return 'Last refreshed: ' + new Date(dateStr).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
 /* ── Match score algorithm (brief §Match Score Calculation) ── */
 function calculateMatchScore(company, memberInterests) {
   if (!memberInterests || memberInterests.length === 0) return 50;
@@ -38,13 +64,15 @@ function CRFilterPanel({ filters, setFilters }) {
   }));
   return (
     <div className="cr-filters">
-      <div className="cr-filter-head"><i className="ti ti-filter"></i> Filters</div>
+      <div className="cr-filter-head">
+        <Icon name="sliders" size={15} /> Filters
+      </div>
 
       <div className="cr-fg">
         <div className="cr-fg-label">Sector</div>
         <div className="cr-chips">
           {CR_SECTORS.map(s => (
-            <button key={s} className={`cr-chip ${filters.sectors.includes(s) ? 'on' : ''}`}
+            <button key={s} className={'cr-chip' + (filters.sectors.includes(s) ? ' on' : '')}
               onClick={() => toggle('sectors', s)}>{s}</button>
           ))}
         </div>
@@ -56,7 +84,9 @@ function CRFilterPanel({ filters, setFilters }) {
           <label key={s} className="cr-check">
             <input type="checkbox" checked={filters.sizes.includes(s)}
               onChange={() => toggle('sizes', s)} />
-            <span className="cr-check-mark"><i className="ti ti-check"></i></span>
+            <span className="cr-check-mark">
+              <Icon name="check" size={10} />
+            </span>
             <span>{s}</span>
           </label>
         ))}
@@ -66,11 +96,11 @@ function CRFilterPanel({ filters, setFilters }) {
         <div className="cr-fg-label">Hiring signal</div>
         <div className="cr-sw-row" onClick={() => setFilters(f => ({ ...f, hiringWeek: !f.hiringWeek, hiringMonth: f.hiringWeek ? f.hiringMonth : false }))}>
           <span>Hiring this week</span>
-          <div className={`cr-sw ${filters.hiringWeek ? 'on' : ''}`}><div className="cr-sw-t"></div></div>
+          <div className={'cr-sw' + (filters.hiringWeek ? ' on' : '')}><div className="cr-sw-t"></div></div>
         </div>
         <div className="cr-sw-row" onClick={() => setFilters(f => ({ ...f, hiringMonth: !f.hiringMonth, hiringWeek: f.hiringMonth ? f.hiringWeek : false }))}>
           <span>Hiring this month</span>
-          <div className={`cr-sw ${filters.hiringMonth ? 'on' : ''}`}><div className="cr-sw-t"></div></div>
+          <div className={'cr-sw' + (filters.hiringMonth ? ' on' : '')}><div className="cr-sw-t"></div></div>
         </div>
       </div>
 
@@ -92,7 +122,7 @@ function CRFilterPanel({ filters, setFilters }) {
 }
 
 /* ── Stats bar ── */
-function CRStatsBar({ total, matching, hiring }) {
+function CRStatsBar({ total, matching, hiring, lastRefreshed }) {
   return (
     <div className="cr-stats">
       <div className="cr-stat">
@@ -107,13 +137,36 @@ function CRStatsBar({ total, matching, hiring }) {
         <div className="cr-stat-n">{hiring}</div>
         <div className="cr-stat-l">Hiring this week</div>
       </div>
+      <div className="cr-stat cr-stat-refresh-box">
+        <div className="cr-stat-refresh-text">{crFormatRefreshDate(lastRefreshed)}</div>
+      </div>
     </div>
   );
+}
+
+/* ── Recently added check ── */
+function crIsRecentlyAdded(company) {
+  if (!company.published_at) return false;
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  return new Date(company.published_at) > sevenDaysAgo;
 }
 
 /* ── Company card ── */
 function CRCompanyCard({ company, matchScore, saved, onToggleSave }) {
   const barColor = matchScore >= 80 ? 'var(--sapphire)' : matchScore >= 70 ? 'var(--teal-600)' : 'var(--coral)';
+  const now = Date.now();
+  const recentlyChecked = company.hiring_last_checked &&
+    (now - new Date(company.hiring_last_checked).getTime()) <= CR_SEVEN_DAYS;
+
+  const hiringLabel = (() => {
+    if (company.job_count > 0) return company.job_count + ' open role' + (company.job_count === 1 ? '' : 's');
+    if (company.hiring_detected) return 'Hiring';
+    return 'Not hiring';
+  })();
+  const hiringActive = company.job_count > 0 || company.hiring_detected;
+  const recentlyAdded = crIsRecentlyAdded(company);
+
   return (
     <div className="cr-card">
       <div className="cr-card-top">
@@ -121,13 +174,13 @@ function CRCompanyCard({ company, matchScore, saved, onToggleSave }) {
           {company.abbreviation || company.name.charAt(0)}
         </div>
         <div className="cr-card-acts">
-          <button className={`cr-act ${saved ? 'saved' : ''}`} onClick={() => onToggleSave(company.id)}
+          <button className={'cr-act' + (saved ? ' saved' : '')} onClick={() => onToggleSave(company.id)}
             title={saved ? 'Unsave' : 'Save'}>
-            <i className={`ti ${saved ? 'ti-heart-filled' : 'ti-heart'}`}></i>
+            <Icon name={saved ? 'star' : 'star'} size={16} style={saved ? { fill: 'var(--coral)', color: 'var(--coral)' } : {}} />
           </button>
           {company.website_url && (
             <a className="cr-act" href={company.website_url} target="_blank" rel="noopener noreferrer" title="Visit website">
-              <i className="ti ti-external-link"></i>
+              <Icon name="external" size={16} />
             </a>
           )}
         </div>
@@ -136,11 +189,19 @@ function CRCompanyCard({ company, matchScore, saved, onToggleSave }) {
       <div className="cr-card-sector">{(company.sector_tags || []).join(' · ')}</div>
       {company.description && <p className="cr-card-desc">{company.description}</p>}
       <div className="cr-card-badges">
-        <span className="cr-badge-size"><i className="ti ti-users"></i> {company.size_tier}</span>
-        <span className={`cr-badge-hire ${company.hiring_detected ? 'on' : ''}`}>
-          {company.hiring_detected ? 'Hiring' : 'Not detected'}
+        <span className="cr-badge-size">
+          <Icon name="users" size={11} /> {company.size_tier}
         </span>
+        <span className={'cr-badge-hire' + (hiringActive ? ' on' : '')}>
+          {hiringLabel}
+        </span>
+        {recentlyAdded && (
+          <span className="cr-badge-new">Recently Added</span>
+        )}
       </div>
+      {recentlyChecked && (
+        <div className="cr-updated-label">{crDaysAgo(company.hiring_last_checked)}</div>
+      )}
       <div className="cr-match">
         <div className="cr-match-track">
           <div className="cr-match-fill" style={{ width: matchScore + '%', background: barColor }}></div>
@@ -161,13 +222,13 @@ function CRTagPicker({ selected, onToggle, tagGroups, label }) {
         {selected.map(t => (
           <span key={t} className="cr-tag">
             {t}
-            <button onClick={() => onToggle(t)}><i className="ti ti-x"></i></button>
+            <button onClick={() => onToggle(t)}>✕</button>
           </span>
         ))}
       </div>
       {!open ? (
         <button className="cr-add-btn" onClick={() => setOpen(true)}>
-          <i className="ti ti-plus"></i> Add {label.toLowerCase()}
+          <Icon name="plus" size={12} /> Add {label.toLowerCase()}
         </button>
       ) : (
         <div className="cr-tag-picker">
@@ -176,14 +237,14 @@ function CRTagPicker({ selected, onToggle, tagGroups, label }) {
               <div className="cr-tag-group-label">{group}</div>
               <div className="cr-chips">
                 {tags.map(t => (
-                  <button key={t} className={`cr-chip ${selected.includes(t) ? 'on' : ''}`}
+                  <button key={t} className={'cr-chip' + (selected.includes(t) ? ' on' : '')}
                     onClick={() => onToggle(t)}>{t}</button>
                 ))}
               </div>
             </div>
           ))}
           <button className="cr-add-btn" onClick={() => setOpen(false)} style={{ marginTop: 6 }}>
-            <i className="ti ti-chevron-up"></i> Close
+            <Icon name="chevron-down" size={12} style={{ transform: 'rotate(180deg)' }} /> Close
           </button>
         </div>
       )}
@@ -199,14 +260,16 @@ function CRPrefsPanel({ interests, roleTargets, onToggleInterest, onToggleRole,
   const panelRef = useRef(null);
 
   return (
-    <div className={`cr-prefs ${isOverlay ? 'cr-prefs-overlay' : ''}`} ref={panelRef}>
+    <div className={'cr-prefs' + (isOverlay ? ' cr-prefs-overlay' : '')} ref={panelRef}>
       {isOverlay && (
         <div className="cr-prefs-overlay-header">
-          <span className="cr-prefs-head" style={{ margin: 0 }}><i className="ti ti-adjustments-horizontal"></i> My Preferences</span>
-          <button className="cr-icon-btn" onClick={onClose}><i className="ti ti-x"></i></button>
+          <span className="cr-prefs-head" style={{ margin: 0 }}>
+            <Icon name="sliders" size={15} /> My Preferences
+          </span>
+          <button className="cr-icon-btn" onClick={onClose}>✕</button>
         </div>
       )}
-      {!isOverlay && <div className="cr-prefs-head"><i className="ti ti-adjustments-horizontal"></i> Preferences</div>}
+      {!isOverlay && <div className="cr-prefs-head"><Icon name="sliders" size={15} /> Preferences</div>}
 
       <CRTagPicker selected={interests} onToggle={onToggleInterest}
         tagGroups={CR_INTEREST_TAGS} label="Your Interests" />
@@ -229,11 +292,11 @@ function CRPrefsPanel({ interests, roleTargets, onToggleInterest, onToggleRole,
               </div>
               <div className="cr-saved-meta">
                 <div className="cr-saved-name">{c.name}</div>
-                <div className={`cr-saved-status ${c.hiring_detected ? 'on' : ''}`}>
+                <div className={'cr-saved-status' + (c.hiring_detected ? ' on' : '')}>
                   {c.hiring_detected ? 'Hiring' : 'Watching'}
                 </div>
               </div>
-              <button className={`cr-saved-bell ${sc.notify ? 'active' : ''}`}
+              <button className={'cr-saved-bell' + (sc.notify ? ' active' : '')}
                 onClick={() => {
                   if (!isPaid) {
                     onNotify(null, true);
@@ -242,7 +305,7 @@ function CRPrefsPanel({ interests, roleTargets, onToggleInterest, onToggleRole,
                   onNotify(c.name, false, sc.id, !sc.notify);
                 }}
                 title={isPaid ? 'Get alerts' : 'Upgrade to enable alerts'}>
-                <i className={`ti ${sc.notify ? 'ti-bell-ringing' : 'ti-bell'}`}></i>
+                <Icon name="bell" size={13} />
               </button>
             </div>
           );
@@ -253,11 +316,11 @@ function CRPrefsPanel({ interests, roleTargets, onToggleInterest, onToggleRole,
         <div className="cr-pg-label">Notifications</div>
         <div className="cr-sw-row" onClick={() => setNotifications(n => ({ ...n, hiring: !n.hiring }))}>
           <span>Hiring alerts</span>
-          <div className={`cr-sw ${notifications.hiring ? 'on' : ''}`}><div className="cr-sw-t"></div></div>
+          <div className={'cr-sw' + (notifications.hiring ? ' on' : '')}><div className="cr-sw-t"></div></div>
         </div>
         <div className="cr-sw-row" onClick={() => setNotifications(n => ({ ...n, newCompanies: !n.newCompanies }))}>
           <span>New companies added</span>
-          <div className={`cr-sw ${notifications.newCompanies ? 'on' : ''}`}><div className="cr-sw-t"></div></div>
+          <div className={'cr-sw' + (notifications.newCompanies ? ' on' : '')}><div className="cr-sw-t"></div></div>
         </div>
       </div>
     </div>
@@ -269,9 +332,68 @@ function CRToast({ message, onClose }) {
   if (!message) return null;
   return (
     <div className="cr-toast">
-      <i className="ti ti-bell-ringing"></i>
+      <Icon name="bell" size={16} />
       <span>{message}</span>
-      <button onClick={onClose}><i className="ti ti-x"></i></button>
+      <button onClick={onClose}>✕</button>
+    </div>
+  );
+}
+
+/* ── Admin Draft Panel ── */
+function CRDraftPanel({ drafts, onPublish, onDiscard }) {
+  const [open, setOpen] = useState(true);
+
+  if (drafts.length === 0) return null;
+
+  return (
+    <div className="cr-draft-panel">
+      <button className="cr-draft-toggle" onClick={() => setOpen(!open)}>
+        <span className="cr-draft-toggle-left">
+          <Icon name="chevron-down" size={14} style={{ transform: open ? 'rotate(0)' : 'rotate(-90deg)', transition: 'transform 0.2s' }} />
+          Draft Companies
+        </span>
+        <span className="cr-draft-count">{drafts.length}</span>
+      </button>
+      {open && (
+        <div className="cr-draft-table-wrap">
+          <table className="cr-draft-table">
+            <thead>
+              <tr>
+                <th>Company</th>
+                <th>Sectors</th>
+                <th>Size</th>
+                <th>Description</th>
+                <th>Discovered</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {drafts.map(c => (
+                <tr key={c.id}>
+                  <td>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div className="cr-draft-dot" style={{ background: c.logo_color || 'var(--sapphire)' }}>
+                        {c.abbreviation || c.name.charAt(0)}
+                      </div>
+                      {c.name}
+                    </div>
+                  </td>
+                  <td>{(c.sector_tags || []).join(', ')}</td>
+                  <td>{c.size_tier}</td>
+                  <td className="cr-draft-desc">{c.description}</td>
+                  <td>{new Date(c.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</td>
+                  <td>
+                    <div className="cr-draft-actions">
+                      <button className="cr-draft-publish" onClick={() => onPublish(c.id)}>Publish</button>
+                      <button className="cr-draft-discard" onClick={() => onDiscard(c.id, c.name)}>Discard</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }
@@ -281,13 +403,18 @@ function CRToast({ message, onClose }) {
    ══════════════════════════════════════════════════════════════ */
 function CorporateRadarScreen({ member }) {
   const sb = window._supabase;
+  const isAdmin = member && member.isAdmin;
 
   /* ── Data state ── */
-  const [companies, setCompanies] = useState([]);
+  const [allCompanies, setAllCompanies] = useState([]);
   const [savedCompanies, setSavedCompanies] = useState([]);
   const [interests, setInterests] = useState([]);
   const [roleTargets, setRoleTargets] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  /* Derived: published companies (what the grid shows) and drafts (admin only) */
+  const companies = useMemo(() => allCompanies.filter(c => c.status === 'published'), [allCompanies]);
+  const drafts = useMemo(() => isAdmin ? allCompanies.filter(c => c.status === 'draft') : [], [allCompanies, isAdmin]);
 
   /* ── UI state ── */
   const [search, setSearch] = useState('');
@@ -299,11 +426,28 @@ function CorporateRadarScreen({ member }) {
   const [notifications, setNotifications] = useState({ hiring: true, newCompanies: false });
   const [toast, setToast] = useState(null);
   const prefsRef = useRef(null);
+  const toastTimer = useRef(null);
 
   const showToast = (msg) => {
+    clearTimeout(toastTimer.current);
     setToast(msg);
-    setTimeout(() => setToast(null), 3000);
+    toastTimer.current = setTimeout(() => setToast(null), 3000);
   };
+
+  /* ── Debounced Supabase upserts (400ms) ── */
+  const debouncedSaveInterests = useRef(
+    crDebounce(async (newInterests) => {
+      const uid = await window.getActiveUserId();
+      await sb.from('profiles').update({ radar_interests: newInterests }).eq('id', uid);
+    }, 400)
+  ).current;
+
+  const debouncedSaveRoleTargets = useRef(
+    crDebounce(async (newTargets) => {
+      const uid = await window.getActiveUserId();
+      await sb.from('profiles').update({ radar_role_targets: newTargets }).eq('id', uid);
+    }, 400)
+  ).current;
 
   /* ── Load data on mount ── */
   useEffect(() => {
@@ -316,7 +460,7 @@ function CorporateRadarScreen({ member }) {
         sb.from('profiles').select('radar_interests, radar_role_targets').eq('id', uid).single()
       ]);
 
-      if (companiesRes.data) setCompanies(companiesRes.data);
+      if (companiesRes.data) setAllCompanies(companiesRes.data);
       if (savedRes.data) setSavedCompanies(savedRes.data);
       if (profileRes.data) {
         setInterests(profileRes.data.radar_interests || []);
@@ -327,32 +471,22 @@ function CorporateRadarScreen({ member }) {
     load();
   }, []);
 
-  /* ── Save interests to Supabase on change ── */
-  const saveInterests = useCallback(async (newInterests) => {
-    const uid = await window.getActiveUserId();
-    await sb.from('profiles').update({ radar_interests: newInterests }).eq('id', uid);
-  }, []);
-
-  const saveRoleTargets = useCallback(async (newTargets) => {
-    const uid = await window.getActiveUserId();
-    await sb.from('profiles').update({ radar_role_targets: newTargets }).eq('id', uid);
-  }, []);
-
+  /* ── Toggle interest tag → immediate state update + debounced save ── */
   const toggleInterest = useCallback((tag) => {
     setInterests(prev => {
       const next = prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag];
-      saveInterests(next);
+      debouncedSaveInterests(next);
       return next;
     });
-  }, [saveInterests]);
+  }, [debouncedSaveInterests]);
 
   const toggleRole = useCallback((tag) => {
     setRoleTargets(prev => {
       const next = prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag];
-      saveRoleTargets(next);
+      debouncedSaveRoleTargets(next);
       return next;
     });
-  }, [saveRoleTargets]);
+  }, [debouncedSaveRoleTargets]);
 
   /* ── Save / unsave company ── */
   const toggleSave = useCallback(async (companyId) => {
@@ -381,7 +515,27 @@ function CorporateRadarScreen({ member }) {
       setSavedCompanies(prev => prev.map(sc => sc.id === savedId ? { ...sc, notify: newNotifyValue } : sc));
     }
     if (companyName && newNotifyValue) {
-      showToast(`You’ll be notified when ${companyName} posts new roles.`);
+      showToast("You'll be notified when " + companyName + " posts new roles.");
+    }
+  }, []);
+
+  /* ── Publish / Discard draft (admin only) ── */
+  const publishDraft = useCallback(async (companyId) => {
+    const { error } = await sb.from('radar_companies')
+      .update({ status: 'published', published_at: new Date().toISOString() })
+      .eq('id', companyId);
+    if (!error) {
+      setAllCompanies(prev => prev.map(c => c.id === companyId ? { ...c, status: 'published', published_at: new Date().toISOString() } : c));
+      showToast('Company published and now visible to members.');
+    }
+  }, []);
+
+  const discardDraft = useCallback(async (companyId, companyName) => {
+    if (!window.confirm('Discard "' + companyName + '"? This will permanently delete it.')) return;
+    const { error } = await sb.from('radar_companies').delete().eq('id', companyId);
+    if (!error) {
+      setAllCompanies(prev => prev.filter(c => c.id !== companyId));
+      showToast('"' + companyName + '" discarded.');
     }
   }, []);
 
@@ -394,10 +548,20 @@ function CorporateRadarScreen({ member }) {
 
   const savedIdSet = useMemo(() => new Set(savedCompanies.map(sc => sc.company_id)), [savedCompanies]);
 
+  /* ── Global last refreshed (most recent hiring_last_checked) ── */
+  const lastRefreshed = useMemo(() => {
+    let latest = null;
+    for (const c of companies) {
+      if (c.hiring_last_checked) {
+        const t = new Date(c.hiring_last_checked).getTime();
+        if (!latest || t > latest) latest = t;
+      }
+    }
+    return latest ? new Date(latest).toISOString() : null;
+  }, [companies]);
+
   /* ── Filtering ── */
   const now = Date.now();
-  const sevenDays = 7 * 24 * 60 * 60 * 1000;
-  const thirtyDays = 30 * 24 * 60 * 60 * 1000;
 
   const filtered = useMemo(() => {
     return companies.filter(c => {
@@ -411,11 +575,11 @@ function CorporateRadarScreen({ member }) {
       if (filters.sizes.length && !filters.sizes.includes(c.size_tier)) return false;
       if (filters.hiringWeek) {
         if (!c.hiring_detected) return false;
-        if (!c.hiring_last_checked || (now - new Date(c.hiring_last_checked).getTime()) > sevenDays) return false;
+        if (!c.hiring_last_checked || (now - new Date(c.hiring_last_checked).getTime()) > CR_SEVEN_DAYS) return false;
       }
       if (filters.hiringMonth) {
         if (!c.hiring_detected) return false;
-        if (!c.hiring_last_checked || (now - new Date(c.hiring_last_checked).getTime()) > thirtyDays) return false;
+        if (!c.hiring_last_checked || (now - new Date(c.hiring_last_checked).getTime()) > CR_THIRTY_DAYS) return false;
       }
       if (filters.matchFilter === 'high' && (scoreMap[c.id] || 0) < 70) return false;
       return true;
@@ -438,7 +602,7 @@ function CorporateRadarScreen({ member }) {
   const statsTotal = filtered.length;
   const statsMatching = filtered.filter(c => (scoreMap[c.id] || 0) >= 70).length;
   const statsHiring = filtered.filter(c => c.hiring_detected && c.hiring_last_checked &&
-    (now - new Date(c.hiring_last_checked).getTime()) <= sevenDays).length;
+    (now - new Date(c.hiring_last_checked).getTime()) <= CR_SEVEN_DAYS).length;
 
   /* ── Desktop prefs visibility check ── */
   const [isWide, setIsWide] = useState(window.innerWidth >= 1100);
@@ -485,29 +649,33 @@ function CorporateRadarScreen({ member }) {
         </div>
         <div className="cr-header-center">
           <div className="cr-search">
-            <i className="ti ti-search"></i>
+            <Icon name="search" size={16} />
             <input type="text" placeholder="Search companies..." value={search}
               onChange={e => setSearch(e.target.value)} />
             {search && (
-              <button className="cr-search-x" onClick={() => setSearch('')}>
-                <i className="ti ti-x"></i>
-              </button>
+              <button className="cr-search-x" onClick={() => setSearch('')}>✕</button>
             )}
           </div>
         </div>
         <div className="cr-header-right">
           <button className="cr-btn-coral" onClick={handlePrefsClick}>
-            <i className="ti ti-heart"></i> <span className="cr-btn-label">My Preferences</span>
+            <Icon name="star" size={14} /> <span className="cr-btn-label">My Preferences</span>
           </button>
         </div>
       </div>
+
+      {/* Admin draft panel */}
+      {isAdmin && drafts.length > 0 && (
+        <CRDraftPanel drafts={drafts} onPublish={publishDraft} onDiscard={discardDraft} />
+      )}
 
       {/* Body: filters | grid | prefs */}
       <div className="cr-body">
         <CRFilterPanel filters={filters} setFilters={setFilters} />
 
         <div className="cr-center">
-          <CRStatsBar total={statsTotal} matching={statsMatching} hiring={statsHiring} />
+          <CRStatsBar total={statsTotal} matching={statsMatching} hiring={statsHiring}
+            lastRefreshed={lastRefreshed} />
 
           <div className="cr-grid-toolbar">
             <span className="cr-grid-count">{sorted.length} {sorted.length === 1 ? 'company' : 'companies'}</span>
@@ -527,7 +695,7 @@ function CorporateRadarScreen({ member }) {
 
           {sorted.length === 0 && (
             <div className="cr-empty-state">
-              <i className="ti ti-radar-2"></i>
+              <Icon name="radar" size={36} style={{ opacity: 0.3, display: 'block', marginBottom: 12 }} />
               <p>No companies match your current filters.</p>
               <button onClick={() => {
                 setFilters({ sectors: [], sizes: [], hiringWeek: false, hiringMonth: false, matchFilter: 'all' });
