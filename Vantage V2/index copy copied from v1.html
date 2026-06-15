@@ -1,0 +1,1230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Vantage · by MEGA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css" />
+
+<!-- Dynamic boxed favicon: white box for dark browser UI, blue box otherwise -->
+<link rel="icon" type="image/svg+xml" href="favicon-dark.svg" media="(prefers-color-scheme: dark)" />
+<link rel="icon" type="image/svg+xml" href="favicon-light.svg" />
+
+<style>
+/* ── Login screen styles ───────────────────────────────────── */
+.login-root {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg, #f5f6fa);
+  padding: 24px;
+}
+
+.login-card {
+  background: var(--bg-elev, #fff);
+  border: 1px solid var(--border, #e8eaed);
+  border-radius: 20px;
+  padding: 48px 44px 40px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 4px 32px rgba(0,0,0,0.07);
+}
+
+.login-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 36px;
+}
+
+.login-brand-logo {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: #0F52BA;
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 24px;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+}
+
+.login-brand-text .brand-mark {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px;
+  letter-spacing: 0.12em;
+  color: var(--text, #0a0a0a);
+  line-height: 1;
+}
+
+.login-brand-text .brand-sub {
+  font-size: 11px;
+  font-family: 'Fira Sans Extra Condensed', sans-serif;
+  color: var(--text-3, #aaa);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+.login-heading {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 32px;
+  letter-spacing: 0.06em;
+  color: var(--text, #0a0a0a);
+  line-height: 1;
+  margin-bottom: 6px;
+}
+
+.login-sub {
+  font-size: 13px;
+  color: var(--text-3, #999);
+  margin-bottom: 28px;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.login-field {
+  margin-bottom: 14px;
+}
+
+.login-field label {
+  display: block;
+  font-size: 11px;
+  font-family: 'Fira Sans Extra Condensed', sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-2, #555);
+  margin-bottom: 6px;
+}
+
+.login-field input {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1.5px solid var(--border, #e0e2e8);
+  border-radius: 10px;
+  font-size: 14px;
+  font-family: 'Montserrat', sans-serif;
+  background: var(--bg, #f5f6fa);
+  color: var(--text, #0a0a0a);
+  outline: none;
+  transition: border-color 0.15s;
+  box-sizing: border-box;
+}
+
+.login-field input:focus {
+  border-color: #0F52BA;
+  background: var(--bg-elev, #fff);
+}
+
+.login-btn-primary {
+  width: 100%;
+  padding: 13px;
+  background: #0F52BA;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 6px;
+  transition: background 0.15s, opacity 0.15s;
+  letter-spacing: 0.02em;
+}
+
+.login-btn-primary:hover { background: #0d47a0; }
+.login-btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.login-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0;
+}
+
+.login-divider::before,
+.login-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border, #e0e2e8);
+}
+
+.login-divider span {
+  font-size: 11px;
+  color: var(--text-3, #aaa);
+  font-family: 'Fira Sans Extra Condensed', sans-serif;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.login-btn-google {
+  width: 100%;
+  padding: 12px;
+  background: var(--bg-elev, #fff);
+  color: var(--text, #0a0a0a);
+  border: 1.5px solid var(--border, #e0e2e8);
+  border-radius: 10px;
+  font-size: 14px;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.login-btn-google:hover {
+  border-color: #0F52BA;
+  background: var(--bg, #f5f6fa);
+}
+
+.login-btn-magic {
+  width: 100%;
+  padding: 12px;
+  background: none;
+  color: #0F52BA;
+  border: 1.5px solid transparent;
+  border-radius: 10px;
+  font-size: 13px;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: background 0.15s;
+}
+
+.login-btn-magic:hover { background: rgba(15,82,186,0.06); }
+
+.login-toggle {
+  text-align: center;
+  margin-top: 20px;
+  font-size: 12px;
+  color: var(--text-3, #999);
+  font-family: 'Montserrat', sans-serif;
+}
+
+.login-toggle button {
+  background: none;
+  border: none;
+  color: #0F52BA;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: 'Montserrat', sans-serif;
+  padding: 0;
+  margin-left: 4px;
+}
+
+.login-error {
+  background: rgba(255,107,107,0.1);
+  border: 1px solid rgba(255,107,107,0.3);
+  color: #c0392b;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 12px;
+  font-family: 'Montserrat', sans-serif;
+  margin-bottom: 14px;
+  line-height: 1.5;
+}
+
+.login-success {
+  background: rgba(163,228,219,0.2);
+  border: 1px solid rgba(163,228,219,0.5);
+  color: #2E8A7B;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 12px;
+  font-family: 'Montserrat', sans-serif;
+  margin-bottom: 14px;
+  line-height: 1.5;
+}
+
+.login-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: var(--bg, #f5f6fa);
+  font-family: 'Montserrat', sans-serif;
+  font-size: 14px;
+  color: var(--text-3, #999);
+  gap: 10px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.spin {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--border, #e0e2e8);
+  border-top-color: #0F52BA;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<!-- React -->
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<!-- Supabase SDK — must load before supabase.jsx -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+
+<!-- App files — supabase.jsx must be first -->
+<script type="text/babel" src="supabase.jsx"></script>
+<script type="text/babel" src="data.jsx"></script>
+<script type="text/babel" src="shell.jsx"></script>
+<script type="text/babel" src="calendar.jsx"></script>
+<script type="text/babel" src="tour.jsx"></script>
+<script type="text/babel" src="modals.jsx"></script>
+<script type="text/babel" src="eisenhower.jsx"></script>
+<script type="text/babel" src="milestone.jsx"></script>
+<script type="text/babel" src="dashboard.jsx"></script>
+<script type="text/babel" src="tasks.jsx"></script>
+<script type="text/babel" src="sessions.jsx"></script>
+<script type="text/babel" src="wins.jsx"></script>
+<script type="text/babel" src="roadmap.jsx"></script>
+<script type="text/babel" src="resources.jsx"></script>
+<script type="text/babel" src="chat.jsx"></script>
+<script type="text/babel" src="profile.jsx"></script>
+<script type="text/babel" src="corporate-radar.jsx"></script>
+<script type="text/babel" src="admin.jsx"></script>
+<script type="text/babel" src="adminplus.jsx"></script>
+<script type="text/babel" src="adminchat.jsx"></script>
+<script type="text/babel" src="analytics.jsx"></script>
+<script type="text/babel" src="roadmapbuilder.jsx"></script>
+
+<script type="text/babel">
+
+const { useState, useEffect } = React;
+
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "theme": "light",
+  "accent": "sapphire",
+  "gameMode": "subtle"
+}/*EDITMODE-END*/;
+
+const ACCENT_MAP = {
+  sapphire: { c: '#0F52BA', soft: '#E6EEFB', dark: '#4F86E6', softDark: 'rgba(79,134,230,0.14)' },
+  coral: { c: '#E05757', soft: '#FFE4E4', dark: '#FF8989', softDark: 'rgba(255,107,107,0.14)' },
+  teal: { c: '#2E8A7B', soft: '#D9F1EC', dark: '#6ED1BF', softDark: 'rgba(79,183,166,0.16)' },
+  violet: { c: '#6B4FD0', soft: '#EAE4FA', dark: '#9E87E8', softDark: 'rgba(124,92,214,0.2)' },
+  forest: { c: '#2F7D4A', soft: '#DDF0E2', dark: '#6CB98A', softDark: 'rgba(47,125,74,0.18)' },
+  ink: { c: '#0A0A0A', soft: '#E6E6E6', dark: '#E6E6E6', softDark: 'rgba(255,255,255,0.1)' }
+};
+
+const isFriday = () => new Date().getDay() === 5;
+
+// ── Login Screen ─────────────────────────────────────────────
+function LoginScreen({ onAuth }) {
+  const [mode, setMode] = useState('signin');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  const clearMessages = () => { setError(''); setSuccess(''); };
+
+  const handleSignIn = async () => {
+    if (!email || !password) { setError('Please enter your email and password.'); return; }
+    setLoading(true); clearMessages();
+    const { data, error } = await authSignIn(email, password);
+    setLoading(false);
+    if (error) { setError(error.message); return; }
+    onAuth(data.user);
+  };
+
+  const handleSignUp = async () => {
+    if (!email || !password || !fullName) { setError('Please fill in all fields.'); return; }
+    setLoading(true); clearMessages();
+    const { data, error } = await authSignUp(email, password, fullName);
+    setLoading(false);
+    if (error) { setError(error.message); return; }
+    setSuccess('Account created! Check your email to confirm before signing in.');
+    setMode('signin');
+  };
+
+  const handleMagicLink = async () => {
+    if (!email) { setError('Please enter your email address.'); return; }
+    setLoading(true); clearMessages();
+    const { error } = await authMagicLink(email);
+    setLoading(false);
+    if (error) { setError(error.message); return; }
+    setSuccess('Magic link sent! Check your inbox and click the link to sign in.');
+  };
+
+  const handleGoogle = async () => {
+    clearMessages();
+    const { error } = await authGoogle();
+    if (error) setError(error.message);
+  };
+
+  return (
+    <div className="login-root">
+      <div className="login-card">
+        <div className="login-brand">
+          <div className="login-brand-logo"><img src="logo-white.svg" alt="Vantage" /></div>
+          <div className="login-brand-text">
+            <div className="brand-mark">VANTAGE</div>
+            <div className="brand-sub">by MEGA</div>
+          </div>
+        </div>
+
+        <div className="login-heading">
+          {mode === 'signup' ? 'Create account' : mode === 'magic' ? 'Magic link' : 'Welcome back'}
+        </div>
+        <div className="login-sub">
+          {mode === 'signup'
+            ? 'Join MEGA and start your growth journey.'
+            : mode === 'magic'
+            ? "Enter your email and we'll send you a sign-in link."
+            : 'Sign in to your Vantage workspace.'}
+        </div>
+
+        {error && <div className="login-error">{error}</div>}
+        {success && <div className="login-success">{success}</div>}
+
+        {mode === 'signup' && (
+          <div className="login-field">
+            <label>Full name</label>
+            <input type="text" placeholder="Your full name" value={fullName} onChange={e => setFullName(e.target.value)} />
+          </div>
+        )}
+
+        <div className="login-field">
+          <label>Email</label>
+          <input type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter' && mode === 'signin') handleSignIn(); }} />
+        </div>
+
+        {mode !== 'magic' && (
+          <div className="login-field">
+            <label>Password</label>
+            <input type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter' && mode === 'signin') handleSignIn(); }} />
+          </div>
+        )}
+
+        <button className="login-btn-primary"
+          onClick={mode === 'signup' ? handleSignUp : mode === 'magic' ? handleMagicLink : handleSignIn}
+          disabled={loading}>
+          {loading ? 'Please wait...' : mode === 'signup' ? 'Create account' : mode === 'magic' ? 'Send magic link' : 'Sign in'}
+        </button>
+
+        {mode === 'signin' && (
+          <button className="login-btn-magic" onClick={() => { setMode('magic'); clearMessages(); }}>
+            Sign in without a password
+          </button>
+        )}
+
+        <div className="login-divider"><span>or</span></div>
+
+        <button className="login-btn-google" onClick={handleGoogle}>
+          <svg width="18" height="18" viewBox="0 0 18 18">
+            <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/>
+            <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/>
+            <path fill="#FBBC05" d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957C.347 6.175 0 7.55 0 9s.348 2.825.957 4.039l3.007-2.332z"/>
+            <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z"/>
+          </svg>
+          Continue with Google
+        </button>
+
+        <div className="login-toggle">
+          {mode === 'signup'
+            ? <span>Already have an account? <button onClick={() => { setMode('signin'); clearMessages(); }}>Sign in</button></span>
+            : mode === 'magic'
+            ? <span>Back to <button onClick={() => { setMode('signin'); clearMessages(); }}>email sign in</button></span>
+            : <span>Don't have an account? <button onClick={() => { setMode('signup'); clearMessages(); }}>Create one</button></span>
+          }
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Remote Banner ────────────────────────────────────────────
+function RemoteBanner({ member, onExit }) {
+  return (
+    <div className="remote-banner">
+      <Icon name="admin" size={16} />
+      <span>You are viewing as <strong>{member.name}</strong></span>
+      <span style={{ opacity: 0.75, fontSize: 11, marginLeft: 4 }}>({member.plan} · Admin read-only)</span>
+      <button className="exit-btn" onClick={onExit}>Exit</button>
+    </div>
+  );
+}
+
+// ── Sidebar with Wins ────────────────────────────────────────
+const WORDMARK_COLORS = {
+  sapphire: '#0F52BA',
+  coral: '#FF6B6B',
+  teal: '#2E8A7B',
+  violet: '#6B4FD0',
+  forest: '#2F7D4A',
+  ink: '#000000'
+};
+
+function SidebarWithWins({ route, setRoute, admin, isRealAdmin, unread, member, onOpenProfile, viewingAs, theme, accent }) {
+  const memberItems = [
+    { k: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
+    { k: 'tasks', label: 'Tasks & Goals', icon: 'tasks' },
+    { k: 'sessions', label: 'Sessions', icon: 'sessions' },
+    { k: 'roadmap', label: 'Roadmap', icon: 'roadmap' },
+    { k: 'wins', label: 'Wins Board', icon: 'trophy' },
+    { k: 'resources', label: 'Resources', icon: 'resources' },
+    { k: 'chat', label: 'Chat', icon: 'chat', badge: unread },
+    { k: 'profile', label: 'Profile', icon: 'profile' }
+  ];
+
+  const careerItems = [
+    { k: 'corporate-radar', label: 'Corporate Radar', icon: 'radar' }
+  ];
+
+  const adminItems = [
+    { k: 'admin-overview', label: 'Overview', icon: 'dashboard' },
+    { k: 'admin-members', label: 'Members', icon: 'users' },
+    { k: 'admin-tasks', label: 'Tasks & Goals', icon: 'tasks' },
+    { k: 'admin-roadmap', label: 'Roadmap Builder', icon: 'roadmap' },
+    { k: 'admin-sessions', label: 'Sessions', icon: 'sessions' },
+    { k: 'admin-messaging', label: 'Chat', icon: 'chat' },
+    { k: 'admin-wins', label: 'Wins Board', icon: 'trophy' },
+    { k: 'admin-resources', label: 'Resources', icon: 'resources' },
+    { k: 'admin-analytics', label: 'Analytics', icon: 'chart' }
+  ];
+
+  const items = admin ? adminItems : memberItems;
+
+  return (
+    <aside className={"sidebar" + (admin ? " admin" : "")}>
+      <div className="brand brand-wordmark">
+        <svg className="brand-wordmark-img" viewBox="0 0 886 223" xmlns="http://www.w3.org/2000/svg" aria-label="Vantage" role="img">
+          <g transform="translate(-43.990772,234.000000) scale(0.100000,-0.100000)"
+            fill={admin ? '#FFFFFF' : theme === 'dark' ? '#F0EFEF' : (WORDMARK_COLORS[accent] || '#0F52BA')} stroke="none">
+            <path d="M452 2328 c-31 -31 -1 -69 64 -83 17 -3 41 -16 52 -28 32 -35 493 -1346 502 -1430 4 -37 13 -74 20 -82 18 -22 272 -22 290 0 7 8 16 48 20 88 6 56 56 210 228 702 121 347 226 646 235 666 18 43 56 75 109 91 48 14 71 43 57 70 -9 17 -26 18 -238 18 -188 0 -231 -3 -241 -15 -29 -35 8 -64 104 -80 55 -9 90 -47 82 -88 -9 -45 -409 -1197 -416 -1197 -10 0 -431 1214 -430 1242 0 23 6 29 38 37 20 6 42 11 47 11 34 0 85 23 90 41 15 47 3 49 -309 49 -214 0 -295 -3 -304 -12z M5063 2048 c-12 -13 -42 -60 -67 -106 -79 -143 -68 -133 -176 -141 l-75 -6 0 -30 c0 -28 4 -31 69 -52 38 -12 71 -25 75 -28 3 -4 9 -187 12 -408 4 -282 10 -414 19 -442 19 -60 93 -129 159 -149 118 -35 259 -7 335 67 45 43 69 99 59 137 -8 31 -48 26 -73 -10 -58 -82 -184 -80 -224 4 -14 30 -16 84 -16 430 l0 396 130 0 c126 0 132 1 156 25 20 20 23 28 14 45 -10 19 -21 20 -155 20 l-145 0 -1 108 c-1 138 -6 156 -45 160 -21 2 -36 -4 -51 -20z M7938 1964 c-54 -16 -144 -93 -173 -148 -22 -41 -26 -42 -86 -20 -68 25 -268 31 -349 10 -237 -60 -370 -216 -371 -431 -1 -169 78 -292 241 -375 l45 -23 -34 -14 c-82 -34 -121 -85 -121 -160 0 -44 5 -58 30 -86 16 -19 43 -40 60 -47 39 -16 38 -26 -3 -34 -18 -3 -64 -21 -103 -40 -128 -61 -182 -160 -149 -271 27 -92 119 -156 275 -191 110 -25 405 -25 519 -1 168 36 279 100 336 191 27 45 30 57 30 137 0 81 -2 90 -30 131 -62 87 -172 133 -430 179 -256 45 -335 74 -335 124 0 13 8 32 18 43 16 19 23 19 96 10 109 -13 242 9 343 57 294 142 338 519 83 717 l-35 27 34 35 c18 19 44 37 57 40 30 8 76 -15 98 -49 21 -31 68 -54 101 -47 13 2 34 15 47 29 19 20 23 36 23 83 0 51 -4 63 -29 89 -29 30 -80 52 -121 50 -11 0 -41 -7 -67 -15z m-403 -240 c123 -42 195 -185 195 -390 0 -121 -19 -184 -74 -239 -113 -112 -303 -69 -382 86 -57 113 -72 300 -33 406 47 127 164 181 294 137z m-51 -1134 c319 -61 396 -104 383 -217 -6 -56 -27 -86 -82 -118 -131 -77 -467 -68 -589 16 -94 64 -114 186 -43 266 32 37 116 83 151 83 11 0 92 -14 180 -30z M2488 1820 c-150 -18 -252 -64 -328 -147 -62 -68 -82 -139 -56 -195 22 -46 60 -62 132 -56 43 4 61 11 82 32 24 24 28 35 32 121 6 104 22 133 87 161 46 20 140 17 188 -5 91 -42 104 -82 105 -322 l0 -186 -52 14 c-74 20 -256 19 -342 -1 -96 -23 -147 -47 -201 -97 -71 -65 -90 -108 -90 -204 0 -70 4 -86 28 -127 53 -91 157 -140 302 -141 131 -1 240 35 331 109 l42 33 6 -31 c3 -17 22 -45 41 -64 90 -85 288 -56 338 49 35 73 8 111 -43 62 -30 -29 -73 -36 -93 -16 -9 9 -14 121 -18 394 -4 289 -9 391 -19 421 -19 53 -91 129 -145 155 -82 38 -212 55 -327 41z m197 -654 l40 -12 3 -139 2 -140 -50 -34 c-106 -72 -250 -79 -322 -14 -81 72 -74 240 13 306 70 52 199 66 314 33z M4057 1820 c-69 -12 -180 -68 -267 -134 l-75 -56 -5 77 c-3 43 -9 83 -13 90 -19 30 -66 25 -204 -23 -169 -57 -193 -69 -193 -94 0 -26 29 -40 84 -40 79 0 76 18 76 -413 0 -287 -3 -388 -13 -407 -9 -18 -29 -30 -69 -43 -56 -18 -72 -34 -62 -62 10 -24 34 -26 278 -23 205 3 230 5 240 21 16 26 -4 50 -55 64 -24 7 -50 21 -56 30 -10 13 -13 104 -13 375 l0 357 71 50 c91 65 151 84 238 79 81 -4 127 -31 163 -93 23 -39 23 -46 26 -392 2 -232 -1 -359 -7 -372 -7 -11 -33 -26 -65 -35 -45 -13 -66 -30 -66 -51 0 -2 7 -11 16 -19 13 -14 50 -16 249 -16 128 0 240 3 249 6 10 4 16 18 16 35 0 26 -5 30 -54 44 -30 9 -60 23 -68 32 -10 13 -14 101 -18 402 -5 376 -6 387 -28 431 -36 74 -78 117 -145 149 -69 34 -152 45 -230 31z M6118 1820 c-150 -18 -252 -64 -328 -147 -62 -68 -82 -139 -56 -195 22 -46 60 -62 132 -56 43 4 61 11 82 32 24 24 28 35 32 121 6 104 22 133 87 161 46 20 140 17 188 -5 91 -42 104 -82 105 -322 l0 -186 -52 14 c-74 20 -256 19 -342 -1 -96 -23 -147 -47 -201 -97 -71 -65 -90 -108 -90 -204 0 -70 4 -86 28 -127 53 -91 157 -140 302 -141 131 -1 240 35 331 109 l42 33 6 -31 c3 -17 22 -45 41 -64 90 -85 288 -56 338 49 35 73 8 111 -43 62 -30 -29 -73 -36 -93 -16 -9 9 -14 121 -18 394 -4 289 -9 391 -19 421 -19 53 -91 129 -145 155 -82 38 -212 55 -327 41z m197 -654 l40 -12 3 -139 2 -140 -50 -34 c-106 -72 -250 -79 -322 -14 -81 72 -74 240 13 306 70 52 199 66 314 33z M8734 1821 c-238 -38 -409 -203 -458 -443 -43 -210 5 -416 126 -544 66 -70 131 -111 221 -139 212 -67 441 -23 576 112 64 65 104 150 99 212 -3 31 -7 36 -27 36 -19 0 -34 -14 -66 -60 -75 -111 -183 -161 -334 -153 -190 9 -319 122 -366 319 -8 35 -15 74 -15 86 l0 22 376 3 376 3 30 34 c30 33 30 36 25 110 -13 185 -123 328 -293 381 -75 23 -197 32 -270 21z m149 -104 c85 -36 140 -125 155 -248 9 -75 7 -98 -12 -111 -6 -4 -129 -8 -273 -8 l-263 0 0 23 c0 41 30 147 54 196 29 57 110 133 158 148 48 16 143 15 181 0z"/>
+          </g>
+        </svg>
+        <div className="brand-sub">{admin ? "Admin · MEGA" : "by MEGA"}</div>
+      </div>
+
+      <div className="sb-section">{admin ? "Control" : "Workspace"}</div>
+      {items.map(it =>
+        <button key={it.k} className={"sb-item" + (route === it.k ? " active" : "")} onClick={() => setRoute(it.k)}>
+          <span className="sb-icon"><Icon name={it.icon} size={18} /></span>
+          <span>{it.label}</span>
+          {it.badge ? <span className="sb-badge">{it.badge}</span> : null}
+        </button>
+      )}
+
+      {!admin && <>
+        <div className="sb-section" style={{ marginTop: 8 }}>Career</div>
+        {careerItems.map(it =>
+          <button key={it.k} className={"sb-item" + (route === it.k ? " active" : "")} onClick={() => setRoute(it.k)}>
+            <span className="sb-icon"><Icon name={it.icon} size={18} /></span>
+            <span>{it.label}</span>
+          </button>
+        )}
+      </>}
+
+      <div className="sb-spacer" />
+      <div className="sb-divider" />
+
+      {admin && (
+        <button className="sb-item" onClick={() => setRoute('dashboard')}>
+          <span className="sb-icon"><Icon name="logout" size={18} /></span>
+          <span>Back to member view</span>
+        </button>
+      )}
+      {isRealAdmin && !admin && (
+        <button className="sb-item" onClick={() => setRoute('admin-overview')}>
+          <span className="sb-icon"><Icon name="admin" size={18} /></span>
+          <span>Admin view</span>
+        </button>
+      )}
+
+      {!admin && (
+        <button className="user-card" onClick={onOpenProfile} style={{ cursor: 'pointer', textAlign: 'left' }}>
+          <Avatar initials={member.initials} color={member.avatarColor} size={36} />
+          <div className="user-card-meta">
+            <div className="user-name">{member.firstName} {member.lastName}</div>
+            <div className="user-sub">
+              <span>{member.product}</span>
+              <span style={{ opacity: 0.5 }}>·</span>
+              <span>{member.plan}</span>
+            </div>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <div className="user-points">{(member.points / 1000).toFixed(1)}k</div>
+            <div className="user-sub" style={{ fontSize: 10 }}>PTS</div>
+          </div>
+        </button>
+      )}
+
+      {admin && (
+        <div className="user-card" style={{ cursor: 'default' }}>
+          <Avatar initials={member.initials || 'ZR'} color="#FF6B6B" size={36} />
+          <div className="user-card-meta">
+            <div className="user-name" style={{ color: '#fff' }}>{member.firstName} {member.lastName}</div>
+            <div className="user-sub">Founder · MEGA</div>
+          </div>
+        </div>
+      )}
+    </aside>
+  );
+}
+
+// ── Main App ─────────────────────────────────────────────────
+function App() {
+  const [authUser, setAuthUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [liveProfile, setLiveProfile] = useState(null);
+  // Live XP + weekday streak (seeded from the profile, then kept current by awardXp/syncBadges)
+  const [xpTotal, setXpTotal] = useState(0);
+  const [streakDays, setStreakDays] = useState(0);
+  useEffect(() => {
+    if (liveProfile) {
+      setXpTotal(liveProfile.xp_total || 0);
+      setStreakDays(liveProfile.streak_days || 0);
+    }
+  }, [liveProfile && liveProfile.id]);
+
+  const [tw, setTw] = useState(() => {
+    try { return { ...TWEAK_DEFAULTS, ...JSON.parse(localStorage.getItem('vantage-tweaks') || '{}') }; }
+    catch { return TWEAK_DEFAULTS; }
+  });
+  const [route, setRoute] = useState(() => localStorage.getItem('vantage-route') || 'dashboard');
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [tweaksOpen, setTweaksOpen] = useState(false);
+  const [rewards, setRewards] = useState([]);
+  const [viewingAs, setViewingAs] = useState(null);
+  const [viewProfile, setViewProfile] = useState(null); // impersonated member's full profile (View As)
+  const [selectedAdminMember, setSelectedAdminMember] = useState(null);
+
+  // Onboarding is now gated server-side via profiles.onboarded_at — set once the profile loads.
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  // Legal consent gate — server-side via profiles.legal_accepted_at. Blocks app entry until accepted.
+  const [showLegalConsent, setShowLegalConsent] = useState(false);
+  const [tourActive, setTourActive] = useState(false);
+  const [tourBubble, setTourBubble] = useState(() => !localStorage.getItem('vantage-tour-seen'));
+  const [tourCompleted, setTourCompleted] = useState(() => !!localStorage.getItem('vantage-tour-done'));
+  const [showIntention, setShowIntention] = useState(() => {
+    const today = new Date().toDateString();
+    return !localStorage.getItem('vantage-intention-' + today);
+  });
+  const [showReflection, setShowReflection] = useState(() => {
+    const today = new Date().toDateString();
+    return isFriday() && !localStorage.getItem('vantage-reflection-' + today);
+  });
+  const [intention, setIntention] = useState(() => {
+    const today = new Date().toDateString();
+    const saved = localStorage.getItem('vantage-intention-data-' + today);
+    return saved ? JSON.parse(saved) : null;
+  });
+
+  const [liveTasks, setLiveTasks] = useState([]);
+  const [liveGoals, setLiveGoals] = useState([]);
+  const [upcomingSessions, setUpcomingSessions] = useState([]);
+  const [dataLoading, setDataLoading] = useState(true);
+
+  // ── Shared focus timer (single active session, reflected on Dashboard + Tasks) ──
+  const [focusTimer, setFocusTimer] = useState(null);
+  const [focusTick, setFocusTick] = useState(0);
+  const focus = {
+    state: focusTimer,
+    start: (linked, minutes) => {
+      const mins = Math.max(1, minutes || 25);
+      const sec = mins * 60;
+      setFocusTimer({
+        linked: linked || null,
+        selectedMin: mins,
+        totalSec: sec,
+        endsAt: Date.now() + sec * 1000,
+        remainingSec: sec,
+        running: true,
+        paused: false,
+        startedAtMs: Date.now(),
+      });
+    },
+    pause: () => setFocusTimer(t => (t && t.running && !t.paused)
+      ? { ...t, paused: true, remainingSec: window.focusTimerRemaining(t), endsAt: null }
+      : t),
+    resume: () => setFocusTimer(t => (t && t.running && t.paused)
+      ? { ...t, paused: false, endsAt: Date.now() + (t.remainingSec || 0) * 1000 }
+      : t),
+    reset: () => setFocusTimer(null),
+    save: async () => {
+      const t = focusTimer;
+      if (!t) return null;
+      const remaining = window.focusTimerRemaining(t);
+      const elapsedSec = Math.max(0, t.totalSec - remaining);
+      if (elapsedSec <= 0) { setFocusTimer(null); return null; }
+      const elapsedMin = Math.max(1, Math.round(elapsedSec / 60));
+      try {
+        const { data: { user } } = await window._supabase.auth.getUser();
+        const { data: row, error } = await window._supabase.from('focus_sessions').insert({
+          user_id: user.id,
+          duration_minutes: elapsedMin,
+          selected_minutes: t.selectedMin,
+          label: t.linked ? t.linked.label : null,
+          subject: t.linked ? t.linked.subject : null,
+          linked_id: t.linked ? String(t.linked.id) : null,
+          linked_kind: t.linked ? t.linked.kind : null,
+          started_at: new Date(t.startedAtMs).toISOString(),
+        }).select('id').single();
+        if (error) throw error;
+        // +10 base, plus +15 per full 30-minute block of elapsed focus time
+        const focusXp = 10 + Math.floor(elapsedMin / 30) * 15;
+        await awardXp('focus_session', focusXp, row ? row.id : null, false, true);
+      } catch (e) { console.error('Failed to save focus session:', e.message); }
+      const linked = t.linked;
+      setFocusTimer(null);
+      setFocusTick(x => x + 1);
+      return { elapsedMin, linked };
+    },
+  };
+
+  const loadUserData = async (userId) => {
+    const [tasksRes, goalsRes] = await Promise.all([
+      window._supabase
+        .from('tasks')
+        .select('*, roadmap_step:roadmap_steps(title, goal_id)')
+        .eq('user_id', userId)
+        .order('order_index', { ascending: true }),
+      window._supabase
+        .from('goals')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+    ]);
+    setLiveTasks(tasksRes.data ? tasksRes.data.map(t => ({
+      ...t,
+      subtasks: [],
+      points: 50,
+      subject: t.subject || 'General',
+      impact: [2.5, 2.5],
+      due: t.due_date ? new Date(t.due_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : null,
+      dueSort: t.due_date ? Math.ceil((new Date(t.due_date) - new Date()) / 86400000) : 999,
+      priority: t.priority || 'Routine',
+    })) : []);
+    setLiveGoals(goalsRes.data || []);
+    setDataLoading(false);
+    try {
+      const cs = await window.fetchCalSessions();
+      setUpcomingSessions((cs || []).filter(s => s.status === 'upcoming'));
+    } catch (e) { /* sessions are non-critical for load */ }
+  };
+
+  useEffect(() => {
+    getCurrentUser().then(user => {
+      setAuthUser(user || false);
+      setAuthLoading(false);
+      if (user) loadProfile(user.id);
+    });
+
+    const { data: { subscription } } = window._supabase.auth.onAuthStateChange((_event, session) => {
+      const user = session?.user || false;
+      setAuthUser(user);
+      if (user) loadProfile(user.id);
+      else setLiveProfile(null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const checkAndApplyTrialExpiry = async (profile, userId) => {
+    // Only trial accounts are subject to expiry
+    const exemptTypes = ['paid', 'mega_management', 'free'];
+    if (exemptTypes.includes(profile.account_type)) return profile;
+    if (profile.account_type !== 'trial') return profile;
+    if (!profile.trial_expires_at) return profile;
+    if (new Date(profile.trial_expires_at) >= new Date()) return profile;
+
+    // Trial has lapsed — mark expired in Supabase
+    if (profile.member_status !== 'expired') {
+      await window._supabase.from('profiles')
+        .update({ member_status: 'expired' })
+        .eq('id', userId);
+    }
+    return { ...profile, member_status: 'expired' };
+  };
+
+  const loadProfile = async (userId) => {
+    const { data } = await getProfile(userId);
+    if (data) {
+      let profile = data;
+
+      // Apply trial expiry check first
+      profile = await checkAndApplyTrialExpiry(profile, userId);
+
+      // If still pending (not expired), mark active on first login
+      if (profile.member_status === 'pending') {
+        await window._supabase.from('profiles')
+          .update({ member_status: 'active' })
+          .eq('id', userId);
+        profile = { ...profile, member_status: 'active' };
+      }
+
+      setLiveProfile(profile);
+      loadUserData(userId);
+      return;
+    }
+
+    // Fallback: profile was created by email (invite flow) before the user's UUID existed.
+    // Re-fetch by email, link to this UUID, and activate.
+    const { data: { user } } = await window._supabase.auth.getUser();
+    if (!user?.email) return;
+
+    const { data: emailProfile } = await window._supabase
+      .from('profiles')
+      .select('*')
+      .eq('email', user.email)
+      .maybeSingle();
+
+    if (emailProfile) {
+      let profile = emailProfile;
+      profile = await checkAndApplyTrialExpiry(profile, userId);
+      const newStatus = profile.member_status === 'expired' ? 'expired' : 'active';
+      await window._supabase.from('profiles')
+        .update({ id: userId, member_status: newStatus })
+        .eq('email', user.email);
+      setLiveProfile({ ...profile, id: userId, member_status: newStatus });
+      loadUserData(userId);
+    }
+  };
+
+  // Show the onboarding wizard the first time this account ever signs in (server-side flag).
+  useEffect(() => {
+    if (liveProfile && !liveProfile.onboarded_at) setShowOnboarding(true);
+  }, [liveProfile && liveProfile.id, liveProfile && liveProfile.onboarded_at]);
+
+  // Legal consent gate: show until profiles.legal_accepted_at is set. Blocks the onboarding wizard too.
+  useEffect(() => {
+    if (liveProfile && !liveProfile.legal_accepted_at) setShowLegalConsent(true);
+    else setShowLegalConsent(false);
+  }, [liveProfile && liveProfile.id, liveProfile && liveProfile.legal_accepted_at]);
+
+  const acceptLegal = async () => {
+    const nowIso = new Date().toISOString();
+    const { data: { user } } = await window._supabase.auth.getUser();
+    if (!user) return;
+    await window._supabase.from('profiles').update({ legal_accepted_at: nowIso }).eq('id', user.id);
+    setLiveProfile(p => p ? { ...p, legal_accepted_at: nowIso } : p);
+    setShowLegalConsent(false);
+  };
+
+  // ── View As: keep an impersonated user id on window so child fetchers can scope reads
+  // to the member. Admin has is_admin() SELECT override on tasks/goals/sessions/focus/
+  // points/subtasks/wins, so explicit user_id filters by the impersonated id work under RLS.
+  useEffect(() => {
+    window._viewingAsId = viewingAs ? viewingAs.id : null;
+    window.getActiveUserId = async () => {
+      if (window._viewingAsId) return window._viewingAsId;
+      const { data: { user } } = await window._supabase.auth.getUser();
+      return user ? user.id : null;
+    };
+  }, [viewingAs && viewingAs.id]);
+
+  // Reload the dataset (profile + tasks/goals + upcoming sessions) when entering/leaving View As.
+  // window._viewingAsId is already set by the effect above, so loadUserData → fetchCalSessions
+  // and other child fetchers automatically scope to the impersonated member.
+  useEffect(() => {
+    let active = true;
+    if (viewingAs) {
+      (async () => {
+        const { data: prof } = await window._supabase
+          .from('profiles').select('*').eq('id', viewingAs.id).maybeSingle();
+        if (!active) return;
+        setViewProfile(prof || null);
+        loadUserData(viewingAs.id);
+      })();
+    } else {
+      setViewProfile(null);
+      if (authUser && authUser.id) loadUserData(authUser.id);
+    }
+    return () => { active = false; };
+  }, [viewingAs && viewingAs.id]);
+
+  useEffect(() => { localStorage.setItem('vantage-tweaks', JSON.stringify(tw)); }, [tw]);
+  useEffect(() => { localStorage.setItem('vantage-route', route); }, [route]);
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', tw.theme);
+    document.body.setAttribute('data-game', tw.gameMode);
+    const a = ACCENT_MAP[tw.accent] || ACCENT_MAP.sapphire;
+    const root = document.documentElement;
+    root.style.setProperty('--accent', tw.theme === 'dark' ? a.dark : a.c);
+    root.style.setProperty('--accent-soft', tw.theme === 'dark' ? a.softDark : a.soft);
+  }, [tw]);
+
+  useEffect(() => {
+    const handle = e => {
+      if (!e.data?.type) return;
+      if (e.data.type === '__activate_edit_mode') setTweaksOpen(true);
+      if (e.data.type === '__deactivate_edit_mode') setTweaksOpen(false);
+    };
+    window.addEventListener('message', handle);
+    try { window.parent.postMessage({ type: '__edit_mode_available' }, '*'); } catch {}
+    return () => window.removeEventListener('message', handle);
+  }, []);
+
+  const updateTweak = patch => {
+    setTw(t => {
+      const next = { ...t, ...patch };
+      try { window.parent.postMessage({ type: '__edit_mode_set_keys', edits: patch }, '*'); } catch {}
+      return next;
+    });
+  };
+
+  const onReward = points => {
+    const id = Date.now() + Math.random();
+    setRewards(r => [...r, { id, points }]);
+    setTimeout(() => setRewards(r => r.filter(x => x.id !== id)), 1700);
+  };
+
+  // ── XP awarding (server-side atomic via award_xp; additive only) ──
+  // qualifies=true also pings record_activity to advance the weekday streak.
+  const awardXp = async (action, xp, ref = null, once = false, qualifies = false) => {
+    try {
+      const r1 = await window._supabase.rpc('award_xp', { p_action: action, p_xp: xp, p_ref: ref || null, p_once: !!once });
+      let total = null;
+      if (!r1.error && r1.data) {
+        if ((r1.data.awarded || 0) > 0) onReward(r1.data.awarded);
+        if (r1.data.total != null) total = r1.data.total;
+      } else if (r1.error) {
+        console.error('award_xp failed:', r1.error.message);
+      }
+      if (qualifies) {
+        const d = new Date();
+        const ds = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        const r2 = await window._supabase.rpc('record_activity', { p_today: ds });
+        if (!r2.error && r2.data) {
+          if ((r2.data.bonus || 0) > 0) onReward(r2.data.bonus);
+          if (r2.data.streak != null) setStreakDays(r2.data.streak);
+          if (r2.data.total != null) total = r2.data.total;
+        }
+      }
+      if (total != null) setXpTotal(total);
+    } catch (e) { console.error('awardXp error:', e.message); }
+  };
+
+  // Award +25 for any newly-earned badges (idempotent; called from the Profile badge wall)
+  const syncBadges = async (keys) => {
+    if (!keys || !keys.length) return;
+    try {
+      const { data, error } = await window._supabase.rpc('sync_badges', { p_keys: keys });
+      if (error) { console.error('sync_badges failed:', error.message); return; }
+      if (data) {
+        if ((data.awarded || 0) > 0) onReward(data.awarded);
+        if (data.total != null) setXpTotal(data.total);
+      }
+    } catch (e) { console.error('syncBadges error:', e.message); }
+  };
+
+  // Joining a session = attendance: town hall +30 (everyone), 1:1 +50 (Breakthrough only).
+  const onJoin = (session) => {
+    if (session && session.link) window.open(session.link, '_blank', 'noopener');
+    if (session && session.id) {
+      const isTownHall = session.type === 'Town Hall' || session.isTownHall;
+      if (isTownHall) {
+        awardXp('town_hall', 30, session.id, true);
+      } else if ((liveProfile && liveProfile.membership_tier) === 'breakthrough') {
+        awardXp('one_to_one', 50, session.id, true);
+      }
+    }
+  };
+  const onViewAs = member => { setViewingAs(member); setRoute('dashboard'); };
+  const exitViewAs = () => { setViewingAs(null); setRoute('admin-members'); };
+
+  const setIntentionHandler = item => {
+    setIntention(item);
+    setShowIntention(false);
+    const today = new Date().toDateString();
+    localStorage.setItem('vantage-intention-' + today, '1');
+    localStorage.setItem('vantage-intention-data-' + today, JSON.stringify(item));
+  };
+  const skipIntention = () => {
+    setShowIntention(false);
+    localStorage.setItem('vantage-intention-' + new Date().toDateString(), 'skipped');
+  };
+  const submitReflection = data => {
+    setShowReflection(false);
+    localStorage.setItem('vantage-reflection-' + new Date().toDateString(), JSON.stringify(data));
+  };
+
+  const handleSignOut = async () => {
+    await authSignOut();
+    setAuthUser(false);
+    setLiveProfile(null);
+    localStorage.removeItem('vantage-route');
+  };
+
+  // ── Render states ─────────────────────────────────────────
+  // 1. Still checking auth
+  if (authLoading) {
+    return (
+      <div className="login-loading">
+        <div className="spin" />
+        Loading Vantage...
+      </div>
+    );
+  }
+
+  // 2. Not logged in — show login screen
+  if (!authUser) {
+    return <LoginScreen onAuth={user => { setAuthUser(user); loadProfile(user.id); }} />;
+  }
+
+  // 3. Logged in but profile not yet loaded — wait before rendering
+  if (!liveProfile) {
+    return (
+      <div className="login-loading">
+        <div className="spin" />
+        Loading your workspace...
+      </div>
+    );
+  }
+
+  // 3.5. Trial expired — full-screen expiry wall
+  const isTrialExpired =
+    liveProfile.member_status === 'expired' ||
+    (liveProfile.account_type === 'trial' &&
+     liveProfile.trial_expires_at &&
+     new Date(liveProfile.trial_expires_at) < new Date());
+
+  if (isTrialExpired) {
+    const expiryDate = liveProfile.trial_expires_at
+      ? new Date(liveProfile.trial_expires_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+      : null;
+    return (
+      <div style={{ position: 'fixed', inset: 0, background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, zIndex: 999 }}>
+        <div style={{ width: '100%', maxWidth: 480, textAlign: 'center' }}>
+
+          {/* Logo */}
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 12, marginBottom: 40 }}>
+            <div style={{ width: 44, height: 44, borderRadius: 12, background: '#0F52BA', display: 'grid', placeItems: 'center' }}><img src="logo-white.svg" alt="Vantage" style={{ width: 26, height: 26, objectFit: 'contain' }} /></div>
+            <div style={{ textAlign: 'left' }}>
+              <div style={{ fontFamily: 'Bebas Neue, sans-serif', fontSize: 20, letterSpacing: 4, color: 'var(--text)' }}>VANTAGE</div>
+              <div style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 11, fontWeight: 600, letterSpacing: 3, textTransform: 'uppercase', color: 'var(--text-3)' }}>by MEGA</div>
+            </div>
+          </div>
+
+          {/* Accent bar */}
+          <div style={{ width: 48, height: 4, borderRadius: 999, background: '#FF6B6B', margin: '0 auto 28px' }} />
+
+          {/* Heading */}
+          <div style={{ fontFamily: 'Bebas Neue, sans-serif', fontSize: 52, lineHeight: 0.95, letterSpacing: 2, color: 'var(--text)', marginBottom: 20 }}>
+            Your trial<br />has ended.
+          </div>
+
+          {/* Date */}
+          {expiryDate && (
+            <div style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 13, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', color: '#E8B24C', marginBottom: 24 }}>
+              Expired {expiryDate}
+            </div>
+          )}
+
+          {/* Message */}
+          <div style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 14, color: 'var(--text-2)', lineHeight: 1.8, marginBottom: 36 }}>
+            To continue your Vantage journey, reach out to your MEGA mentor<br />or contact us at{' '}
+            <a href="mailto:contact@mega-mentorship.com" style={{ color: '#0F52BA', fontWeight: 700, textDecoration: 'none' }}>
+              contact@mega-mentorship.com
+            </a>
+          </div>
+
+          {/* Sign out */}
+          <button
+            onClick={handleSignOut}
+            style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 12, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', color: 'var(--text-3)', background: 'none', border: '1px solid var(--border)', borderRadius: 8, padding: '10px 24px', cursor: 'pointer' }}>
+            Sign out
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // 4. Logged in and profile ready — build member object and show platform
+  // In View As mode, the visible profile fields come from the impersonated member (viewProfile).
+  // The real admin's identity stays on `isAdmin` so capability checks remain correct.
+  const effectiveProfile = viewProfile || liveProfile;
+  const member = {
+    firstName: (effectiveProfile.full_name || '').split(' ')[0] || 'Member',
+    lastName: (effectiveProfile.full_name || '').split(' ').slice(1).join(' ') || '',
+    initials: (effectiveProfile.full_name || 'M').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2),
+    email: effectiveProfile.email || '',
+    avatarColor: '#0F52BA',
+    plan: effectiveProfile.membership_tier === 'breakthrough' ? 'Breakthrough' : 'Foundations',
+    membershipTier: effectiveProfile.membership_tier || 'foundations',
+    product: 'Mentorship',
+    accountType: effectiveProfile.account_type || 'member',
+    trialExpiresAt: effectiveProfile.trial_expires_at || null,
+    joinedAt: effectiveProfile.joined_at || null,
+    xp: viewingAs ? (effectiveProfile.xp_total || 0) : xpTotal,
+    points: viewingAs ? (effectiveProfile.xp_total || 0) : xpTotal,
+    streakDays: viewingAs ? (effectiveProfile.streak_days || 0) : streakDays,
+    learningThisMonth: '0h 0m',
+    interests: effectiveProfile.interests || [],
+    notificationPrefs: effectiveProfile.notification_preferences || {},
+    role: effectiveProfile.job_title || '',
+    status: effectiveProfile.employment_status || '',
+    field: effectiveProfile.field || '',
+    focus: effectiveProfile.focus_area || '',
+    isAdmin: liveProfile.role === 'admin', // real admin capability — keep on real profile
+  };
+  window._currentMember = member;
+  window.awardXp = awardXp;
+  window.syncBadges = syncBadges;
+
+  const isRealAdmin = liveProfile.role === 'admin';
+
+  // Non-admin users should never land on an admin route — redirect them out
+  if (!isRealAdmin && route.startsWith('admin-')) {
+    setRoute('dashboard');
+  }
+
+  const isAdmin = !viewingAs && isRealAdmin && route.startsWith('admin-');
+
+  let screen;
+  switch (route) {
+    case 'dashboard':
+      screen = <DashboardScreen member={member} onJoin={onJoin} onGoto={setRoute} gameMode={tw.gameMode}
+        intention={intention} onClearIntention={() => setIntention(null)}
+        tasks={liveTasks} goals={liveGoals} setTasks={setLiveTasks}
+        focus={focus} focusTick={focusTick} />;
+      break;
+    case 'tasks':
+      screen = <TasksScreen
+        tasks={liveTasks} setTasks={setLiveTasks}
+        goals={liveGoals} setGoals={setLiveGoals}
+        dataLoading={dataLoading}
+        focus={focus} focusTick={focusTick}
+        onReward={onReward} />;
+      break;
+    case 'sessions': screen = <SessionsScreen onJoin={onJoin} isAdmin={false} />; break;
+    case 'wins': screen = <WinsScreen />; break;
+    case 'roadmap': screen = <RoadmapScreen />; break;
+    case 'resources': screen = <ResourcesScreen member={member} adminAll={isRealAdmin && !viewingAs} onStartTour={() => { setTourBubble(false); setTourActive(true); }} tourCompleted={tourCompleted} />; break;
+    case 'chat': screen = <ChatScreen />; break;
+    case 'corporate-radar': screen = <CorporateRadarScreen member={member} />; break;
+    case 'profile': screen = <ProfileScreen member={member} theme={tw.theme} setTheme={t => updateTweak({ theme: t })} onSignOut={handleSignOut} onProfileSaved={fields => setLiveProfile(p => ({ ...p, ...fields }))} />; break;
+    case 'admin-overview': screen = <AdminOverview onPick={setRoute} />; break;
+    case 'admin-members':
+      screen = selectedAdminMember
+        ? <AdminMemberDetail member={selectedAdminMember} onBack={() => setSelectedAdminMember(null)} onViewAs={onViewAs} />
+        : <AdminMembers onViewAs={onViewAs} onOpenDetail={m => setSelectedAdminMember(m)} />;
+      break;
+    case 'admin-tasks': screen = <AdminTasks />; break;
+    case 'admin-roadmap': screen = <RoadmapBuilder />; break;
+    case 'admin-sessions': screen = <AdminSessions />; break;
+    case 'admin-messaging': screen = <BulkMessaging />; break;
+    case 'admin-wins': screen = <WinsScreen />; break;
+    case 'admin-resources': screen = <AdminResources />; break;
+    case 'admin-analytics': screen = <AdminAnalytics />; break;
+    default:
+      screen = <DashboardScreen member={member} onJoin={onJoin} onGoto={setRoute} gameMode={tw.gameMode}
+        intention={intention} onClearIntention={() => setIntention(null)} tasks={liveTasks} goals={liveGoals} setTasks={setLiveTasks}
+        focus={focus} focusTick={focusTick} />;
+  }
+
+  return (
+    <div className="app" data-screen-label={isAdmin ? "Admin" : "Member"}>
+      <SidebarWithWins
+        route={route}
+        setRoute={r => { if (!viewingAs || !r.startsWith('admin-')) setRoute(r); }}
+        admin={isAdmin}
+        isRealAdmin={isRealAdmin}
+        unread={0}
+        member={viewingAs
+          ? { ...member, firstName: viewingAs.name.split(' ')[0], initials: viewingAs.initials, avatarColor: viewingAs.color }
+          : member}
+        onOpenProfile={() => setRoute('profile')}
+        viewingAs={viewingAs}
+        theme={tw.theme}
+        accent={tw.accent}
+      />
+
+      <main className="main">
+        <div className="main-inner">
+          {viewingAs && <RemoteBanner member={viewingAs} onExit={exitViewAs} />}
+          <Topbar
+            theme={tw.theme} setTheme={t => updateTweak({ theme: t })}
+            onOpenTweaks={() => setTweaksOpen(true)}
+            notifCount={upcomingSessions.length} onOpenNotifs={() => setNotifOpen(true)} />
+          {/* Keying on the effective user id forces screen remount on View As toggle,
+              so every screen-level useEffect refetches with the impersonated user. */}
+          <React.Fragment key={viewingAs ? viewingAs.id : (authUser && authUser.id) || 'anon'}>
+            {screen}
+          </React.Fragment>
+        </div>
+      </main>
+
+      <NotifPanel open={notifOpen} onClose={() => setNotifOpen(false)} sessions={upcomingSessions} onGoToSettings={() => setRoute('profile')} />
+      <TweaksPanel
+        open={tweaksOpen} onClose={() => setTweaksOpen(false)}
+        theme={tw.theme} setTheme={t => updateTweak({ theme: t })}
+        accent={tw.accent} setAccent={a => updateTweak({ accent: a })} />
+
+      {tourBubble && !showOnboarding && !showLegalConsent && (
+        <TourBubble
+          onStart={() => { setTourBubble(false); localStorage.setItem('vantage-tour-seen', '1'); setTourActive(true); }}
+          onDismiss={() => { setTourBubble(false); localStorage.setItem('vantage-tour-seen', '1'); }}
+        />
+      )}
+
+      {tourActive && (
+        <TourController
+          onNavigate={r => setRoute(r)}
+          onClose={() => { setTourActive(false); setTourCompleted(true); localStorage.setItem('vantage-tour-done', '1'); }}
+        />
+      )}
+
+      {showLegalConsent && (
+        <LegalConsentModal onAccept={acceptLegal} />
+      )}
+
+      {!showLegalConsent && showOnboarding && (
+        <OnboardingWizard onComplete={async () => {
+          setShowOnboarding(false);
+          const nowIso = new Date().toISOString();
+          const { data: { user } } = await window._supabase.auth.getUser();
+          if (user) {
+            await window._supabase.from('profiles').update({ onboarded_at: nowIso }).eq('id', user.id);
+            setLiveProfile(p => p ? { ...p, onboarded_at: nowIso } : p);
+          }
+        }} />
+      )}
+      {!showLegalConsent && !showOnboarding && showReflection && (
+        <ReflectionModal onSubmit={submitReflection} onLater={() => setShowReflection(false)} />
+      )}
+      {!showLegalConsent && !showOnboarding && !showReflection && showIntention && (
+        <IntentionModal tasks={liveTasks} goals={liveGoals} onSet={setIntentionHandler} onSkip={skipIntention} />
+      )}
+
+      {rewards.map(r =>
+        <div key={r.id} className="point-pop">
+          <Icon name="star" size={14} /><span>+{r.points}</span><span className="val">XP</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
