@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Vantage V3 - Wins Board</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "inverse-surface": "#e2e2e8",
+                      "inverse-primary": "#1d59c1",
+                      "surface-container": "#1e2024",
+                      "secondary-container": "#901822",
+                      "on-tertiary": "#003733",
+                      "tertiary-fixed-dim": "#92d2ca",
+                      "surface-dim": "#111317",
+                      "primary-container": "#0f52ba",
+                      "surface": "#111317",
+                      "surface-container-high": "#282a2e",
+                      "tertiary": "#92d2ca",
+                      "on-secondary": "#68000f",
+                      "inverse-on-surface": "#2f3035",
+                      "on-secondary-fixed-variant": "#8c1520",
+                      "error-container": "#93000a",
+                      "error": "#ffb4ab",
+                      "on-background": "#e2e2e8",
+                      "tertiary-container": "#1e625b",
+                      "on-secondary-fixed": "#410006",
+                      "on-surface-variant": "#c3c6d5",
+                      "on-tertiary-fixed-variant": "#00504a",
+                      "outline-variant": "#434653",
+                      "on-primary": "#002c6f",
+                      "on-error": "#690005",
+                      "secondary-fixed": "#ffdad8",
+                      "secondary": "#ffb3b0",
+                      "outline": "#8d909e",
+                      "on-surface": "#e2e2e8",
+                      "surface-bright": "#37393e",
+                      "primary-fixed-dim": "#b0c6ff",
+                      "surface-tint": "#b0c6ff",
+                      "surface-container-highest": "#333539",
+                      "on-error-container": "#ffdad6",
+                      "primary": "#b0c6ff",
+                      "surface-container-low": "#1a1c20",
+                      "primary-fixed": "#d9e2ff",
+                      "on-tertiary-fixed": "#00201d",
+                      "tertiary-fixed": "#aeefe6",
+                      "on-primary-fixed": "#001945",
+                      "on-primary-container": "#bcceff",
+                      "on-secondary-container": "#ff9e9b",
+                      "on-primary-fixed-variant": "#00419c",
+                      "surface-variant": "#333539",
+                      "secondary-fixed-dim": "#ffb3b0",
+                      "on-tertiary-container": "#9adbd2",
+                      "surface-container-lowest": "#0c0e12",
+                      "background": "#111317"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "gutter": "24px",
+                      "container-padding-desktop": "32px",
+                      "stack-md": "16px",
+                      "stack-sm": "8px",
+                      "stack-lg": "32px",
+                      "unit": "4px",
+                      "container-padding-mobile": "16px"
+              },
+              "fontFamily": {
+                      "display-lg-mobile": ["Montserrat"],
+                      "body-lg": ["Montserrat"],
+                      "headline-md": ["Montserrat"],
+                      "label-md": ["Montserrat"],
+                      "headline-lg": ["Montserrat"],
+                      "display-lg": ["Montserrat"],
+                      "body-md": ["Montserrat"],
+                      "body-sm": ["Montserrat"]
+              },
+              "fontSize": {
+                      "display-lg-mobile": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                      "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
+                      "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                      "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "700"}],
+                      "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
+              }
+            },
+          },
+        }
+    </script>
+<style>
+        body {
+            background-color: #0c0e12;
+            color: #e2e2e8;
+            font-family: 'Montserrat', sans-serif;
+        }
+        .glass-panel {
+            background: #161b22;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+        }
+        .sidebar-active {
+            border-left: 4px solid #0f52ba;
+            background: rgba(15, 82, 186, 0.1);
+            color: #b0c6ff;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #333539;
+            border-radius: 10px;
+        }
+        .reaction-chip {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.2s ease;
+        }
+        .reaction-chip:hover {
+            background: rgba(15, 82, 186, 0.1);
+            border-color: #0f52ba;
+        }
+    </style>
+</head>
+<body class="flex min-h-screen overflow-hidden">
+<!-- SIDEBAR ANCHOR -->
+<!-- SideNavBar - Content & Style applied from JSON -->
+<aside class="h-screen w-64 fixed left-0 top-0 flex flex-col py-gutter bg-surface-container border-r border-outline-variant z-50">
+<div class="px-6 mb-10">
+<h1 class="font-headline-md text-headline-md font-extrabold text-primary mb-0.5">Vantage</h1>
+<span class="font-label-md text-label-md text-on-surface-variant tracking-widest uppercase">Professional Suite</span>
+</div>
+<nav class="flex-1 overflow-y-auto px-4 space-y-1 custom-scrollbar">
+<div class="mb-4">
+<p class="font-label-md text-label-md text-outline px-2 py-2 uppercase">Workspace</p>
+<a class="flex items-center gap-3 px-3 py-3 rounded-lg text-on-surface-variant font-body-md text-body-md transition-colors duration-200 hover:bg-surface-bright hover:text-on-surface" href="#">
+<span class="material-symbols-outlined text-[20px]">dashboard</span>
+                    Dashboard
+                </a>
+<a class="flex items-center gap-3 px-3 py-3 rounded-lg text-on-surface-variant font-body-md text-body-md transition-colors duration-200 hover:bg-surface-bright hover:text-on-surface" href="#">
+<span class="material-symbols-outlined text-[20px]">checklist</span>
+                    Tasks
+                </a>
+<a class="flex items-center gap-3 px-3 py-3 rounded-lg text-on-surface-variant font-body-md text-body-md transition-colors duration-200 hover:bg-surface-bright hover:text-on-surface" href="#">
+<span class="material-symbols-outlined text-[20px]">video_chat</span>
+                    Sessions
+                </a>
+<a class="flex items-center gap-3 px-3 py-3 rounded-lg text-on-surface-variant font-body-md text-body-md transition-colors duration-200 hover:bg-surface-bright hover:text-on-surface" href="#">
+<span class="material-symbols-outlined text-[20px]">route</span>
+                    Roadmap
+                </a>
+<a class="flex items-center gap-3 px-3 py-3 rounded-lg font-body-md text-body-md transition-colors duration-200 text-primary border-l-4 border-primary bg-primary-container/10" href="#">
+<span class="material-symbols-outlined text-[20px]">workspace_premium</span>
+                    Wins Board
+                </a>
+<a class="flex items-center gap-3 px-3 py-3 rounded-lg text-on-surface-variant font-body-md text-body-md transition-colors duration-200 hover:bg-surface-bright hover:text-on-surface" href="#">
+<span class="material-symbols-outlined text-[20px]">inventory_2</span>
+                    Resources
+                </a>
+<a class="flex items-center gap-3 px-3 py-3 rounded-lg text-on-surface-variant font-body-md text-body-md transition-colors duration-200 hover:bg-surface-bright hover:text-on-surface" href="#">
+<span class="material-symbols-outlined text-[20px]">chat</span>
+                    Chat
+                </a>
+<a class="flex items-center gap-3 px-3 py-3 rounded-lg text-on-surface-variant font-body-md text-body-md transition-colors duration-200 hover:bg-surface-bright hover:text-on-surface" href="#">
+<span class="material-symbols-outlined text-[20px]">account_circle</span>
+                    Profile
+                </a>
+</div>
+<div class="mb-4">
+<p class="font-label-md text-label-md text-outline px-2 py-2 uppercase">Career</p>
+<a class="flex items-center gap-3 px-3 py-3 rounded-lg text-on-surface-variant font-body-md text-body-md transition-colors duration-200 hover:bg-surface-bright hover:text-on-surface" href="#">
+<span class="material-symbols-outlined text-[20px]">radar</span>
+                    Corporate Radar
+                </a>
+</div>
+</nav>
+<div class="px-4 mt-auto">
+<div class="p-4 rounded-xl bg-surface-container-high border border-outline-variant flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container font-bold">L</div>
+<div class="flex-1 min-w-0">
+<p class="font-label-md text-label-md text-on-surface truncate">Lola</p>
+<p class="text-[10px] text-outline truncate">Mentorship · BreakthroughPTS</p>
+</div>
+<div class="text-right">
+<span class="font-label-md text-label-md text-primary">4.6K</span>
+</div>
+</div>
+</div>
+</aside>
+<!-- TOP BAR ANCHOR -->
+<header class="fixed top-0 right-0 left-64 h-16 flex justify-between items-center px-container-padding-desktop bg-surface/80 backdrop-blur-xl border-b border-outline-variant z-40">
+<div class="flex items-center gap-4 bg-surface-container-high px-4 py-2 rounded-full border border-outline-variant w-96">
+<span class="material-symbols-outlined text-outline text-[20px]">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-body-sm font-body-sm w-full text-on-surface-variant placeholder:text-outline" placeholder="Search wins, members..." type="text"/>
+</div>
+<div class="flex items-center gap-4">
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-bright transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined">dark_mode</span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-bright transition-colors text-on-surface-variant relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-secondary rounded-full"></span>
+</button>
+<div class="h-8 w-[1px] bg-outline-variant mx-2"></div>
+<img alt="User Profile" class="w-10 h-10 rounded-full bg-surface-container-highest border border-outline-variant" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBCOA-E9jTeXZoY44CgQLmoIsyS6f759CQvjiWzWKOY4Fii5oEUz610TDUOrnXpgHGlOqWRBJY2iCusKqJ3AE8tJCXEEvIfRc31XUABub83q5FXOW_UHPPSO4UFzTJmADoonjNbZmyP2ZeVzK0Vt4M9EG4fNmFYeVUbtjcjQhzbPZ_GAaHU58MmMgA0UPfHRN5s1mjXhZ-HsgT_hMtjdVVYwd1oNkj8o4n-3LcQTo-6ecq6o2nLBjmkp-MfC-dw4RjpwBrmIdK0Vguu"/>
+</div>
+</header>
+<!-- MAIN CONTENT CANVAS -->
+<main class="flex-1 ml-64 mt-16 p-container-padding-desktop overflow-y-auto custom-scrollbar h-[calc(100vh-64px)]">
+<div class="max-w-7xl mx-auto flex gap-stack-lg">
+<!-- FEED SECTION -->
+<div class="flex-1 space-y-6">
+<!-- WIN CARD 1 -->
+<div class="glass-panel rounded-2xl p-6 transition-all duration-300 hover:border-primary/50">
+<div class="flex gap-4">
+<div class="w-12 h-12 rounded-full bg-[#1db954]/20 flex items-center justify-center text-[#1db954] font-bold shrink-0">ZM</div>
+<div class="flex-1">
+<div class="flex justify-between items-start mb-2">
+<div class="flex items-center gap-2">
+<span class="font-headline-md text-body-md font-bold text-on-surface">Zachariah Manyapye</span>
+<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-secondary-container text-on-secondary-container uppercase">MEGA</span>
+<span class="text-body-sm font-body-sm text-outline">Founder, MEGA</span>
+</div>
+<span class="text-body-sm font-body-sm text-outline">5 days ago</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mb-6">Created a new wordmark for Vantage!</p>
+<div class="flex gap-2">
+<button class="reaction-chip px-3 py-1.5 rounded-full flex items-center gap-1.5">
+<span class="text-sm">👍</span>
+</button>
+<button class="reaction-chip px-3 py-1.5 rounded-full flex items-center gap-1.5">
+<span class="text-sm">🔥</span>
+</button>
+<button class="reaction-chip px-3 py-1.5 rounded-full flex items-center gap-1.5">
+<span class="text-sm">👏</span>
+</button>
+<button class="reaction-chip px-3 py-1.5 rounded-full flex items-center gap-1.5">
+<span class="text-sm">⭐</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- WIN CARD 2 -->
+<div class="glass-panel rounded-2xl p-6 transition-all duration-300 hover:border-primary/50">
+<div class="flex gap-4">
+<div class="w-12 h-12 rounded-full bg-[#1db954]/20 flex items-center justify-center text-[#1db954] font-bold shrink-0">ZM</div>
+<div class="flex-1">
+<div class="flex justify-between items-start mb-2">
+<div class="flex items-center gap-2">
+<span class="font-headline-md text-body-md font-bold text-on-surface">Zachariah Manyapye</span>
+<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-secondary-container text-on-secondary-container uppercase">MEGA</span>
+<span class="text-body-sm font-body-sm text-outline">Founder, MEGA</span>
+</div>
+<span class="text-body-sm font-body-sm text-outline">6 days ago</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mb-6 leading-relaxed">Deployed our Corporate Radar page to help all members Understand hiring signals and unearth companies in the UAE that they may not have been aware of previously !!!</p>
+<div class="flex gap-2">
+<button class="reaction-chip px-3 py-1.5 rounded-full flex items-center gap-1.5 border-primary/40 bg-primary/10">
+<span class="text-sm">👍</span>
+<span class="text-label-md font-bold text-primary">1</span>
+</button>
+<button class="reaction-chip px-3 py-1.5 rounded-full flex items-center gap-1.5 border-primary/40 bg-primary/10">
+<span class="text-sm">🔥</span>
+<span class="text-label-md font-bold text-primary">1</span>
+</button>
+<button class="reaction-chip px-3 py-1.5 rounded-full flex items-center gap-1.5">
+<span class="text-sm">👏</span>
+</button>
+<button class="reaction-chip px-3 py-1.5 rounded-full flex items-center gap-1.5 border-primary/40 bg-primary/10">
+<span class="text-sm">⭐</span>
+<span class="text-label-md font-bold text-primary">1</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- WIN CARD 3 -->
+<div class="glass-panel rounded-2xl p-6 transition-all duration-300 hover:border-primary/50">
+<div class="flex gap-4">
+<div class="w-12 h-12 rounded-full bg-secondary-container/40 flex items-center justify-center text-secondary font-bold shrink-0">ZM</div>
+<div class="flex-1">
+<div class="flex justify-between items-start mb-2">
+<div class="flex items-center gap-2">
+<span class="font-headline-md text-body-md font-bold text-on-surface">Zion Manyapye</span>
+<span class="text-body-sm font-body-sm text-outline">Foundations</span>
+</div>
+<span class="text-body-sm font-body-sm text-outline">May 26</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mb-6">Happy to join MEGA, huge W</p>
+<div class="flex gap-2">
+<button class="reaction-chip px-3 py-1.5 rounded-full flex items-center gap-1.5 bg-primary/5 border-primary/20">
+<span class="text-sm">👍</span>
+<span class="text-label-md font-bold text-primary">1</span>
+</button>
+<button class="reaction-chip px-3 py-1.5 rounded-full flex items-center gap-1.5 bg-primary/5 border-primary/20">
+<span class="text-sm">🔥</span>
+<span class="text-label-md font-bold text-primary">1</span>
+</button>
+<button class="reaction-chip px-3 py-1.5 rounded-full flex items-center gap-1.5">
+<span class="text-sm">👏</span>
+</button>
+<button class="reaction-chip px-3 py-1.5 rounded-full flex items-center gap-1.5">
+<span class="text-sm">⭐</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- WIN CARD 4 -->
+<div class="glass-panel rounded-2xl p-6 transition-all duration-300 hover:border-primary/50">
+<div class="flex gap-4">
+<div class="w-12 h-12 rounded-full bg-[#1db954]/20 flex items-center justify-center text-[#1db954] font-bold shrink-0">ZM</div>
+<div class="flex-1">
+<div class="flex justify-between items-start mb-2">
+<div class="flex items-center gap-2">
+<span class="font-headline-md text-body-md font-bold text-on-surface">Zachariah Manyapye</span>
+<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-secondary-container text-on-secondary-container uppercase">MEGA</span>
+<span class="text-body-sm font-body-sm text-outline">Founder, MEGA</span>
+</div>
+<span class="text-body-sm font-body-sm text-outline">May 26</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mb-6">We created an XP system for all members!</p>
+<div class="flex gap-2">
+<button class="reaction-chip px-3 py-1.5 rounded-full flex items-center gap-1.5">
+<span class="text-sm">👍</span>
+</button>
+<button class="reaction-chip px-3 py-1.5 rounded-full flex items-center gap-1.5">
+<span class="text-sm">🔥</span>
+</button>
+<button class="reaction-chip px-3 py-1.5 rounded-full flex items-center gap-1.5">
+<span class="text-sm">👏</span>
+</button>
+<button class="reaction-chip px-3 py-1.5 rounded-full flex items-center gap-1.5">
+<span class="text-sm">⭐</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- ASIDE STATS SECTION -->
+<aside class="w-80 space-y-6">
+<!-- ON THE BOARD -->
+<div class="glass-panel rounded-2xl p-6">
+<h2 class="font-label-md text-label-md text-outline uppercase tracking-widest mb-6">On the Board</h2>
+<div class="space-y-4">
+<div class="flex justify-between items-center">
+<span class="text-body-sm font-body-sm text-on-surface-variant">Wins shared</span>
+<span class="text-headline-md text-body-md font-extrabold text-on-surface">5</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-body-sm font-body-sm text-on-surface-variant">Subject areas</span>
+<span class="text-headline-md text-body-md font-extrabold text-on-surface">1</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-body-sm font-body-sm text-on-surface-variant">Community members</span>
+<span class="text-headline-md text-body-md font-extrabold text-on-surface">7</span>
+</div>
+</div>
+</div>
+<!-- RECENT WINS MINI-FEED -->
+<div class="glass-panel rounded-2xl p-6">
+<h2 class="font-label-md text-label-md text-outline uppercase tracking-widest mb-6">Recent Wins</h2>
+<div class="space-y-6">
+<div class="flex gap-3">
+<div class="w-8 h-8 rounded-full bg-[#1db954]/20 flex items-center justify-center text-[#1db954] text-[10px] font-bold shrink-0">ZM</div>
+<div class="min-w-0">
+<p class="text-body-sm font-bold text-on-surface truncate">Zachariah Manyapye</p>
+<p class="text-[12px] text-outline truncate">Created a new wordmark for Vanta...</p>
+</div>
+</div>
+<div class="flex gap-3">
+<div class="w-8 h-8 rounded-full bg-[#1db954]/20 flex items-center justify-center text-[#1db954] text-[10px] font-bold shrink-0">ZM</div>
+<div class="min-w-0">
+<p class="text-body-sm font-bold text-on-surface truncate">Zachariah Manyapye</p>
+<p class="text-[12px] text-outline truncate">Deployed our Corporate Radar page...</p>
+</div>
+</div>
+<div class="flex gap-3">
+<div class="w-8 h-8 rounded-full bg-secondary-container/40 flex items-center justify-center text-secondary text-[10px] font-bold shrink-0">ZM</div>
+<div class="min-w-0">
+<p class="text-body-sm font-bold text-on-surface truncate">Zion Manyapye</p>
+<p class="text-[12px] text-outline truncate">Happy to join MEGA, huge W</p>
+</div>
+</div>
+</div>
+</div>
+<!-- ATMOSPHERIC ELEMENT -->
+<div class="relative overflow-hidden rounded-2xl h-48 group">
+<div class="absolute inset-0 bg-gradient-to-br from-primary-container/20 to-transparent z-10"></div>
+<img class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" data-alt="A cinematic, low-angle shot of a group of diverse professionals standing around a high-tech glowing table in a dark, architectural workspace. The lighting is dominated by Cobalt Blue neon accents and soft volumetric shadows, creating an atmosphere of elite collaboration and technical mastery. The scene is shot with high detail, sharp focus, and a sophisticated editorial aesthetic consistent with a dark-mode professional platform." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD3kt8oXcj3Kazw02Cp_5uwEA9pwKTOwlxVnOnjewHwpCBgqxCFdIxL75nKgj5dUDZrWYTPlIndgYPv5E55mg6G571M33dPA8NyoI3-3AQ4Ghskjws0u6yIIhdpjy6XN1IphB-YW5c0F63sRwgPKRmf345Ubxxwzq0E7YnGJL47l7YlDJhjszJzPd2dqQxSQhnl2YsRpsCyDO_OU0qWaKdEtvxTKc5U9QsmYSsXlkom97vvNGmMmdPVopVGM2TXGzaAf6BiPtaIweu5"/>
+<div class="absolute bottom-4 left-4 z-20">
+<p class="font-headline-md text-body-md font-bold text-white mb-1">Growth Radar</p>
+<p class="text-body-sm text-white/70">Analyze community trends</p>
+</div>
+</div>
+</aside>
+</div>
+</main>
+<!-- FLOATING ACTION BUTTON (Contextual: Home/Dashboard/Wins) -->
+<button class="fixed bottom-8 right-8 w-14 h-14 bg-primary text-on-primary rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all duration-200 group">
+<span class="material-symbols-outlined text-[28px] font-bold">add</span>
+<span class="absolute right-full mr-4 bg-surface-container-highest border border-outline-variant px-4 py-2 rounded-lg text-label-md text-on-surface whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">Share a Win</span>
+</button>
+<script>
+        // Simple micro-interactions for reactions
+        document.querySelectorAll('.reaction-chip').forEach(button => {
+            button.addEventListener('click', function() {
+                const countSpan = this.querySelector('.text-label-md');
+                if (countSpan) {
+                    let count = parseInt(countSpan.textContent);
+                    if (this.classList.contains('bg-primary/10')) {
+                        countSpan.textContent = count - 1;
+                        this.classList.remove('bg-primary/10', 'border-primary/40');
+                        this.classList.add('bg-white/5');
+                    } else {
+                        countSpan.textContent = count + 1;
+                        this.classList.remove('bg-white/5');
+                        this.classList.add('bg-primary/10', 'border-primary/40');
+                    }
+                } else {
+                    const newSpan = document.createElement('span');
+                    newSpan.className = 'text-label-md font-bold text-primary';
+                    newSpan.textContent = '1';
+                    this.appendChild(newSpan);
+                    this.classList.add('bg-primary/10', 'border-primary/40');
+                }
+            });
+        });
+
+        // Dashboard/Nav highlight logic based on prompt instructions
+        // We ensure "Wins Board" is the only one with active styles.
+    </script>
+</body></html>

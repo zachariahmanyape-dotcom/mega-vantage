@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Vantage | Resource Library</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&amp;family=Work+Sans:wght@700;800&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-surface-variant": "#4b5563",
+                    "on-error": "#ffffff",
+                    "on-tertiary-fixed": "#00201d",
+                    "surface-container-high": "#e7e7f1",
+                    "inverse-primary": "#b0c6ff",
+                    "surface-container": "#ededf6",
+                    "surface-container-lowest": "#ffffff",
+                    "on-secondary-fixed": "#410006",
+                    "on-primary": "#ffffff",
+                    "primary-container": "#0f52ba",
+                    "tertiary-container": "#1e625b",
+                    "error-container": "#ffdad6",
+                    "surface-variant": "#e1e2eb",
+                    "surface": "#faf8ff",
+                    "primary-fixed-dim": "#b0c6ff",
+                    "outline-variant": "#d1d5db",
+                    "background": "#faf8ff",
+                    "surface-bright": "#faf8ff",
+                    "on-error-container": "#93000a",
+                    "on-surface": "#191b22",
+                    "secondary-fixed": "#ffdad8",
+                    "tertiary-fixed-dim": "#92d2c9",
+                    "primary-fixed": "#d9e2ff",
+                    "secondary-container": "#ff6b6b",
+                    "on-primary-container": "#bcceff",
+                    "tertiary": "#004a43",
+                    "on-secondary-container": "#6d0011",
+                    "surface-dim": "#d9d9e2",
+                    "tertiary-fixed": "#aeefe5",
+                    "secondary": "#ae2f34",
+                    "surface-container-highest": "#e1e2eb",
+                    "primary": "#003c90",
+                    "error": "#ba1a1a",
+                    "inverse-surface": "#2e3037",
+                    "on-background": "#191b22",
+                    "inverse-on-surface": "#f0f0f9",
+                    "on-tertiary-container": "#9adbd2",
+                    "on-tertiary": "#ffffff",
+                    "secondary-fixed-dim": "#ffb3b0",
+                    "on-secondary": "#ffffff",
+                    "on-secondary-fixed-variant": "#8c1520",
+                    "surface-container-low": "#f3f3fc",
+                    "on-primary-fixed": "#001945",
+                    "surface-tint": "#1d59c1",
+                    "on-tertiary-fixed-variant": "#00504a",
+                    "on-primary-fixed-variant": "#00419c",
+                    "outline": "#737784"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "lg": "40px",
+                    "container-max": "1440px",
+                    "sm": "16px",
+                    "base": "4px",
+                    "xs": "8px",
+                    "xl": "64px",
+                    "md": "24px",
+                    "gutter": "24px"
+            },
+            "fontFamily": {
+                    "body-md": ["Montserrat"],
+                    "body-sm": ["Montserrat"],
+                    "headline-sm": ["Work Sans"],
+                    "body-lg": ["Montserrat"],
+                    "headline-md": ["Work Sans"],
+                    "label-md": ["Montserrat"],
+                    "headline-lg-mobile": ["Work Sans"],
+                    "display-lg": ["Work Sans"],
+                    "headline-lg": ["Work Sans"]
+            },
+            "fontSize": {
+                    "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "body-sm": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "headline-sm": ["20px", {"lineHeight": "1.4", "fontWeight": "700"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "700"}],
+                    "label-md": ["12px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "headline-lg-mobile": ["28px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                    "display-lg": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.01em", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { background-color: #f2f4f7; }
+        .glass-panel { backdrop-filter: blur(24px); border-right: 1px solid rgba(209, 213, 227, 0.3); }
+        .book-shadow { box-shadow: 25px 25px 50px -12px rgba(0, 0, 0, 0.15); }
+        .card-hover:hover { transform: translateY(-4px); transition: all 0.3s ease; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    </style>
+</head>
+<body class="font-body-md text-on-surface">
+<!-- Sidebar Navigation -->
+<aside class="fixed left-0 top-0 h-full w-[256px] glass-panel bg-surface/30 flex flex-col py-lg space-y-base z-50">
+<div class="px-6 mb-10">
+<h1 class="font-display-lg text-display-lg font-bold text-primary tracking-tighter">Vantage</h1>
+<p class="text-on-surface-variant font-label-md mt-1">Deep Work Ecosystem</p>
+</div>
+<nav class="flex-1">
+<a class="flex items-center gap-3 text-on-surface-variant hover:text-on-surface px-4 py-2 mx-2 font-body-md transition-all duration-200 rounded-lg hover:bg-surface-container-high" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:text-on-surface px-4 py-2 mx-2 font-body-md transition-all duration-200 rounded-lg hover:bg-surface-container-high" href="#">
+<span class="material-symbols-outlined">checklist</span>
+<span>Tasks</span>
+</a>
+<a class="flex items-center gap-3 bg-primary-container text-on-primary-container rounded-lg px-4 py-2 mx-2 font-body-md shadow-sm" href="#">
+<span class="material-symbols-outlined">library_books</span>
+<span>Resources</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:text-on-surface px-4 py-2 mx-2 font-body-md transition-all duration-200 rounded-lg hover:bg-surface-container-high" href="#">
+<span class="material-symbols-outlined">video_chat</span>
+<span>Sessions</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:text-on-surface px-4 py-2 mx-2 font-body-md transition-all duration-200 rounded-lg hover:bg-surface-container-high" href="#">
+<span class="material-symbols-outlined">map</span>
+<span>Roadmap</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:text-on-surface px-4 py-2 mx-2 font-body-md transition-all duration-200 rounded-lg hover:bg-surface-container-high" href="#">
+<span class="material-symbols-outlined">emoji_events</span>
+<span>Wins Board</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:text-on-surface px-4 py-2 mx-2 font-body-md transition-all duration-200 rounded-lg hover:bg-surface-container-high" href="#">
+<span class="material-symbols-outlined">chat</span>
+<span>Chat</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:text-on-surface px-4 py-2 mx-2 font-body-md transition-all duration-200 rounded-lg hover:bg-surface-container-high" href="#">
+<span class="material-symbols-outlined">person</span>
+<span>Profile</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:text-on-surface px-4 py-2 mx-2 font-body-md transition-all duration-200 rounded-lg hover:bg-surface-container-high" href="#">
+<span class="material-symbols-outlined">radar</span>
+<span>Corporate Radar</span>
+</a>
+</nav>
+<div class="px-2 pt-4 border-t border-outline-variant/30">
+<a class="flex items-center gap-3 text-on-surface-variant hover:text-on-surface px-4 py-2 mx-2 font-body-md transition-all duration-200" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span>Settings</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:text-on-surface px-4 py-2 mx-2 font-body-md transition-all duration-200" href="#">
+<span class="material-symbols-outlined">help</span>
+<span>Help</span>
+</a>
+</div>
+</aside>
+<!-- Top App Bar -->
+<header class="fixed top-0 right-0 left-[256px] h-16 glass-panel bg-surface/30 z-40 flex justify-between items-center px-gutter border-b border-outline-variant/30">
+<div class="flex items-center gap-4 flex-1">
+<div class="relative w-full max-w-md">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full bg-surface-container border-none rounded-full pl-10 pr-4 py-2 text-body-sm focus:ring-2 focus:ring-primary focus:bg-surface transition-all" placeholder="Search resources..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="hover:bg-surface-container rounded-full p-2 text-on-surface-variant transition-all active:opacity-80">
+<span class="material-symbols-outlined">dark_mode</span>
+</button>
+<button class="hover:bg-surface-container rounded-full p-2 text-on-surface-variant transition-all active:opacity-80">
+<span class="material-symbols-outlined">text_fields</span>
+</button>
+<button class="hover:bg-surface-container rounded-full p-2 text-on-surface-variant transition-all active:opacity-80 relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-secondary rounded-full"></span>
+</button>
+<div class="h-8 w-8 rounded-full overflow-hidden border border-outline-variant">
+<img alt="User profile photo" class="w-full h-full object-cover" data-alt="Close-up professional headshot of a smiling creative executive in a modern light-filled office environment. The image is crisp with soft bokeh background and high-key lighting, maintaining the Vantage brand's professional and high-performance aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDOJOJZWF9kzsG4B2iE7m7UtyfuM-Uih9ioEroK8unD1Frk_ofaMxsNwdsyF7SvgxN0oiR_RjcR8G4xNSb0RL3Yh2z_-_LYthDgLh1JEigYcGYBUiU5A51oe24syfYBuipslYH2Ttaucr2ovT-ZP1ZaNZy2uutHlcF0ii6ikUEEMHaT8oZyakztQ1CTUPPGmXEy4Y6yQapNm9taStg5pyf8wDm6ObidIkTCO-SiBiK7GZIC9S9MMPkmBiC5AcLHli4dU9BQ5zk-zdjg"/>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="ml-[256px] pt-16 min-h-screen">
+<div class="max-w-[1440px] mx-auto px-lg py-lg">
+<!-- Hero Spotlight Section -->
+<section class="relative mb-20">
+<div class="flex flex-col lg:flex-row gap-16 items-center">
+<!-- Text Content -->
+<div class="lg:w-1/2 order-2 lg:order-1">
+<div class="inline-flex items-center px-3 py-1 rounded-full bg-primary/10 text-primary font-label-md mb-6">
+                            FEATURED SELECTION
+                        </div>
+<h2 class="font-display-lg text-[56px] leading-[1.1] mb-6 text-on-surface">Maintenance: <br/><span class="text-primary">Of Everything</span></h2>
+<p class="font-body-lg text-on-surface-variant mb-8 max-w-lg">
+                            Stewart Brand argues that we are in a period of intense focus on creation, while neglecting the essential art of keeping things working. Discover the philosophy of long-term thinking through systemic upkeep.
+                        </p>
+<div class="flex gap-4">
+<button class="bg-primary text-on-primary px-8 py-3 rounded-lg font-headline-sm hover:scale-[0.98] transition-transform flex items-center gap-2">
+<span class="material-symbols-outlined">auto_stories</span>
+                                Read Synopsis
+                            </button>
+<button class="border border-outline-variant text-on-surface-variant px-8 py-3 rounded-lg font-headline-sm hover:bg-surface-container transition-all">
+                                Save to Library
+                            </button>
+</div>
+</div>
+<!-- Book Mockup -->
+<div class="lg:w-1/2 order-1 lg:order-2 flex justify-center perspective-[1000px]">
+<div class="relative group">
+<div class="absolute -inset-4 bg-primary/5 rounded-3xl blur-3xl group-hover:bg-primary/10 transition-all"></div>
+<div class="relative w-[340px] h-[480px] bg-white rounded-r-lg book-shadow border-l-[12px] border-primary-container overflow-hidden transition-transform duration-500 hover:rotate-y-12">
+<img alt="Maintenance of Everything book cover" class="w-full h-full object-cover grayscale-[0.2] contrast-125" data-alt="Minimalist book cover design for Maintenance of Everything by Stewart Brand. The cover features clean Swiss typography on a crisp white background with subtle geometric line art in cobalt blue. The lighting is bright and architectural, suggesting a high-end editorial and corporate modern aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDf08bRHO0MBEGvXrp9abivbNzmcI6W3H2MbTu6HOQZjFKAmDlUw5qdgRX7Wp-wenELOz5L38z7jJaq8m_abxIJ39H0am2kRvI3pdmBjzqppylfFg8RiedRSmbxrGzYP5AEQaGe1SYtxhJBIR6zGkFumStstO7aHlLK92IqW0tQQdx6MpjjZ1zc-nbN71NwZS-srN3aobvQA7ARP55_i06fdJfb46VcxLGrcdd0dILvkzLVhr8CZ1lQQS6p38Ge_oBLPLMrwEFGkN5v"/>
+<div class="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-transparent opacity-30 pointer-events-none"></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Curated Resources Horizontal Scroll -->
+<section class="mb-20">
+<div class="flex justify-between items-end mb-10">
+<div>
+<h3 class="font-headline-lg text-headline-lg text-on-surface mb-2">Curated Resources</h3>
+<p class="text-on-surface-variant font-body-md">Essential reading for the deep work ecosystem.</p>
+</div>
+<div class="flex gap-2">
+<button class="w-10 h-10 rounded-full border border-outline-variant flex items-center justify-center hover:bg-surface-container transition-all">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<button class="w-10 h-10 rounded-full border border-outline-variant flex items-center justify-center hover:bg-surface-container transition-all">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</div>
+<div class="flex gap-gutter overflow-x-auto pb-8 scrollbar-hide">
+<!-- Book Item 1 -->
+<div class="flex-shrink-0 w-[220px] group cursor-pointer">
+<div class="h-[320px] bg-white rounded-lg shadow-sm mb-4 overflow-hidden card-hover border border-outline-variant/30">
+<img alt="The Discipline of Flow" class="w-full h-full object-cover" data-alt="Modern book cover featuring abstract architectural photography with sharp angles and dramatic shadows. The color palette is composed of cool grays and a singular highlight of bright yellow. The visual style is professional, clean, and perfectly aligned with a light-mode corporate library UI." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB_-Ksu5kcehe8Aggk_V8IRjO_5FlURERQrNAbtQJ_7ooy8ijYUg2ijQcE6JtHM88k-1DDYa6F17TiQ99SHRhTaXxXsLND26oMGi_X4zt-9UJn4Ii6VUvfQB_B8_-DCfnpYXiBE2QCN2MVdDkpO25KXk5z6smmM4rjpLqz-63cmXFllFLVjBksg1wGDK1ldg6T4rgJPuRaHn4BTCd7YgPb-hKmHBOMDB1SfxJ7zT3uO9xRTjaYhn9RQTynBL-7zy9_53qUGM14HbQ0M"/>
+</div>
+<div class="flex items-center gap-2 mb-2">
+<span class="px-2 py-0.5 rounded bg-tertiary/10 text-tertiary font-label-md text-[10px]">PREMIUM</span>
+</div>
+<h4 class="font-headline-sm text-body-md text-on-surface mb-1 group-hover:text-primary transition-colors">The Discipline of Flow</h4>
+<p class="text-on-surface-variant text-body-sm">Mihaly Csikszentmihalyi</p>
+</div>
+<!-- Book Item 2 -->
+<div class="flex-shrink-0 w-[220px] group cursor-pointer">
+<div class="h-[320px] bg-white rounded-lg shadow-sm mb-4 overflow-hidden card-hover border border-outline-variant/30">
+<img alt="Deep Work Principles" class="w-full h-full object-cover" data-alt="Elegant book cover showcasing a minimalist Zen garden inspired graphic. Soft textures, pebble shapes, and thin concentric circles in muted charcoal and off-white. The atmosphere is calm and focused, reinforcing the theme of productivity and deep work in a professional setting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD1aUmIhpzq6oqtAEZvTP_z2THi1M-nTIEmI6YeZJkRrQ_F1QmieSWTSNcayV9q2qkXSBQL7E5fnGGdkPSXQ7Cf3NFJxddzkSrWPiGtd8j1JpMTeuasI55vKkHJODRwR0GdNYpfqSBoAtitMyq2s_9pSOSwre51zNAI8Mup1C9CteYro_bN8C4Dko_Cj4pdxhN5oTNVHnmH-KYCpVYrUnDEb0pIWfrP_XnYiUCwIfBgUWJamzMPBPcoIV7vZxt77-Tg7oEe7ufrbceW"/>
+</div>
+<div class="flex items-center gap-2 mb-2">
+<span class="px-2 py-0.5 rounded bg-secondary/10 text-secondary font-label-md text-[10px]">EXECUTIVE</span>
+</div>
+<h4 class="font-headline-sm text-body-md text-on-surface mb-1 group-hover:text-primary transition-colors">Deep Work Principles</h4>
+<p class="text-on-surface-variant text-body-sm">Cal Newport</p>
+</div>
+<!-- Book Item 3 -->
+<div class="flex-shrink-0 w-[220px] group cursor-pointer">
+<div class="h-[320px] bg-white rounded-lg shadow-sm mb-4 overflow-hidden card-hover border border-outline-variant/30">
+<img alt="Atomic Habits" class="w-full h-full object-cover" data-alt="A book cover with a high-contrast black and white photograph of an industrial machine part, symbolizing mechanical efficiency. The typography is bold sans-serif, using cobalt blue for emphasis. The overall aesthetic is industrial modernism, conveying a sense of technological advancement and structured output." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD7W9yllk-JT9eqflw6_DC_dmdvpxnJc996pzSqgbo3Jz6VyXYgI3YImcWWQFp55XI2cb9BqWg4ASDp0p37apols2BW2oJvQCvEejHrwEVHFYkPgum5MSZrADJJFj4NctGlDZC1rw_kKn_jhulgYzY_d3OM1Ac-GT0UtIppIWegG8OjeVmZ1AoKHTSDi9lmW71fCGrsyAider0PasFe1Ep4zm8Kb7Q-3S8dxc2vIQNmqbPu8GIciCyp3jYCHa1rqwlfyQm49CrS7We9"/>
+</div>
+<div class="flex items-center gap-2 mb-2">
+<span class="px-2 py-0.5 rounded bg-primary/10 text-primary font-label-md text-[10px]">ESSENTIAL</span>
+</div>
+<h4 class="font-headline-sm text-body-md text-on-surface mb-1 group-hover:text-primary transition-colors">Atomic Habits</h4>
+<p class="text-on-surface-variant text-body-sm">James Clear</p>
+</div>
+<!-- Book Item 4 -->
+<div class="flex-shrink-0 w-[220px] group cursor-pointer">
+<div class="h-[320px] bg-white rounded-lg shadow-sm mb-4 overflow-hidden card-hover border border-outline-variant/30">
+<img alt="Biological Architecture" class="w-full h-full object-cover" data-alt="Minimalist book cover featuring a single stylized leaf in a technical drawing style, rendered in thin navy lines. The background is a very light ivory with a subtle paper texture. The design is airy and intellectual, reflecting a refined editorial approach for a knowledge worker's library." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB2wKI10fSJcNgGcQjcqb0S3PXPubZ-v22JHgPrw9ViqUfzblpcrETAfHLQTMt9uy9ScuGk2NF1UsOPW8AR-ZMhfojhuJvw8tcq05oxH9AOYonZABNnRuC3hFiJGPAZ_m4ExljFidgu3k9vW6PMkZ5mBi1XBxsSYR2AWRVVhlVE-te6TadhFG86TsKOXQIOSg8LX5scWyKImhp8Gq29cmC-N98K168W-pxZqQATctXvIgBAshRjwMRe7opNxDGWSYy6sFOEBZA_klI0"/>
+</div>
+<div class="flex items-center gap-2 mb-2">
+<span class="px-2 py-0.5 rounded bg-tertiary/10 text-tertiary font-label-md text-[10px]">PREMIUM</span>
+</div>
+<h4 class="font-headline-sm text-body-md text-on-surface mb-1 group-hover:text-primary transition-colors">Biological Architecture</h4>
+<p class="text-on-surface-variant text-body-sm">Neri Oxman</p>
+</div>
+<!-- Book Item 5 -->
+<div class="flex-shrink-0 w-[220px] group cursor-pointer">
+<div class="h-[320px] bg-white rounded-lg shadow-sm mb-4 overflow-hidden card-hover border border-outline-variant/30">
+<img alt="The One Thing" class="w-full h-full object-cover" data-alt="Bold book cover with a large, embossed number one in the center. The background is a deep matte navy blue with a subtle gradient glow. The lighting is studio-quality, highlighting the texture of the cover. This visual is designed to command attention and signify a high-status corporate resource." src="https://lh3.googleusercontent.com/aida-public/AB6AXuABHanYeYku3uWeMhaOgdit98rQdmQXXXNm5Q6ljIzWRcAnc40byAfRN5sqdlRiYzxV8mQxtCF7nplJjuK_og6oU6HtGC5uET6ns4gmlOG2lGhhh3TksW97EruiZzU__gr1uG9dcSBDqpBheODV5IM3_cVe_k87qv1Ijupe3RefAG6s0jX32tU8uKLxefw4-qtaXYE5l5P19hda-enChSig-22ZkVRkxchkv3IaYi6yFf2Xd1UxZH3Dtt4p4OOG06nQDeLYgD1u5n2w"/>
+</div>
+<div class="flex items-center gap-2 mb-2">
+<span class="px-2 py-0.5 rounded bg-secondary/10 text-secondary font-label-md text-[10px]">EXECUTIVE</span>
+</div>
+<h4 class="font-headline-sm text-body-md text-on-surface mb-1 group-hover:text-primary transition-colors">The One Thing</h4>
+<p class="text-on-surface-variant text-body-sm">Gary Keller</p>
+</div>
+</div>
+</section>
+<!-- Bento Featured Categories -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-20">
+<div class="col-span-1 md:col-span-2 bg-white rounded-xl p-8 border border-outline-variant/30 shadow-sm group hover:shadow-md transition-all">
+<div class="flex justify-between items-start mb-6">
+<div class="p-3 bg-primary/10 rounded-lg text-primary">
+<span class="material-symbols-outlined text-[32px]">architecture</span>
+</div>
+<button class="text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined">arrow_outward</span></button>
+</div>
+<h3 class="font-headline-md mb-3">System Design &amp; Thinking</h3>
+<p class="text-on-surface-variant font-body-md mb-6 max-w-md">Explore over 150+ resources dedicated to understanding complex systems, organizational structure, and holistic maintenance strategies.</p>
+<div class="flex -space-x-3">
+<div class="w-10 h-10 rounded-full border-2 border-white bg-surface-container overflow-hidden">
+<img alt="Curator 1" class="w-full h-full object-cover" data-alt="Close-up avatar of a professional woman with glasses in a bright workspace." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDRa0KoIPGIpXSe-9lNVoq85ZeCCeAfMR8pS7M6rqS82iWjyxRrZcw5hG3Ws7ZJbtZWK5_2issUDA1lG8R9AQbcxfWSNdC6xts1dCAUY5AHxjSy8lxWpBciJ3gAXeXlaZrgpTwQGyCiG-WazFpWdKJv4vSwP02Jk_2WCZ5w_6Wd2gmbxMFH3VexZz8UGL1YolXA3sREDCNhvnGfF2kLy-4dkkjIh_0pYPcri4coWAwf9T4MopgrZzfcSeaSSMgnBaxOm90AhNaJJLso"/>
+</div>
+<div class="w-10 h-10 rounded-full border-2 border-white bg-surface-container overflow-hidden">
+<img alt="Curator 2" class="w-full h-full object-cover" data-alt="Professional headshot of a man in a modern office." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAPPe0PJ7e4BU8pVzepiXtp2dYbDwdnQrsymOF97CPTSvhyLWTYwMhozS9qLg1VHm-GrGURi0RXSL4U5DgvYePE0JtcyA_J6IYewFlvOjg5bYsHfFdTXSk9_dsBOZPECiBv9mccyc4WEWgpp1QtCx92g-eBFRVfrWMJ37mD-TIrVP9NYhZzEq90jqp-f_k_zsITUOXnkKA_WYW0TFrNYMpaKwmieqpm-3q0mw_2_cRfEe6gZ1x3_NsfDewQ_q4Jv4nw1SiXsklQflvR"/>
+</div>
+<div class="w-10 h-10 rounded-full border-2 border-white bg-surface-container overflow-hidden">
+<img alt="Curator 3" class="w-full h-full object-cover" data-alt="Professional headshot of a person in creative studio." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAIayFyJXQFCokdCW9DffVyzOT5JWMDolSkazlvOPpmP0JPiPx91IFaJSyv6vkKS9GDROiHulZ2TbtwqM1MXwCbZA3fLezBLSIoUb-seu-N0d0_JmC2105l6U5BKI90nzTxvUotjrIt529YnFgE_oyK2UoYiQzpE8uU6VVlkLRgyWPmp8zomxrQKVy7yOry6SnGDmbpoUQ59VLZmFn4SnMhcGUn6RcukAe4F1qXYJxQ-8GhkMtrOjPjs5pNbcd7CNKzp5zzPqNk9wDO"/>
+</div>
+<div class="w-10 h-10 rounded-full border-2 border-white bg-surface-container flex items-center justify-center text-label-md font-bold text-on-surface-variant">+12</div>
+</div>
+</div>
+<div class="bg-primary-container rounded-xl p-8 text-on-primary-container relative overflow-hidden group">
+<div class="relative z-10">
+<h3 class="font-headline-md mb-3">Vantage Picks</h3>
+<p class="font-body-sm opacity-90 mb-6">This month's hand-picked toolkit for cognitive high-performance.</p>
+<button class="bg-white text-primary px-6 py-2 rounded-lg font-label-md hover:bg-surface-container-low transition-all">Download PDF</button>
+</div>
+<span class="material-symbols-outlined absolute -bottom-8 -right-8 text-[180px] opacity-10 rotate-12 group-hover:rotate-0 transition-transform duration-700">stars</span>
+</div>
+</section>
+<!-- Newsletter Footer -->
+<footer class="rounded-2xl bg-surface-container-highest p-12 text-center relative overflow-hidden">
+<div class="absolute inset-0 opacity-10 pointer-events-none">
+
+</div>
+<div class="relative z-10 max-w-2xl mx-auto">
+<h2 class="font-display-lg text-headline-lg mb-4 text-on-surface">Expand your horizon.</h2>
+<p class="font-body-md text-on-surface-variant mb-8">Receive a monthly curated synthesis of the world's best resources for deep work and systemic performance.</p>
+<form class="flex flex-col sm:flex-row gap-4 justify-center">
+<input class="flex-1 max-w-sm px-6 py-3 rounded-lg border-none focus:ring-2 focus:ring-primary text-body-md shadow-sm" placeholder="Your corporate email" type="email"/>
+<button class="bg-primary text-on-primary px-8 py-3 rounded-lg font-headline-sm shadow-md hover:shadow-lg transition-all active:scale-95">Subscribe</button>
+</form>
+<p class="mt-6 text-[11px] text-on-surface-variant/60 font-label-md">JOIN 15,000+ KNOWLEDGE WORKERS IN THE ECOSYSTEM.</p>
+</div>
+</footer>
+</div>
+</main>
+<!-- Floating Action Button -->
+<button class="fixed bottom-8 right-8 w-14 h-14 bg-primary text-on-primary rounded-full shadow-lg flex items-center justify-center hover:scale-110 active:scale-90 transition-all z-50">
+<span class="material-symbols-outlined text-[28px]">add</span>
+</button>
+<script>
+        // Simple Micro-interaction for the search bar focus effect
+        const searchInput = document.querySelector('input[type="text"]');
+        searchInput.addEventListener('focus', () => {
+            searchInput.parentElement.classList.add('ring-2', 'ring-primary/20');
+        });
+        searchInput.addEventListener('blur', () => {
+            searchInput.parentElement.classList.remove('ring-2', 'ring-primary/20');
+        });
+
+        // Intersection Observer for fade-in animations
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('opacity-100', 'translate-y-0');
+                    entry.target.classList.remove('opacity-0', 'translate-y-10');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('section, footer').forEach(el => {
+            el.classList.add('transition-all', 'duration-700', 'opacity-0', 'translate-y-10');
+            observer.observe(el);
+        });
+    </script>
+</body></html>

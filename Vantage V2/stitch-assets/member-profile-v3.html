@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Vantage | Profile - LOLA</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "inverse-surface": "#e2e2e8",
+                        "inverse-primary": "#1d59c1",
+                        "surface-container": "#1e2024",
+                        "secondary-container": "#901822",
+                        "on-tertiary": "#003733",
+                        "tertiary-fixed-dim": "#92d2ca",
+                        "surface-dim": "#111317",
+                        "primary-container": "#0f52ba",
+                        "surface": "#111317",
+                        "surface-container-high": "#282a2e",
+                        "tertiary": "#92d2ca",
+                        "on-secondary": "#68000f",
+                        "inverse-on-surface": "#2f3035",
+                        "on-secondary-fixed-variant": "#8c1520",
+                        "error-container": "#93000a",
+                        "error": "#ffb4ab",
+                        "on-background": "#e2e2e8",
+                        "tertiary-container": "#1e625b",
+                        "on-secondary-fixed": "#410006",
+                        "on-surface-variant": "#c3c6d5",
+                        "on-tertiary-fixed-variant": "#00504a",
+                        "outline-variant": "#434653",
+                        "on-primary": "#002c6f",
+                        "on-error": "#690005",
+                        "secondary-fixed": "#ffdad8",
+                        "secondary": "#ffb3b0",
+                        "outline": "#8d909e",
+                        "on-surface": "#e2e2e8",
+                        "surface-bright": "#37393e",
+                        "primary-fixed-dim": "#b0c6ff",
+                        "surface-tint": "#b0c6ff",
+                        "surface-container-highest": "#333539",
+                        "on-error-container": "#ffdad6",
+                        "primary": "#b0c6ff",
+                        "surface-container-low": "#1a1c20",
+                        "primary-fixed": "#d9e2ff",
+                        "on-tertiary-fixed": "#00201d",
+                        "tertiary-fixed": "#aeefe6",
+                        "on-primary-fixed": "#001945",
+                        "on-primary-container": "#bcceff",
+                        "on-secondary-container": "#ff9e9b",
+                        "on-primary-fixed-variant": "#00419c",
+                        "surface-variant": "#333539",
+                        "secondary-fixed-dim": "#ffb3b0",
+                        "on-tertiary-container": "#9adbd2",
+                        "surface-container-lowest": "#0c0e12",
+                        "background": "#111317"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "24px",
+                        "container-padding-desktop": "32px",
+                        "stack-md": "16px",
+                        "stack-sm": "8px",
+                        "stack-lg": "32px",
+                        "unit": "4px",
+                        "container-padding-mobile": "16px"
+                    },
+                    "fontFamily": {
+                        "display-lg-mobile": ["Montserrat"],
+                        "body-lg": ["Montserrat"],
+                        "headline-md": ["Montserrat"],
+                        "label-md": ["Montserrat"],
+                        "headline-lg": ["Montserrat"],
+                        "display-lg": ["Montserrat"],
+                        "body-md": ["Montserrat"],
+                        "body-sm": ["Montserrat"]
+                    },
+                    "fontSize": {
+                        "display-lg-mobile": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
+                        "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "700"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #0c0e12;
+            font-family: 'Montserrat', sans-serif;
+        }
+        .glass-card {
+            background: rgba(22, 27, 34, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .badge-gradient {
+            background: radial-gradient(circle at center, rgba(15, 82, 186, 0.15) 0%, transparent 70%);
+        }
+    </style>
+</head>
+<body class="text-on-surface">
+<!-- Side Navigation Shell -->
+<nav class="h-screen w-64 fixed left-0 top-0 bg-surface-container border-r border-outline-variant flex flex-col py-gutter z-50">
+<div class="px-gutter mb-stack-lg">
+<h1 class="font-headline-md text-headline-md font-bold text-primary">Vantage</h1>
+<p class="font-label-md text-label-md text-on-surface-variant tracking-widest uppercase">Professional Suite</p>
+</div>
+<div class="flex-1 space-y-unit px-2">
+<a class="flex items-center gap-3 px-gutter py-3 rounded-lg text-on-surface-variant hover:bg-surface-bright transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-body-md text-body-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-gutter py-3 rounded-lg text-on-surface-variant hover:bg-surface-bright transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">checklist</span>
+<span class="font-body-md text-body-md">Tasks</span>
+</a>
+<a class="flex items-center gap-3 px-gutter py-3 rounded-lg text-on-surface-variant hover:bg-surface-bright transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">video_chat</span>
+<span class="font-body-md text-body-md">Sessions</span>
+</a>
+<a class="flex items-center gap-3 px-gutter py-3 rounded-lg text-on-surface-variant hover:bg-surface-bright transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">route</span>
+<span class="font-body-md text-body-md">Roadmap</span>
+</a>
+<a class="flex items-center gap-3 px-gutter py-3 rounded-lg text-on-surface-variant hover:bg-surface-bright transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">workspace_premium</span>
+<span class="font-body-md text-body-md">Wins Board</span>
+</a>
+<a class="flex items-center gap-3 px-gutter py-3 rounded-lg text-on-surface-variant hover:bg-surface-bright transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span class="font-body-md text-body-md">Resources</span>
+</a>
+<a class="flex items-center gap-3 px-gutter py-3 rounded-lg text-on-surface-variant hover:bg-surface-bright transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">chat</span>
+<span class="font-body-md text-body-md">Chat</span>
+</a>
+<a class="flex items-center gap-3 px-gutter py-3 rounded-lg text-primary border-l-4 border-primary bg-primary-container/10 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">account_circle</span>
+<span class="font-body-md text-body-md">Profile</span>
+</a>
+<div class="pt-stack-lg mt-stack-lg border-t border-outline-variant">
+<p class="px-gutter font-label-md text-[10px] text-outline tracking-widest uppercase mb-2">Career</p>
+<a class="flex items-center gap-3 px-gutter py-3 rounded-lg text-on-surface-variant hover:bg-surface-bright transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">radar</span>
+<span class="font-body-md text-body-md">Corporate Radar</span>
+</a>
+</div>
+</div>
+<div class="px-gutter mt-auto pt-gutter border-t border-outline-variant">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container font-bold">L</div>
+<div class="overflow-hidden">
+<p class="font-body-sm font-bold truncate">Lola</p>
+<p class="text-[10px] text-on-surface-variant">Professional Member</p>
+</div>
+</div>
+</div>
+</nav>
+<!-- Top App Bar -->
+<header class="fixed top-0 right-0 left-64 h-16 bg-surface/80 backdrop-blur-xl border-b border-outline-variant flex justify-between items-center px-container-padding-desktop z-40">
+<div class="flex items-center gap-stack-md flex-1">
+<div class="relative w-64 group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors">search</span>
+<input class="w-full bg-surface-container-low border border-outline-variant rounded-full py-1.5 pl-10 pr-4 font-body-sm focus:outline-none focus:border-primary transition-all" placeholder="Quick search..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-stack-md">
+<button class="p-2 rounded-full hover:bg-surface-bright text-on-surface-variant transition-transform active:scale-95">
+<span class="material-symbols-outlined">dark_mode</span>
+</button>
+<button class="p-2 rounded-full hover:bg-surface-bright text-on-surface-variant transition-transform active:scale-95 relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-secondary-container rounded-full ring-2 ring-surface"></span>
+</button>
+<button class="flex items-center gap-2 border border-outline-variant rounded-full py-1 px-3 hover:bg-surface-bright transition-all">
+<span class="material-symbols-outlined text-[18px]">edit</span>
+<span class="font-label-md text-label-md">Edit profile</span>
+</button>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-64 pt-24 pb-stack-lg px-container-padding-desktop min-h-screen">
+<div class="max-w-6xl mx-auto space-y-gutter">
+<!-- User Identity Header -->
+<div class="flex flex-col md:flex-row items-end gap-gutter mb-stack-lg">
+<div class="flex items-center gap-gutter">
+<div class="w-24 h-24 rounded-full border-4 border-surface-container-high overflow-hidden shadow-2xl relative group">
+<img class="w-full h-full object-cover" data-alt="Close-up professional portrait of a woman named Lola with a friendly yet determined expression, soft studio lighting highlighting her features against a minimalist dark background. High-resolution editorial photography style with rich depth and professional corporate aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDCNFrq-2zOFFO_f3hBSFIb_t3arWrt2ZQeRsjLfzFzV3-SUXx0izmFO_82Cp5rabxneLZE6xj3kYpSAGkvA3nSB9xkhTlZXUkK-e8lWb_qK4vWhh46zVYCyNuSlXvvEMd3xyu5h4N-huLZn-K8Wb3fHlHtpDuybXtSP46NennSmVYvaIE-57b4ADW8MOUfdnYSf9JlgTiDgP42oZzWXr4HHUlDFgRV_U2Lr0A9YDIKPKFkI9jUeUbWjEEl1TdVzM2AUsFgqPaRJGfL"/>
+<div class="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+<span class="material-symbols-outlined text-white">photo_camera</span>
+</div>
+</div>
+<div>
+<p class="font-label-md text-label-md text-primary tracking-widest uppercase mb-1">Profile</p>
+<h2 class="font-display-lg text-display-lg uppercase tracking-tighter">Lola</h2>
+<div class="flex gap-2 mt-2">
+<span class="px-3 py-1 rounded-full bg-primary-container/10 border border-primary/20 text-primary text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span> Mentorship
+                            </span>
+<span class="px-3 py-1 rounded-full bg-tertiary-container/10 border border-tertiary/20 text-tertiary text-[10px] font-bold uppercase tracking-wider">Breakthrough</span>
+</div>
+</div>
+</div>
+<div class="ml-auto flex gap-stack-lg pb-2">
+<div class="text-right">
+<p class="font-display-lg text-display-lg leading-none text-primary">4,620</p>
+<p class="font-label-md text-label-md text-on-surface-variant uppercase">Total XP</p>
+</div>
+<div class="text-right">
+<p class="font-display-lg text-display-lg leading-none text-secondary">14</p>
+<p class="font-label-md text-label-md text-on-surface-variant uppercase">Day Streak</p>
+</div>
+</div>
+</div>
+<!-- Stats Overview Cards -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-stack-md">
+<div class="glass-card p-6 rounded-xl">
+<p class="font-label-md text-label-md text-on-surface-variant uppercase mb-2">Total Learning</p>
+<p class="font-headline-md text-headline-md">3h 30m</p>
+</div>
+<div class="glass-card p-6 rounded-xl">
+<p class="font-label-md text-label-md text-on-surface-variant uppercase mb-2">Sessions</p>
+<p class="font-headline-md text-headline-md">5 done</p>
+</div>
+<div class="glass-card p-6 rounded-xl border-l-4 border-primary">
+<p class="font-label-md text-label-md text-primary uppercase mb-2">Upcoming</p>
+<p class="font-headline-md text-headline-md">1 scheduled</p>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-gutter">
+<!-- Main Activity Feed (Left 2/3) -->
+<div class="lg:col-span-2 space-y-gutter">
+<!-- Achievement Story (Milestones) -->
+<section class="glass-card p-gutter rounded-xl overflow-hidden relative">
+<div class="flex justify-between items-center mb-stack-lg">
+<div>
+<p class="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest mb-1">Achievement Story</p>
+<h3 class="font-headline-md text-headline-md uppercase italic">Milestones</h3>
+</div>
+</div>
+<div class="relative pt-12 pb-8 px-4">
+<!-- Timeline Line -->
+<div class="absolute top-1/2 left-0 w-full h-[2px] bg-outline-variant -translate-y-1/2"></div>
+<div class="flex justify-between items-center relative z-10">
+<!-- Step 1 -->
+<div class="flex flex-col items-center group">
+<div class="w-12 h-12 rounded-full bg-surface-container-high border-2 border-primary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform cursor-pointer">
+<span class="material-symbols-outlined text-primary">schedule</span>
+</div>
+<p class="font-label-md text-[10px] text-primary uppercase">Apr 7, 2026</p>
+<p class="font-body-sm font-bold text-center mt-1">First focus session</p>
+<p class="text-[10px] text-on-surface-variant">45m focused</p>
+</div>
+<!-- Step 2 -->
+<div class="flex flex-col items-center group">
+<div class="w-12 h-12 rounded-full bg-primary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform cursor-pointer">
+<span class="material-symbols-outlined text-on-primary">check_circle</span>
+</div>
+<p class="font-label-md text-[10px] text-on-surface-variant uppercase">May 8, 2026</p>
+<p class="font-body-sm font-bold text-center mt-1">First task completed</p>
+<p class="text-[10px] text-on-surface-variant">Career goals Q4</p>
+</div>
+<!-- Step 3 -->
+<div class="flex flex-col items-center group">
+<div class="w-12 h-12 rounded-full bg-surface-container-high border-2 border-outline flex items-center justify-center mb-4 group-hover:scale-110 transition-transform cursor-pointer">
+<span class="material-symbols-outlined text-outline">event</span>
+</div>
+<p class="font-label-md text-[10px] text-on-surface-variant uppercase">May 14, 2026</p>
+<p class="font-body-sm font-bold text-center mt-1">First session attended</p>
+<p class="text-[10px] text-on-surface-variant">Q2 Kickoff</p>
+</div>
+<!-- Step 4 -->
+<div class="flex flex-col items-center group opacity-50">
+<div class="w-12 h-12 rounded-full bg-surface-container-high border-2 border-outline-variant flex items-center justify-center mb-4 group-hover:scale-110 transition-transform cursor-pointer">
+<span class="material-symbols-outlined text-outline-variant">grade</span>
+</div>
+<p class="font-label-md text-[10px] text-on-surface-variant uppercase">May 22, 2026</p>
+<p class="font-body-sm font-bold text-center mt-1">Joined Vantage</p>
+<p class="text-[10px] text-on-surface-variant">Mentorship member</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Badge Wall -->
+<section class="glass-card p-gutter rounded-xl">
+<div class="flex justify-between items-center mb-stack-lg">
+<div>
+<p class="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest mb-1">Achievements</p>
+<h3 class="font-headline-md text-headline-md uppercase italic">Badge Wall</h3>
+</div>
+<a class="text-primary font-label-md flex items-center gap-1 hover:underline" href="#">
+                                View all <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</a>
+</div>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-gutter">
+<!-- Badge 1 -->
+<div class="flex flex-col items-center p-4 rounded-xl hover:bg-white/5 transition-colors group cursor-pointer">
+<div class="w-16 h-16 rounded-full badge-gradient border border-primary/30 flex items-center justify-center mb-3 group-hover:rotate-12 transition-transform">
+<span class="material-symbols-outlined text-primary text-3xl" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+<p class="font-body-sm font-bold">First Focus</p>
+<p class="text-[10px] text-on-surface-variant text-center">Log 1 focus session</p>
+</div>
+<!-- Badge 2 -->
+<div class="flex flex-col items-center p-4 rounded-xl hover:bg-white/5 transition-colors group cursor-pointer">
+<div class="w-16 h-16 rounded-full badge-gradient border border-secondary/30 flex items-center justify-center mb-3 group-hover:rotate-12 transition-transform">
+<span class="material-symbols-outlined text-secondary text-3xl" style="font-variation-settings: 'FILL' 1;">bolt</span>
+</div>
+<p class="font-body-sm font-bold">Deep Worker</p>
+<p class="text-[10px] text-on-surface-variant text-center">Log 10 focus sessions</p>
+</div>
+<!-- Badge 3 -->
+<div class="flex flex-col items-center p-4 rounded-xl hover:bg-white/5 transition-colors group cursor-pointer">
+<div class="w-16 h-16 rounded-full badge-gradient border border-tertiary/30 flex items-center justify-center mb-3 group-hover:rotate-12 transition-transform">
+<span class="material-symbols-outlined text-tertiary text-3xl" style="font-variation-settings: 'FILL' 1;">target</span>
+</div>
+<p class="font-body-sm font-bold">In The Zone</p>
+<p class="text-[10px] text-on-surface-variant text-center">Log 25 focus sessions</p>
+</div>
+<!-- Badge 4 -->
+<div class="flex flex-col items-center p-4 rounded-xl hover:bg-white/5 transition-colors group cursor-pointer">
+<div class="w-16 h-16 rounded-full bg-surface-container-high border border-outline-variant flex items-center justify-center mb-3 group-hover:rotate-12 transition-transform">
+<span class="material-symbols-outlined text-outline-variant text-3xl">timer</span>
+</div>
+<p class="font-body-sm font-bold text-outline-variant">Five Hours</p>
+<p class="text-[10px] text-outline-variant text-center">Accumulate 5 focused hours</p>
+</div>
+<!-- Row 2 -->
+<div class="flex flex-col items-center p-4 rounded-xl hover:bg-white/5 transition-colors group cursor-pointer">
+<div class="w-16 h-16 rounded-full badge-gradient border border-primary/30 flex items-center justify-center mb-3 group-hover:rotate-12 transition-transform">
+<span class="material-symbols-outlined text-primary text-3xl" style="font-variation-settings: 'FILL' 1;">assignment_turned_in</span>
+</div>
+<p class="font-body-sm font-bold">First Task</p>
+<p class="text-[10px] text-on-surface-variant text-center">Complete 1 task</p>
+</div>
+<div class="flex flex-col items-center p-4 rounded-xl hover:bg-white/5 transition-colors group cursor-pointer">
+<div class="w-16 h-16 rounded-full badge-gradient border border-secondary/30 flex items-center justify-center mb-3 group-hover:rotate-12 transition-transform">
+<span class="material-symbols-outlined text-secondary text-3xl" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
+</div>
+<p class="font-body-sm font-bold">Three Day Run</p>
+<p class="text-[10px] text-on-surface-variant text-center">Maintain 3-day streak</p>
+</div>
+<div class="flex flex-col items-center p-4 rounded-xl hover:bg-white/5 transition-colors group cursor-pointer">
+<div class="w-16 h-16 rounded-full badge-gradient border border-tertiary/30 flex items-center justify-center mb-3 group-hover:rotate-12 transition-transform">
+<span class="material-symbols-outlined text-tertiary text-3xl" style="font-variation-settings: 'FILL' 1;">school</span>
+</div>
+<p class="font-body-sm font-bold">First Session</p>
+<p class="text-[10px] text-on-surface-variant text-center">Attend 1 session</p>
+</div>
+<div class="flex flex-col items-center p-4 rounded-xl hover:bg-white/5 transition-colors group cursor-pointer">
+<div class="w-16 h-16 rounded-full bg-surface-container-high border border-outline-variant flex items-center justify-center mb-3 group-hover:rotate-12 transition-transform">
+<span class="material-symbols-outlined text-outline-variant text-3xl">visibility</span>
+</div>
+<p class="font-body-sm font-bold text-outline-variant">Showing Up</p>
+<p class="text-[10px] text-outline-variant text-center">Attend 5 sessions</p>
+</div>
+</div>
+</section>
+</div>
+<!-- Sidebar Info & Settings (Right 1/3) -->
+<div class="space-y-gutter">
+<!-- Personal Info Card -->
+<section class="glass-card p-gutter rounded-xl">
+<div class="flex justify-between items-center mb-stack-md">
+<h4 class="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest">Personal Info</h4>
+<button class="text-primary hover:text-primary-container transition-colors">
+<span class="material-symbols-outlined text-[18px]">edit</span>
+</button>
+</div>
+<div class="grid grid-cols-2 gap-stack-md mb-stack-md">
+<div>
+<p class="text-[10px] text-outline uppercase font-bold mb-0.5">Current Role</p>
+<p class="font-body-sm">Marketing Coordinator</p>
+</div>
+<div>
+<p class="text-[10px] text-outline uppercase font-bold mb-0.5">Employment Status</p>
+<p class="font-body-sm">Full-time</p>
+</div>
+<div>
+<p class="text-[10px] text-outline uppercase font-bold mb-0.5">Industry / Field</p>
+<p class="font-body-sm">Marketing &amp; Comm.</p>
+</div>
+<div>
+<p class="text-[10px] text-outline uppercase font-bold mb-0.5">Growth Focus</p>
+<p class="font-body-sm">Career promotion</p>
+</div>
+</div>
+<div class="pt-stack-md border-t border-outline-variant">
+<p class="text-[10px] text-outline uppercase font-bold mb-2">Interests</p>
+<div class="flex flex-wrap gap-2">
+<span class="px-2 py-1 bg-surface-container-high rounded text-[10px] font-bold">Networking</span>
+<span class="px-2 py-1 bg-surface-container-high rounded text-[10px] font-bold">Personal branding</span>
+<span class="px-2 py-1 bg-surface-container-high rounded text-[10px] font-bold">Career development</span>
+<span class="px-2 py-1 bg-surface-container-high rounded text-[10px] font-bold">Data analytics</span>
+</div>
+</div>
+</section>
+<!-- Appearance Settings -->
+<section class="glass-card p-gutter rounded-xl">
+<h4 class="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest mb-stack-md">Appearance</h4>
+<div class="flex items-center justify-between">
+<p class="font-body-sm">Theme</p>
+<div class="flex bg-surface-container-low rounded-lg p-1 border border-outline-variant">
+<button class="px-4 py-1.5 rounded-md font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors">Light</button>
+<button class="px-4 py-1.5 rounded-md font-label-md text-label-md bg-primary text-on-primary shadow-lg">Dark</button>
+</div>
+</div>
+</section>
+<!-- Notification Settings -->
+<section class="glass-card p-gutter rounded-xl">
+<h4 class="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest mb-1">Notifications</h4>
+<p class="text-[10px] text-outline-variant mb-stack-lg">Manage how you receive alerts and reminders.</p>
+<div class="space-y-stack-lg">
+<div class="flex items-center justify-between">
+<div>
+<p class="font-body-sm font-bold">Task assignments</p>
+<p class="text-[10px] text-outline">In-app notifications</p>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-10 h-5 bg-surface-container-high peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+<div class="flex items-center justify-between">
+<div>
+<p class="font-body-sm font-bold">Task assignments</p>
+<p class="text-[10px] text-outline">Email updates</p>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-10 h-5 bg-surface-container-high peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+<div class="flex items-center justify-between">
+<div>
+<p class="font-body-sm font-bold">Session reminders</p>
+<p class="text-[10px] text-outline">In-app notifications</p>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-10 h-5 bg-surface-container-high peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+<div class="flex items-center justify-between">
+<div>
+<p class="font-body-sm font-bold">Session reminders</p>
+<p class="text-[10px] text-outline">Email notifications</p>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox"/>
+<div class="w-10 h-5 bg-surface-container-high peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+</div>
+<div class="mt-stack-lg pt-stack-lg border-t border-outline-variant flex justify-center">
+<button class="flex items-center gap-2 px-6 py-2 rounded-full border border-secondary text-secondary hover:bg-secondary/10 transition-all font-label-md text-label-md uppercase">
+<span class="material-symbols-outlined text-[18px]">logout</span>
+                                Sign out
+                            </button>
+</div>
+</section>
+</div>
+</div>
+</div>
+</main>
+<!-- Bottom Nav for Mobile (hidden on desktop) -->
+<nav class="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-surface-container border-t border-outline-variant flex items-center justify-around px-container-padding-mobile z-50">
+<button class="flex flex-col items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-[10px] uppercase font-bold">Home</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined">checklist</span>
+<span class="text-[10px] uppercase font-bold">Tasks</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-primary">
+<span class="material-symbols-outlined">account_circle</span>
+<span class="text-[10px] uppercase font-bold">Profile</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined">notifications</span>
+<span class="text-[10px] uppercase font-bold">Alerts</span>
+</button>
+</nav>
+<script>
+        // Micro-interaction: Toggles
+        document.querySelectorAll('input[type="checkbox"]').forEach(toggle => {
+            toggle.addEventListener('change', function() {
+                // Optional: add haptic-like effect or save to storage
+                console.log('Preference updated');
+            });
+        });
+
+        // Search bar interaction
+        const searchInput = document.querySelector('input[type="text"]');
+        searchInput.addEventListener('focus', () => {
+            searchInput.parentElement.classList.add('w-80');
+            searchInput.parentElement.classList.remove('w-64');
+        });
+        searchInput.addEventListener('blur', () => {
+            searchInput.parentElement.classList.add('w-64');
+            searchInput.parentElement.classList.remove('w-80');
+        });
+    </script>
+</body></html>

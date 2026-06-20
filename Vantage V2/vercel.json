@@ -1,0 +1,6 @@
+{
+  "framework": null,
+  "rewrites": [
+    { "source": "/legal", "destination": "/legal.html" }
+  ]
+}

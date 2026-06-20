@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Vantage - Professional Intelligence Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container": "#1e2024",
+                    "inverse-primary": "#1d59c1",
+                    "secondary-container": "#901822",
+                    "on-background": "#e2e2e8",
+                    "on-tertiary-container": "#9adbd2",
+                    "inverse-surface": "#e2e2e8",
+                    "on-error": "#690005",
+                    "surface-container-highest": "#333539",
+                    "on-secondary-fixed-variant": "#8c1520",
+                    "tertiary-fixed-dim": "#92d2ca",
+                    "primary-fixed-dim": "#b0c6ff",
+                    "on-secondary-fixed": "#410006",
+                    "surface-container-low": "#1a1c20",
+                    "background": "#111317",
+                    "error-container": "#93000a",
+                    "tertiary": "#92d2ca",
+                    "surface-dim": "#111317",
+                    "primary": "#b0c6ff",
+                    "surface-variant": "#333539",
+                    "on-tertiary": "#003733",
+                    "inverse-on-surface": "#2f3035",
+                    "secondary": "#ffb3b0",
+                    "on-primary": "#002c6f",
+                    "on-secondary-container": "#ff9e9b",
+                    "secondary-fixed-dim": "#ffb3b0",
+                    "on-tertiary-fixed-variant": "#00504a",
+                    "on-primary-fixed": "#001945",
+                    "on-surface": "#e2e2e8",
+                    "on-surface-variant": "#c3c6d5",
+                    "tertiary-container": "#1e625b",
+                    "primary-fixed": "#d9e2ff",
+                    "on-secondary": "#68000f",
+                    "surface-container-high": "#282a2e",
+                    "outline-variant": "#434653",
+                    "on-primary-container": "#bcceff",
+                    "on-tertiary-fixed": "#00201d",
+                    "secondary-fixed": "#ffdad8",
+                    "on-error-container": "#ffdad6",
+                    "surface-bright": "#37393e",
+                    "surface": "#111317",
+                    "tertiary-fixed": "#aeefe6",
+                    "surface-tint": "#b0c6ff",
+                    "error": "#ffb4ab",
+                    "primary-container": "#0f52ba",
+                    "outline": "#8d909e",
+                    "on-primary-fixed-variant": "#00419c",
+                    "surface-container-lowest": "#0c0e12"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "stack-sm": "8px",
+                    "stack-md": "16px",
+                    "unit": "4px",
+                    "stack-lg": "32px",
+                    "gutter": "24px",
+                    "container-padding-mobile": "16px",
+                    "container-padding-desktop": "32px"
+            },
+            "fontFamily": {
+                    "label-md": ["Montserrat"],
+                    "headline-md": ["Montserrat"],
+                    "display-lg": ["Montserrat"],
+                    "headline-lg": ["Montserrat"],
+                    "body-md": ["Montserrat"],
+                    "body-lg": ["Montserrat"],
+                    "display-lg-mobile": ["Montserrat"],
+                    "body-sm": ["Montserrat"]
+            },
+            "fontSize": {
+                    "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "700"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "display-lg-mobile": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #0c0e12;
+            color: #e2e2e8;
+            font-family: 'Montserrat', sans-serif;
+        }
+        .glass-panel {
+            background: rgba(22, 27, 34, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.2s ease;
+        }
+        .glass-panel:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+            background: rgba(26, 31, 38, 0.8);
+        }
+        .cobalt-bar {
+            box-shadow: -4px 0 0 0 #0f52ba;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #434653;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="bg-surface-container-lowest min-h-screen">
+<!-- SIDE NAVIGATION BAR (Predicted Component #1) -->
+<aside class="h-screen w-72 flex flex-col fixed left-0 top-0 bg-surface border-r border-outline-variant/10 py-stack-lg z-50">
+<div class="px-gutter mb-stack-lg">
+<h1 class="font-display-lg text-display-lg font-bold tracking-tighter text-on-surface">Vantage</h1>
+<p class="font-label-md text-label-md uppercase tracking-widest text-primary mt-1">Professional Intelligence</p>
+</div>
+<nav class="flex-1 px-stack-sm space-y-1 overflow-y-auto custom-scrollbar">
+<!-- Active: Dashboard -->
+<a class="flex items-center px-gutter py-3 text-primary border-l-4 border-primary bg-primary/5 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-3">dashboard</span>
+<span class="font-body-md text-body-md">Dashboard</span>
+</a>
+<a class="flex items-center px-gutter py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-3">assignment_turned_in</span>
+<span class="font-body-md text-body-md">Tasks and Goals</span>
+</a>
+<a class="flex items-center px-gutter py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-3">forum</span>
+<span class="font-body-md text-body-md">Sessions</span>
+</a>
+<a class="flex items-center px-gutter py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-3">timeline</span>
+<span class="font-body-md text-body-md">Roadmap</span>
+</a>
+<a class="flex items-center px-gutter py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-3">military_tech</span>
+<span class="font-body-md text-body-md">Wins Board</span>
+</a>
+<a class="flex items-center px-gutter py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-3">folder_shared</span>
+<span class="font-body-md text-body-md">Resources</span>
+</a>
+<a class="flex items-center px-gutter py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-3">chat</span>
+<span class="font-body-md text-body-md">Chat</span>
+</a>
+<a class="flex items-center px-gutter py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-3">person</span>
+<span class="font-body-md text-body-md">Profile</span>
+</a>
+<a class="flex items-center px-gutter py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-3">radar</span>
+<span class="font-body-md text-body-md">Corporate Radar</span>
+</a>
+</nav>
+<div class="mt-auto px-stack-sm space-y-1">
+<a class="flex items-center px-gutter py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-3">settings</span>
+<span class="font-body-md text-body-md">Settings</span>
+</a>
+<a class="flex items-center px-gutter py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-3">help</span>
+<span class="font-body-md text-body-md">Support</span>
+</a>
+</div>
+</aside>
+<!-- TOP APP BAR (Predicted Component #2) -->
+<header class="ml-72 flex justify-between items-center h-16 px-gutter bg-surface/80 backdrop-blur-xl border-b border-outline-variant/10 fixed top-0 left-0 right-0 z-40">
+<div class="flex items-center gap-4">
+<span class="font-label-md text-label-md uppercase tracking-widest text-on-surface-variant">System / Overview</span>
+</div>
+<div class="flex items-center gap-stack-md">
+<div class="flex items-center gap-2 px-3 py-1 bg-surface-container-highest rounded-full border border-outline-variant/20">
+<span class="material-symbols-outlined text-primary text-sm">stars</span>
+<span class="font-label-md text-label-md text-on-surface">PLATINUM</span>
+</div>
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors">dark_mode</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors">tune</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors relative">
+                notifications
+                <span class="absolute top-0 right-0 w-2 h-2 bg-secondary rounded-full"></span>
+</button>
+<img alt="User avatar" class="w-8 h-8 rounded-full border border-outline-variant/30" data-alt="A professional close-up headshot of a person with a modern, confident expression, set against a blurred high-tech office background. The lighting is crisp and editorial, highlighting sharp features and a sophisticated look, perfectly matching the premium dark mode aesthetic of a corporate intelligence platform." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBMsnY2evNYTSXJXTTxI-4ruEosfYcM5T1NcGbbaCduR30DaXGOST0MyYuNVTzm92PmYBC6z2X66IYYwfOpmFy1cIlRO-Tby6c--i1podaWQIhWrjlJVTbFLTVLJIAr0DNaekuOWRY423SnVY2MUzDmOkG-MxE9Ku8Dt6qoLuoiYWQdXQBI4CLmytfywg5L9y2fVAbeHFKWQ6Pv-xGX_-u7zL1NkK_ry8dioVMS83IPC9rANozNNYtQhvILuqbldCfqtovnt5tq5ZWU"/>
+</div>
+</header>
+<!-- MAIN CONTENT CANVAS -->
+<main class="ml-72 mt-16 p-stack-lg min-h-screen">
+<!-- GREETING & INTENTION -->
+<div class="mb-stack-lg flex flex-col md:flex-row justify-between items-end gap-stack-md">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Welcome back, Alex</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Thursday, October 24, 2024</p>
+</div>
+<div class="w-full md:max-w-md glass-panel p-4 rounded-xl flex items-center justify-between border-l-4 border-primary shadow-lg animate-in fade-in slide-in-from-top-4 duration-500 slide-in-from-bottom-2 duration-700 fill-both" style="animation-delay: 0s;">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">target</span>
+<div>
+<p class="font-label-md text-label-md uppercase tracking-widest text-primary">Daily Intention</p>
+<p class="font-body-md text-body-md font-bold text-on-surface">Focus: Finalize Q4 Roadmap Strategy</p>
+</div>
+</div>
+<button class="material-symbols-outlined text-on-surface-variant hover:text-error transition-colors" onclick="this.parentElement.remove()">close</button>
+</div>
+</div>
+<!-- STAT TILES GRID -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-stack-md mb-stack-lg">
+<div class="glass-panel p-stack-md rounded-xl animate-in fade-in slide-in-from-bottom-2 duration-700 fill-both" style="animation-delay: 0.1s;">
+<div class="flex justify-between items-start mb-2">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">military_tech</span>
+<span class="text-tertiary font-label-md text-label-md">+15% vs LY</span>
+</div>
+<p class="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest">XP Total</p>
+<div class="flex items-baseline gap-2">
+<span class="font-headline-md text-headline-md text-on-surface">2,450</span>
+<span class="font-label-md text-label-md text-primary">PLATINUM</span>
+</div>
+</div>
+<div class="glass-panel p-stack-md rounded-xl animate-in fade-in slide-in-from-bottom-2 duration-700 fill-both" style="animation-delay: 0.2s;">
+<div class="flex justify-between items-start mb-2">
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
+<span class="text-on-surface-variant font-label-md text-label-md">Current</span>
+</div>
+<p class="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest">Streak</p>
+<div class="flex items-baseline gap-2">
+<span class="font-headline-md text-headline-md text-on-surface">12 Days</span>
+<span class="material-symbols-outlined text-secondary text-sm">trending_up</span>
+</div>
+</div>
+<div class="glass-panel p-stack-md rounded-xl animate-in fade-in slide-in-from-bottom-2 duration-700 fill-both" style="animation-delay: 0.3s;">
+<div class="flex justify-between items-start mb-2">
+<span class="material-symbols-outlined text-tertiary">task_alt</span>
+<span class="text-tertiary font-label-md text-label-md">3 Finished</span>
+</div>
+<p class="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest">Active Tasks</p>
+<div class="flex items-baseline gap-2">
+<span class="font-headline-md text-headline-md text-on-surface">8</span>
+<span class="font-label-md text-label-md text-on-surface-variant">in progress</span>
+</div>
+</div>
+<div class="glass-panel p-stack-md rounded-xl animate-in fade-in slide-in-from-bottom-2 duration-700 fill-both" style="animation-delay: 0.4s;">
+<div class="flex justify-between items-start mb-2">
+<span class="material-symbols-outlined text-primary">calendar_today</span>
+<span class="text-secondary font-label-md text-label-md">Next in 2h</span>
+</div>
+<p class="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest">Upcoming Sessions</p>
+<div class="flex items-baseline gap-2">
+<span class="font-headline-md text-headline-md text-on-surface">3</span>
+<span class="font-label-md text-label-md text-on-surface-variant">scheduled</span>
+</div>
+</div>
+</div>
+<!-- BENTO GRID SECTION -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-stack-lg">
+<!-- COLUMN 1: WIDGETS -->
+<div class="lg:col-span-8 space-y-stack-lg">
+<!-- ROW 1: QUICK TASKS & FOCUS TIMER -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-stack-lg">
+<!-- Quick Tasks -->
+<div class="glass-panel rounded-xl overflow-hidden flex flex-col animate-in fade-in slide-in-from-bottom-2 duration-700 fill-both" style="animation-delay: 0.5s;">
+<div class="p-stack-md border-b border-outline-variant/10 flex justify-between items-center">
+<h3 class="font-label-md text-label-md uppercase tracking-widest text-on-surface">Quick Tasks</h3>
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary">add</button>
+</div>
+<div class="p-stack-md space-y-4 flex-1">
+<div class="flex items-center gap-3">
+<input class="w-5 h-5 rounded border-outline bg-surface focus:ring-primary text-primary transition-all cursor-pointer" type="checkbox"/>
+<div class="flex-1">
+<p class="font-body-md text-body-md text-on-surface">Review Q4 Budget Proposals</p>
+<div class="flex gap-2 mt-1">
+<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-secondary-container text-on-secondary-container uppercase">High</span>
+<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-surface-container-highest text-on-surface-variant uppercase">Finance</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<input class="w-5 h-5 rounded border-outline bg-surface focus:ring-primary text-primary transition-all cursor-pointer" type="checkbox"/>
+<div class="flex-1">
+<p class="font-body-md text-body-md text-on-surface">Team Lead Sync - Project Alpha</p>
+<div class="flex gap-2 mt-1">
+<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-primary/20 text-primary uppercase">Med</span>
+<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-surface-container-highest text-on-surface-variant uppercase">Management</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<input class="w-5 h-5 rounded border-outline bg-surface focus:ring-primary text-primary transition-all cursor-pointer" type="checkbox"/>
+<div class="flex-1">
+<p class="font-body-md text-body-md text-on-surface">Draft Marketing Brief</p>
+<div class="flex gap-2 mt-1">
+<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-surface-container-highest text-on-surface-variant uppercase">Low</span>
+<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-surface-container-highest text-on-surface-variant uppercase">Marketing</span>
+</div>
+</div>
+</div>
+</div>
+<a class="p-stack-md text-center font-label-md text-label-md text-primary border-t border-outline-variant/10 hover:bg-primary/5 transition-colors" href="#">VIEW ALL TASKS</a>
+</div>
+<!-- Focus Timer -->
+<div class="glass-panel rounded-xl overflow-hidden flex flex-col relative group animate-in fade-in slide-in-from-bottom-2 duration-700 fill-both" style="animation-delay: 0.6s;">
+<div class="relative z-10 p-stack-md flex flex-col items-center justify-center flex-1 h-full">
+<h3 class="font-label-md text-label-md uppercase tracking-widest text-on-surface mb-6">Focus Session</h3>
+<div class="relative flex items-center justify-center mb-8">
+<svg class="w-48 h-48 -rotate-90">
+<circle class="text-outline-variant/20" cx="96" cy="96" fill="transparent" r="88" stroke="currentColor" stroke-width="4"></circle>
+<circle class="text-primary transition-all duration-500" cx="96" cy="96" fill="transparent" id="timer-progress" r="88" stroke="currentColor" stroke-dasharray="553" stroke-dashoffset="138" stroke-width="4"></circle>
+</svg>
+<div class="absolute inset-0 flex flex-col items-center justify-center">
+<span class="font-display-lg text-4xl text-on-surface font-bold tracking-tight" id="timer-display">25:00</span>
+<span class="font-label-md text-label-md text-on-surface-variant uppercase">Project Alpha</span>
+</div>
+</div>
+<div class="flex gap-4">
+<button class="w-12 h-12 rounded-full bg-primary text-on-primary flex items-center justify-center hover:scale-105 active:scale-95 transition-all" id="timer-start">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</button>
+<button class="w-12 h-12 rounded-full border border-outline text-on-surface flex items-center justify-center hover:bg-surface-container-high transition-all" id="timer-pause">
+<span class="material-symbols-outlined">pause</span>
+</button>
+<button class="w-12 h-12 rounded-full border border-outline text-on-surface flex items-center justify-center hover:bg-surface-container-high transition-all" id="timer-stop">
+<span class="material-symbols-outlined">stop</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- ROW 2: GOALS PROGRESS -->
+<div class="glass-panel rounded-xl overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-700 fill-both" style="animation-delay: 0.7s;"><div class="p-stack-md border-b border-outline-variant/10 flex justify-between items-center"><div class="flex flex-col"><span class="font-label-md text-label-md uppercase tracking-widest text-on-surface-variant">Priority Matrix</span><h3 class="font-headline-md text-headline-md text-on-surface uppercase">Eisenhower Matrix</h3></div><button class="flex items-center gap-2 px-4 py-2 rounded-lg border border-outline-variant/30 text-on-surface hover:bg-surface-container-high transition-all"><span class="font-label-md text-label-md">Expand</span><span class="material-symbols-outlined text-sm">arrow_forward</span></button></div><div class="p-stack-lg grid grid-cols-1 md:grid-cols-2 gap-stack-lg"><div class="space-y-4"><div class="flex items-center gap-2 text-secondary"><span class="material-symbols-outlined">local_fire_department</span><span class="font-bold">Do Now</span></div><div class="text-4xl font-bold text-on-surface">2</div><p class="text-on-surface-variant text-sm">Urgent + Important</p><div class="space-y-2"><div class="p-3 rounded-lg border border-outline-variant/20 flex items-center gap-3"><span class="w-2 h-2 rounded-full bg-secondary"></span><span class="text-sm">Prepare talking points for Monday...</span></div><div class="p-3 rounded-lg border border-outline-variant/20 flex items-center gap-3"><span class="w-2 h-2 rounded-full bg-secondary"></span><span class="text-sm">Send thank-you notes to informa...</span></div></div></div><div class="space-y-4"><div class="flex items-center gap-2 text-secondary"><span class="material-symbols-outlined">calendar_today</span><span class="font-bold">Do Next</span></div><div class="text-4xl font-bold text-on-surface">3</div><p class="text-on-surface-variant text-sm">Not Urgent + Important</p><div class="space-y-2"><div class="p-3 rounded-lg border border-outline-variant/20 flex items-center gap-3"><span class="w-2 h-2 rounded-full bg-secondary"></span><span class="text-sm">Complete Google Data Analytics ...</span></div><div class="p-3 rounded-lg border border-outline-variant/20 flex items-center gap-3"><span class="w-2 h-2 rounded-full bg-secondary"></span><span class="text-sm">Draft 90-day career development...</span></div><p class="text-xs text-on-surface-variant">+1 more</p></div></div><div class="space-y-4"><div class="flex items-center gap-2 text-tertiary"><span class="material-symbols-outlined">groups</span><span class="font-bold">Handle Soon</span></div><div class="text-4xl font-bold text-on-surface">1</div><p class="text-on-surface-variant text-sm">Urgent + Lower Priority</p><div class="space-y-2"><div class="p-3 rounded-lg border border-outline-variant/20 flex items-center gap-3"><span class="w-2 h-2 rounded-full bg-tertiary"></span><span class="text-sm">Reply to LinkedIn recruiter messa...</span></div></div></div><div class="space-y-4"><div class="flex items-center gap-2 text-on-surface-variant"><span class="material-symbols-outlined">target</span><span class="font-bold">Revisit Later</span></div><div class="text-4xl font-bold text-on-surface">2</div><p class="text-on-surface-variant text-sm">Not Urgent + Lower Priority</p><div class="space-y-2"><div class="p-3 rounded-lg border border-outline-variant/20 flex items-center gap-3"><span class="w-2 h-2 rounded-full bg-tertiary"></span><span class="text-sm">Research industry conferences fo...</span></div><div class="p-3 rounded-lg border border-outline-variant/20 flex items-center gap-3"><span class="w-2 h-2 rounded-full bg-outline"></span><span class="text-sm">Start reading "Designing Your Life"</span></div></div></div></div></div>
+</div>
+<!-- COLUMN 2: FEED & SESSIONS -->
+<div class="lg:col-span-4 space-y-stack-lg">
+<!-- Breakthrough Card -->
+<div class="glass-panel rounded-xl overflow-hidden relative border-t-2 border-primary group animate-in fade-in slide-in-from-bottom-2 duration-700 fill-both" style="animation-delay: 0.8s;">
+<div class="absolute top-0 right-0 p-3">
+<span class="flex h-3 w-3">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+<span class="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
+</span>
+</div>
+<div class="p-stack-md flex flex-col"><div class="flex items-center gap-3 mb-4"><div><h4 class="font-body-md text-body-md font-bold text-on-surface">Upcoming Sessions</h4><p class="font-label-md text-label-md text-primary">Senior Strategy Lead</p></div></div><p class="font-body-sm text-body-sm text-on-surface-variant mb-6">"Breakthrough session starting in 5 minutes. We'll be deep-diving into your Q4 roadmap and identifying friction points."</p><button class="w-full py-3 bg-primary text-on-primary font-label-md text-label-md uppercase tracking-widest rounded-lg flex items-center justify-center gap-2 hover:bg-primary/90 transition-all"><span class="material-symbols-outlined">video_call</span>JOIN MENTORSHIP</button></div>
+</div>
+<!-- Recent Wins Feed -->
+<div class="glass-panel rounded-xl flex flex-col animate-in fade-in slide-in-from-bottom-2 duration-700 fill-both" style="animation-delay: 0.9s;">
+<div class="p-stack-md border-b border-outline-variant/10">
+<h3 class="font-label-md text-label-md uppercase tracking-widest text-on-surface">Recent Wins</h3>
+</div>
+<div class="p-stack-md space-y-6">
+<div class="flex gap-4 group">
+<div class="mt-1">
+<div class="w-8 h-8 rounded-full bg-tertiary/10 text-tertiary flex items-center justify-center">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">emoji_events</span>
+</div>
+</div>
+<div>
+<p class="font-body-sm text-body-sm text-on-surface"><span class="font-bold">Won:</span> Project Alpha Milestone 1 approved by stakeholders.</p>
+<p class="text-[10px] text-on-surface-variant uppercase mt-1">2 hours ago</p>
+</div>
+</div>
+<div class="flex gap-4 group">
+<div class="mt-1">
+<div class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">trending_up</span>
+</div>
+</div>
+<div>
+<p class="font-body-sm text-body-sm text-on-surface"><span class="font-bold">Unlocked:</span> 'Master Strategist' achievement badge.</p>
+<p class="text-[10px] text-on-surface-variant uppercase mt-1">Yesterday</p>
+</div>
+</div>
+<div class="flex gap-4 group">
+<div class="mt-1">
+<div class="w-8 h-8 rounded-full bg-secondary/10 text-secondary flex items-center justify-center">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">favorite</span>
+</div>
+</div>
+<div>
+<p class="font-body-sm text-body-sm text-on-surface"><span class="font-bold">Feedback:</span> +5 Peer Recognition points from Marcus.</p>
+<p class="text-[10px] text-on-surface-variant uppercase mt-1">Oct 22</p>
+</div>
+</div>
+</div>
+<a class="p-stack-md text-center font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors border-t border-outline-variant/10" href="#">VIEW ALL WINS</a>
+</div>
+</div>
+</div>
+</main>
+<!-- FAB (Suppressed on Dashboard as per rules? Or allowed? Let's check: 
+         "You MUST ONLY render the FAB if the screen's primary purpose aligns perfectly with the FAB's action (e.g., rendering 'Book a Walk' on the Home or Dashboard screen)")
+    -->
+<button class="fixed bottom-8 right-8 w-16 h-16 rounded-full bg-primary-container text-on-primary-container shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-50">
+<span class="material-symbols-outlined text-3xl">add</span>
+</button>
+<script>
+        // Micro-interactions for Timer
+        let timerSeconds = 1500;
+        let timerInterval = null;
+        const display = document.getElementById('timer-display');
+        const progress = document.getElementById('timer-progress');
+        const startBtn = document.getElementById('timer-start');
+        const pauseBtn = document.getElementById('timer-pause');
+        const stopBtn = document.getElementById('timer-stop');
+
+        function updateDisplay() {
+            const mins = Math.floor(timerSeconds / 60);
+            const secs = timerSeconds % 60;
+            display.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            
+            // Progress circle (dashoffset)
+            const percent = (timerSeconds / 1500);
+            const offset = 553 - (percent * 553);
+            progress.style.strokeDashoffset = offset;
+        }
+
+        startBtn.addEventListener('click', () => {
+            if (timerInterval) return;
+            timerInterval = setInterval(() => {
+                if (timerSeconds > 0) {
+                    timerSeconds--;
+                    updateDisplay();
+                } else {
+                    clearInterval(timerInterval);
+                }
+            }, 1000);
+            startBtn.classList.add('bg-primary/50');
+        });
+
+        pauseBtn.addEventListener('click', () => {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            startBtn.classList.remove('bg-primary/50');
+        });
+
+        stopBtn.addEventListener('click', () => {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            timerSeconds = 1500;
+            updateDisplay();
+            startBtn.classList.remove('bg-primary/50');
+        });
+
+        // Add a subtle entrance animation delay for grid items
+        document.querySelectorAll('.glass-panel').forEach((el, i) => {
+            el.style.animationDelay = `${i * 0.1}s`;
+            el.classList.add('animate-in', 'fade-in', 'slide-in-from-bottom-2', 'duration-700', 'fill-both');
+        });
+    </script>
+</body></html>
