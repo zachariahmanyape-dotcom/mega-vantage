@@ -37,7 +37,7 @@ function anDaysSince(iso) {
 
 function AnStat({ label, value, sub, color, loading }) {
   return (
-    <div className="card" style={{ padding: 20 }}>
+    <div className="bento-card" style={{ padding: 20 }}>
       <div className="eyebrow">{label}</div>
       <div className="display" style={{ fontSize: 38, marginTop: 4, lineHeight: 1, color: color || 'var(--text)' }}>
         {loading ? '—' : value}
@@ -61,7 +61,7 @@ function AtRiskBanner({ members }) {
   return (
     <div className="risk-alert">
       <div style={{ width: 36, height: 36, flex: '0 0 36px', borderRadius: 10, background: 'var(--coral)', color: '#fff', display: 'grid', placeItems: 'center' }}>
-        <Icon name="bell" size={18} />
+        <span className="material-symbols-outlined" style={{fontSize:18,lineHeight:1}}>notifications</span>
       </div>
       <div style={{ flex: 1 }}>
         <div style={{ fontFamily: 'var(--ff-display)', fontSize: 18, color: 'var(--coral)' }}>{atRisk.length} member{atRisk.length > 1 ? 's' : ''} at risk — no activity for 7+ days</div>
@@ -94,7 +94,7 @@ function EngagementTab({ stats, loading }) {
         <AnStat loading={loading} label="Task completion rate" value={`${stats?.completion_rate ?? 0}%`} sub="Across all members" color="var(--teal-600)" />
       </div>
 
-      <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+      <div className="bento-card" style={{ padding: 0, overflow: 'hidden' }}>
         <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between' }}>
           <div className="eyebrow" style={{ margin: 0 }}>Member engagement health</div>
           <span style={{ fontSize: 11, color: 'var(--text-3)' }}>Sorted by focus time</span>
@@ -125,7 +125,7 @@ function EngagementTab({ stats, loading }) {
                   <td style={{ padding: '10px 16px' }}>{(m.hours || 0)}h</td>
                   <td style={{ padding: '10px 16px' }}>
                     <span style={{ color: m.streak > 0 ? 'var(--coral)' : 'var(--text-3)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                      <Icon name="flame" size={12} />{m.streak || 0}
+                      <span className="material-symbols-outlined" style={{fontSize:12,lineHeight:1}}>local_fire_department</span>{m.streak || 0}
                     </span>
                   </td>
                   <td style={{ padding: '10px 16px' }}>{m.tasks_done || 0}</td>
@@ -163,7 +163,7 @@ function TasksGoalsTab({ stats, loading }) {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 20 }}>
-        <div className="card" style={{ padding: 22 }}>
+        <div className="bento-card" style={{ padding: 22 }}>
           <div className="eyebrow" style={{ marginBottom: 14 }}>Subject area completion</div>
           {loading ? (
             <div style={{ fontSize: 13, color: 'var(--text-3)' }}>Loading…</div>
@@ -185,7 +185,7 @@ function TasksGoalsTab({ stats, loading }) {
         </div>
 
         <div className="stack" style={{ gap: 16 }}>
-          <div className="card" style={{ padding: 22 }}>
+          <div className="bento-card" style={{ padding: 22 }}>
             <div className="eyebrow" style={{ marginBottom: 12 }}>Goals status breakdown</div>
             {loading ? (
               <div style={{ fontSize: 13, color: 'var(--text-3)' }}>Loading…</div>
@@ -206,7 +206,7 @@ function TasksGoalsTab({ stats, loading }) {
             )}
           </div>
 
-          <div className="card" style={{ padding: 22 }}>
+          <div className="bento-card" style={{ padding: 22 }}>
             <div className="eyebrow" style={{ marginBottom: 12 }}>Task assignment volume</div>
             {loading ? (
               <div style={{ fontSize: 13, color: 'var(--text-3)' }}>Loading…</div>
@@ -247,7 +247,7 @@ function SessionMetricsTab({ stats, loading }) {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
-        <div className="card" style={{ padding: 22 }}>
+        <div className="bento-card" style={{ padding: 22 }}>
           <div className="eyebrow" style={{ marginBottom: 14 }}>Attendance by type</div>
           {loading ? (
             <div style={{ fontSize: 13, color: 'var(--text-3)' }}>Loading…</div>
@@ -270,7 +270,7 @@ function SessionMetricsTab({ stats, loading }) {
           )}
         </div>
 
-        <div className="card" style={{ padding: 0, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div className="bento-card" style={{ padding: 0, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <AnEmpty title="Reschedule & no-show analytics" note="These aren't tracked yet — sessions don't record reschedule requests or attendance no-shows. This will light up once that data is captured." />
         </div>
       </div>
@@ -280,7 +280,7 @@ function SessionMetricsTab({ stats, loading }) {
 // ---------- Revenue Tab (no billing data in the schema) ----------
 function RevenueTab() {
   return (
-    <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+    <div className="bento-card" style={{ padding: 0, overflow: 'hidden' }}>
       <AnEmpty
         title="Revenue & CLV tracking isn't connected"
         note="Vantage doesn't store billing, subscription, or fee data yet, so there's nothing to report here. Once payments/plans are wired to the backend, MRR, per-member revenue, and CLV will populate automatically." />
@@ -306,11 +306,11 @@ function AdminAnalytics() {
 
   return (
     <>
-      <div className="page-header">
+      <div className="page-header" style={{ marginBottom: 24 }}>
         <div>
-          <div className="eyebrow">Admin · Analytics</div>
-          <h1 className="page-title">The numbers</h1>
-          <div className="page-sub" style={{ marginTop: 8, color: 'var(--text-2)', maxWidth: 560 }}>Engagement, tasks, and sessions across all members — pulled live from the platform.</div>
+          <div className="page-eyebrow">Admin · Analytics</div>
+          <h1 className="page-title xl" style={{ margin: '6px 0 0', color: 'var(--text)' }}>The numbers</h1>
+          <div style={{ marginTop: 10, fontSize: 14, color: 'var(--text-2)', maxWidth: 560, lineHeight: 1.6, opacity: 0.8 }}>Engagement, tasks, and sessions across all members — pulled live from the platform.</div>
         </div>
       </div>
 

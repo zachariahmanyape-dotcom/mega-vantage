@@ -1,5 +1,7 @@
 // milestone.jsx — Milestone timeline for profile page (derived from real activity)
 
+const MILESTONE_MAT = { star:'star', sessions:'event', clock:'schedule', check:'check_circle', trophy:'military_tech', flag:'flag' };
+
 function MilestoneTimeline({ milestones }) {
   const [expanded, setExpanded] = useState(false);
   const all = milestones || [];
@@ -28,7 +30,7 @@ function MilestoneTimeline({ milestones }) {
         </div>
         {all.length > 6 &&
         <button className="btn ghost sm" onClick={() => setExpanded(e => !e)}>
-          {expanded ? 'Show recent' : 'Show all'} <Icon name={expanded ? 'chevron-down' : 'arrow-right'} size={12} />
+          {expanded ? 'Show recent' : 'Show all'} <span className="material-symbols-outlined" style={{fontSize:13,lineHeight:1,verticalAlign:'middle'}}>{expanded ? 'expand_less' : 'chevron_right'}</span>
         </button>
         }
       </div>
@@ -47,7 +49,7 @@ function MilestoneTimeline({ milestones }) {
                   color: m.color,
                   boxShadow: '0 0 0 4px var(--bg-elev)'
                 }}>
-                  <Icon name={m.icon} size={16} />
+                  <span className="material-symbols-outlined" style={{fontSize:16,lineHeight:1}}>{MILESTONE_MAT[m.icon] || 'flag'}</span>
                 </div>
                 <div style={{ flex: 1, height: 2, background: i === visible.length - 1 ? 'transparent' : 'var(--border)' }} />
               </div>

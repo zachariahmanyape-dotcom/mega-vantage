@@ -92,7 +92,7 @@ function NewChannelModal({ onClose, onCreated }) {
             <div className="eyebrow">Chat</div>
             <div className="display" style={{ fontSize: 24, marginTop: 2, lineHeight: 1.1 }}>New channel</div>
           </div>
-          <button onClick={onClose} style={{ color: 'var(--text-3)', fontSize: 16, background: 'none', border: 'none', cursor: 'pointer', lineHeight: 1 }}>✕</button>
+          <button onClick={onClose} style={{ color: 'var(--text-3)', background: 'none', border: 'none', cursor: 'pointer', lineHeight: 1, display: 'inline-flex' }}><span className="material-symbols-outlined" style={{fontSize:18,lineHeight:1}}>close</span></button>
         </div>
 
         <div style={{ padding: '20px 24px' }}>
@@ -117,7 +117,7 @@ function NewChannelModal({ onClose, onCreated }) {
                       const on = selected.has(m.id);
                       return (
                         <div key={m.id} onClick={() => toggle(m.id)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderBottom: '1px solid var(--border)', cursor: 'pointer' }}>
-                          <div className={'check' + (on ? ' on' : '')}>{on && <Icon name="check" size={11} stroke={3} />}</div>
+                          <div className={'check' + (on ? ' on' : '')}>{on && <span className="material-symbols-outlined" style={{fontSize:11,lineHeight:1}}>check</span>}</div>
                           <Avatar initials={winInitials(m.full_name)} color={winColor(m.full_name)} size={28} />
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ fontSize: 13, fontWeight: 600 }}>{m.full_name || 'Member'}</div>
@@ -156,7 +156,7 @@ function DmPickerModal({ directory, meId, onClose, onPick }) {
             <div className="eyebrow">Chat</div>
             <div className="display" style={{ fontSize: 24, marginTop: 2, lineHeight: 1.1 }}>New direct message</div>
           </div>
-          <button onClick={onClose} style={{ color: 'var(--text-3)', fontSize: 16, background: 'none', border: 'none', cursor: 'pointer', lineHeight: 1 }}>✕</button>
+          <button onClick={onClose} style={{ color: 'var(--text-3)', background: 'none', border: 'none', cursor: 'pointer', lineHeight: 1, display: 'inline-flex' }}><span className="material-symbols-outlined" style={{fontSize:18,lineHeight:1}}>close</span></button>
         </div>
         <div style={{ padding: '20px 24px' }}>
           <input className="input" style={{ fontSize: 13, marginBottom: 8 }} value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search members…" autoFocus />
@@ -170,7 +170,7 @@ function DmPickerModal({ directory, meId, onClose, onPick }) {
                     <div style={{ fontSize: 13, fontWeight: 600 }}>{m.full_name || 'Member'}</div>
                     <div style={{ fontSize: 11, color: 'var(--text-3)' }}>{m.membership_tier ? m.membership_tier.charAt(0).toUpperCase() + m.membership_tier.slice(1) : 'Member'}</div>
                   </div>
-                  <Icon name="arrow-right" size={13} style={{ color: 'var(--text-3)' }} />
+                  <span className="material-symbols-outlined" style={{fontSize:13,lineHeight:1,color:'var(--text-3)'}}>chevron_right</span>
                 </div>
               ))}
           </div>
@@ -333,17 +333,17 @@ function ChatScreen() {
 
   return (
     <>
-      <div className="page-header">
+      <div className="page-header" style={{ marginBottom: 24 }}>
         <div>
-          <div className="eyebrow">Chat</div>
-          <h1 className="page-title">Community</h1>
-          <div className="page-sub" style={{ marginTop: 8, color: 'var(--text-2)', maxWidth: 540 }}>
+          <div className="page-eyebrow">Chat</div>
+          <h1 className="page-title xl" style={{ margin: '6px 0 0', color: 'var(--text)' }}>Community</h1>
+          <div style={{ marginTop: 10, fontSize: 14, color: 'var(--text-2)', maxWidth: 540, lineHeight: 1.6, opacity: 0.8 }}>
             Channels and direct discussion for the MEGA Mentorship community.
           </div>
         </div>
       </div>
 
-      <div className="card" style={{ padding: 0, overflow: 'hidden', display: 'grid', gridTemplateColumns: '260px 1fr', minHeight: 640 }}>
+      <div className="bento-card" style={{ padding: 0, overflow: 'hidden', display: 'grid', gridTemplateColumns: '260px 1fr', minHeight: 640 }}>
         {/* Sidebar — channel list */}
         <div style={{ borderRight: '1px solid var(--border)', padding: '16px 12px', background: 'var(--bg-sunken)', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
           <div className="row-between" style={{ padding: '4px 8px 10px' }}>
@@ -351,7 +351,7 @@ function ChatScreen() {
             {isAdmin && (
               <button onClick={() => setCreating(true)} title="New channel"
                 style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'var(--accent)', display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 12, fontWeight: 600 }}>
-                <Icon name="plus" size={13} /> New
+                <span className="material-symbols-outlined" style={{fontSize:13,lineHeight:1}}>add</span> New
               </button>
             )}
           </div>
@@ -375,11 +375,11 @@ function ChatScreen() {
               {isAdmin
                 ? <button onClick={() => setDmPicker(true)} title="New direct message"
                     style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'var(--accent)', display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 12, fontWeight: 600 }}>
-                    <Icon name="plus" size={13} /> New
+                    <span className="material-symbols-outlined" style={{fontSize:13,lineHeight:1}}>add</span> New
                   </button>
                 : (adminId && <button onClick={() => startDm(adminId)} title={`Message ${adminName}`}
                     style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'var(--accent)', display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 12, fontWeight: 600 }}>
-                    <Icon name="plus" size={13} /> New
+                    <span className="material-symbols-outlined" style={{fontSize:13,lineHeight:1}}>add</span> New
                   </button>)}
             </div>
             {!loadingChannels && dmChannels.length === 0
@@ -428,7 +428,7 @@ function ChatScreen() {
                   : messages.length === 0
                     ? <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: 14 }}>
                         <div style={{ width: 56, height: 56, borderRadius: 16, background: 'var(--accent-soft)', color: 'var(--accent)', display: 'grid', placeItems: 'center' }}>
-                          <Icon name="chat" size={26} />
+                          <span className="material-symbols-outlined" style={{fontSize:26,lineHeight:1}}>chat</span>
                         </div>
                         <div>
                           <div style={{ fontSize: 16, fontWeight: 700 }}>Start the conversation</div>
@@ -469,7 +469,7 @@ function ChatScreen() {
                     placeholder={`Message ${selectedTitle}…`}
                     style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', fontSize: 13, padding: '6px 0', color: 'var(--text)' }} />
                   <button className="btn primary sm" disabled={!text.trim() || sending} onClick={send} style={{ opacity: !text.trim() || sending ? 0.5 : 1 }}>
-                    <Icon name="send" size={12} /> {sending ? 'Sending…' : 'Send'}
+                    <span className="material-symbols-outlined" style={{fontSize:12,lineHeight:1}}>send</span> {sending ? 'Sending…' : 'Send'}
                   </button>
                 </div>
               </div>

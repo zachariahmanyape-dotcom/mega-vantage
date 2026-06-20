@@ -180,7 +180,7 @@ function AddToCalendar({ session, compact }) {
   return (
     <div style={{ position: 'relative' }}>
       <button className={compact ? 'btn sm' : 'btn'} onClick={(e) => {e.stopPropagation();setOpen((o) => !o);}} style={{ justifyContent: 'center' }}>
-        <Icon name="sessions" size={13} /> Add to calendar
+        <span className="material-symbols-outlined" style={{fontSize:13,lineHeight:1}}>event</span> Add to calendar
       </button>
       {open &&
       <>
@@ -191,7 +191,7 @@ function AddToCalendar({ session, compact }) {
           style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '9px 10px', borderRadius: 8, border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, color: 'var(--text)', textAlign: 'left' }}
           onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-sunken)'}
           onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
-                <Icon name="external" size={12} style={{ color: 'var(--text-3)' }} /> {opt.label}
+                <span className="material-symbols-outlined" style={{fontSize:12,lineHeight:1,color:'var(--text-3)'}}>open_in_new</span> {opt.label}
               </button>
           )}
           </div>
@@ -223,7 +223,7 @@ function SessionDetailModal({ session, onClose, isAdmin }) {
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
                 <span className={"chip " + (isTH ? 'coral' : 'sapphire')}><span className="dot" />{session.type}</span>
                 {session.recurring && <span className="chip teal">↻ Repeats {session.recurring}</span>}
-                {past && <span className="chip teal"><Icon name="check" size={10} stroke={3} /> Completed</span>}
+                {past && <span className="chip teal"><span className="material-symbols-outlined" style={{fontSize:10,lineHeight:1}}>check</span> Completed</span>}
               </div>
               <div className="display" style={{ fontSize: 22, lineHeight: 1.1 }}>{session.title}</div>
             </div>
@@ -251,7 +251,7 @@ function SessionDetailModal({ session, onClose, isAdmin }) {
               {session.link ?
               <a href={session.link} target="_blank" rel="noopener noreferrer"
               style={{ fontSize: 13, color: 'var(--accent)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 4, textDecoration: 'none' }}>
-                    Join now <Icon name="external" size={11} />
+                    Join now <span className="material-symbols-outlined" style={{fontSize:11,lineHeight:1,verticalAlign:'middle'}}>open_in_new</span>
                   </a> :
               <span style={{ fontSize: 12, color: 'var(--text-3)' }}>Not set</span>
               }
@@ -285,7 +285,7 @@ function SessionDetailModal({ session, onClose, isAdmin }) {
             <AddToCalendar session={session} compact />
             {session.link &&
             <button className="btn primary" onClick={() => window.open(session.link, '_blank', 'noopener')}>
-              Join session <Icon name="external" size={13} />
+              Join session <span className="material-symbols-outlined" style={{fontSize:13,lineHeight:1,verticalAlign:'middle'}}>open_in_new</span>
             </button>
             }
           </div>
@@ -457,11 +457,12 @@ function DayView({ sessions, date, filters, onSelect }) {
   const totalH = (HOUR_END - HOUR_START) * HOUR_H;
 
   return (
-    <div>
-      <div style={{ textAlign: 'center', padding: '10px 0 16px', fontFamily: 'var(--ff-display)', fontSize: 32, color: isToday ? 'var(--accent)' : 'var(--text)' }}>
-        {date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+    <div style={{ border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
+      <div className={"week-col-header" + (isToday ? ' today-col' : '')} style={{ borderBottom: '1px solid var(--border)', padding: '10px 14px', background: 'var(--bg-sunken)' }}>
+        <div className="week-col-day">{date.toLocaleDateString('en-US', { weekday: 'long' })}</div>
+        <div className="week-col-num" style={isToday ? { color: 'var(--accent)' } : {}}>{date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}</div>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '52px 1fr', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '52px 1fr' }}>
         <div className="time-gutter">
           {HOURS.map((h) => <div key={h} className="time-label">{h === 0 ? '12 AM' : h < 12 ? `${h} AM` : h === 12 ? '12 PM' : `${h - 12} PM`}</div>)}
         </div>
@@ -534,8 +535,8 @@ function Calendar({ isAdmin, reloadKey }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <button className="btn sm" onClick={() => setDate(new Date(TODAY))}>Today</button>
           <div style={{ display: 'flex', gap: 4 }}>
-            <button className="icon-btn" style={{ width: 28, height: 28 }} onClick={() => navigate(-1)}><Icon name="chevron-right" size={13} style={{ transform: 'rotate(180deg)' }} /></button>
-            <button className="icon-btn" style={{ width: 28, height: 28 }} onClick={() => navigate(1)}><Icon name="chevron-right" size={13} /></button>
+            <button className="icon-btn" style={{ width: 28, height: 28 }} onClick={() => navigate(-1)}><span className="material-symbols-outlined" style={{fontSize:13,lineHeight:1,transform:'rotate(180deg)',display:'inline-block'}}>chevron_right</span></button>
+            <button className="icon-btn" style={{ width: 28, height: 28 }} onClick={() => navigate(1)}><span className="material-symbols-outlined" style={{fontSize:13,lineHeight:1}}>chevron_right</span></button>
           </div>
           <div className="display" style={{ fontSize: 24 }}>{periodLabel()}</div>
         </div>

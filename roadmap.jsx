@@ -20,7 +20,7 @@ function RmSaveTick({ on }) {
   if (!on) return null;
   return (
     <span className="rm-saved" style={{ fontSize: 11, color: 'var(--teal-600)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 3 }}>
-      <Icon name="check" size={11} /> Saved
+      <span className="material-symbols-outlined" style={{fontSize:11,lineHeight:1}}>check</span> Saved
     </span>
   );
 }
@@ -54,7 +54,7 @@ function RmTask({ task, onToggle, onSaveField }) {
   return (
     <div style={{ display: 'flex', gap: 12, padding: '14px 0', borderTop: '1px solid var(--border)' }}>
       <button onClick={toggle} className={'check' + (done ? ' on' : '')} style={{ marginTop: 2 }}>
-        {done && <Icon name="check" size={12} />}
+        {done && <span className="material-symbols-outlined" style={{fontSize:12,lineHeight:1}}>check</span>}
       </button>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 14, fontWeight: 600, color: done ? 'var(--text-3)' : 'var(--text)', textDecoration: done ? 'line-through' : 'none' }}>
@@ -66,7 +66,7 @@ function RmTask({ task, onToggle, onSaveField }) {
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
           <span className="eyebrow" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-            <Icon name="clock" size={12} /> Due
+            <span className="material-symbols-outlined" style={{fontSize:12,lineHeight:1}}>schedule</span> Due
           </span>
           <input type="date" className="input" value={due ? due.slice(0, 10) : ''}
             onChange={(e) => setDue(e.target.value)} onBlur={blurDue}
@@ -93,7 +93,7 @@ function RmPhaseCard({ step, tasks, index, dimmed, defaultOpen, onToggleTask, on
   const doneCount = tasks.filter((t) => t.is_completed).length;
 
   return (
-    <div className="card rm-phase" style={{ padding: 0, overflow: 'hidden', marginBottom: 16, opacity: dimmed ? 0.62 : 1, transition: 'opacity .3s ease', animationDelay: (index * 80) + 'ms' }}>
+    <div className="bento-card rm-phase" style={{ padding: 0, overflow: 'hidden', marginBottom: 16, opacity: dimmed ? 0.62 : 1, transition: 'opacity .3s ease', animationDelay: (index * 80) + 'ms' }}>
       <button onClick={() => setOpen((o) => !o)}
         style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '18px 22px', textAlign: 'left', borderBottom: open ? '1px solid var(--border)' : 'none' }}>
         <div style={{ flex: 1, minWidth: 0 }}>
@@ -105,7 +105,7 @@ function RmPhaseCard({ step, tasks, index, dimmed, defaultOpen, onToggleTask, on
           <div style={{ fontFamily: 'var(--ff-sub)', fontSize: 17, fontWeight: 700, color: 'var(--text)' }}>{step.title}</div>
         </div>
         <span style={{ fontSize: 12, color: 'var(--text-3)', flexShrink: 0 }}>{doneCount}/{tasks.length}</span>
-        <Icon name={open ? 'chevron-down' : 'chevron-right'} size={18} style={{ color: 'var(--text-3)', flexShrink: 0 }} />
+        <span className="material-symbols-outlined" style={{fontSize:18,lineHeight:1,color:'var(--text-3)',flexShrink:0}}>{open ? 'expand_more' : 'chevron_right'}</span>
       </button>
 
       {open && (
@@ -203,7 +203,7 @@ function RoadmapScreen() {
 
   if (loading) {
     return (
-      <div className="card" style={{ padding: '28px 22px', color: 'var(--text-3)', fontSize: 13 }}>Loading your roadmap…</div>
+      <div className="bento-card" style={{ padding: '28px 22px', color: 'var(--text-3)', fontSize: 13 }}>Loading your roadmap…</div>
     );
   }
 
@@ -211,17 +211,17 @@ function RoadmapScreen() {
   if (!goal || steps.length === 0) {
     return (
       <>
-        <div className="page-header">
+        <div className="page-header" style={{ marginBottom: 24 }}>
           <div>
-            <div className="eyebrow">Your plan</div>
-            <h1 className="page-title">Roadmap</h1>
+            <div className="page-eyebrow">Your plan</div>
+            <h1 className="page-title xl" style={{ margin: '6px 0 0', color: 'var(--text)' }}>Roadmap</h1>
           </div>
         </div>
-        <div className="card" style={{ textAlign: 'center', padding: '56px 32px' }}>
+        <div className="bento-card" style={{ textAlign: 'center', padding: '56px 32px' }}>
           <div style={{ width: 56, height: 56, borderRadius: 16, background: 'var(--accent-soft)', color: 'var(--accent)', display: 'grid', placeItems: 'center', margin: '0 auto 18px' }}>
-            <Icon name="roadmap" size={26} />
+            <span className="material-symbols-outlined" style={{fontSize:26,lineHeight:1}}>timeline</span>
           </div>
-          <div style={{ fontFamily: 'var(--ff-display)', fontSize: 26, marginBottom: 8 }}>Your roadmap is on its way</div>
+          <div style={{ fontFamily: 'var(--ff-heading)', fontWeight: 800, fontSize: 24, marginBottom: 8, color: 'var(--text)' }}>Your roadmap is on its way</div>
           <div style={{ fontSize: 14, color: 'var(--text-2)', maxWidth: 440, margin: '0 auto', lineHeight: 1.6 }}>
             After your first discovery session with Zach, your personalized growth roadmap will appear right here — phase by phase, built around your goal.
           </div>
@@ -240,18 +240,24 @@ function RoadmapScreen() {
 
   return (
     <>
-      <div className="page-header">
+      <div className="page-header" style={{ marginBottom: 24 }}>
         <div>
-          <div className="eyebrow">Your plan</div>
-          <h1 className="page-title">Roadmap</h1>
-          <div className="page-sub" style={{ marginTop: 8, color: 'var(--text-2)', maxWidth: 560 }}>{goal.title}</div>
+          <div className="page-eyebrow">Your plan</div>
+          <h1 className="page-title xl" style={{ margin: '6px 0 0', color: 'var(--text)' }}>Roadmap</h1>
+          <div style={{ marginTop: 10, fontSize: 14, color: 'var(--text-2)', maxWidth: 560, lineHeight: 1.6, opacity: 0.8 }}>{goal.title}</div>
         </div>
       </div>
 
       {/* Progress */}
-      <div className="card" style={{ marginBottom: 20 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 10 }}>
-          <div className="eyebrow">Overall progress</div>
+      <div className="bento-card" style={{ marginBottom: 20 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 12 }}>
+          <div>
+            <div className="eyebrow">Overall progress</div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 4 }}>
+              <span style={{ fontFamily: 'var(--ff-display)', fontWeight: 700, fontSize: 34, lineHeight: 1, color: 'var(--accent)' }}>{pct}</span>
+              <span style={{ fontFamily: 'var(--ff-display)', fontWeight: 600, fontSize: 16, color: 'var(--text-3)' }}>%</span>
+            </div>
+          </div>
           <div style={{ fontSize: 13, color: 'var(--text-2)', fontWeight: 600 }}>{done} of {total} tasks complete</div>
         </div>
         <div className="progress" style={{ height: 8 }}>

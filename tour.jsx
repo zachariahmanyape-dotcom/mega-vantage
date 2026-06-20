@@ -12,35 +12,35 @@ const TOUR_STEPS = [
     route:  'tasks',
     nav:    'tasks',
     title:  'Tasks & Goals',
-    icon:   'tasks',
+    icon:   'assignment_turned_in',
     desc:   'Capture every task and goal here. Open a task to log focus time, add subtasks, or let AI break it down into smaller steps for you.',
   },
   {
     route:  'sessions',
     nav:    'sessions',
     title:  'Sessions',
-    icon:   'sessions',
+    icon:   'event',
     desc:   'All your 1:1s and town halls in one calendar. Each session carries the agenda your mentor wrote, and you can add it to Google or Outlook in one click.',
   },
   {
     route:  'roadmap',
     nav:    'roadmap',
     title:  'Your Roadmap',
-    icon:   'roadmap',
+    icon:   'timeline',
     desc:   'A personalized growth roadmap built with your mentor — split into phases with tasks, reflection prompts, and a personal note for each stage.',
   },
   {
     route:  'wins',
     nav:    'wins',
     title:  'Wins Board',
-    icon:   'trophy',
+    icon:   'military_tech',
     desc:   'The community feed. Share achievements big or small, react to your cohort\'s wins, and build a record of everything you\'ve accomplished.',
   },
   {
     route:  'resources',
     nav:    'resources',
     title:  'Resources',
-    icon:   'resources',
+    icon:   'menu_book',
     desc:   'Your mentor\'s library — videos, worksheets, templates — organised by subject area and plan tier. Everything is searchable.',
   },
   {
@@ -54,7 +54,7 @@ const TOUR_STEPS = [
     route:  'profile',
     nav:    'profile',
     title:  'Profile & Badges',
-    icon:   'profile',
+    icon:   'person',
     desc:   'Your XP tier, streak history, and the full badge wall. Every action you take in Vantage unlocks something new — climb 8 tiers from Rookie to Icon.',
   },
   {
@@ -104,7 +104,7 @@ function TourBubble({ onStart, onDismiss }) {
             background:'linear-gradient(135deg, var(--accent), var(--teal-600))',
             display:'grid', placeItems:'center', color:'#fff'
           }}>
-            <Icon name="star" size={18} />
+            <span className="material-symbols-outlined" style={{fontSize:18,lineHeight:1}}>star</span>
           </div>
           <div>
             <div style={{ fontFamily:'var(--ff-display)', fontSize:18, lineHeight:1 }}>Vantage Tour</div>
@@ -118,7 +118,7 @@ function TourBubble({ onStart, onDismiss }) {
       </div>
       <div style={{ display:'flex', gap:8 }}>
         <button className="btn primary" style={{ flex:1, justifyContent:'center', fontSize:13 }} onClick={onStart}>
-          Start tour <Icon name="arrow-right" size={13} />
+          Start tour <span className="material-symbols-outlined" style={{fontSize:14,lineHeight:1,verticalAlign:'middle'}}>arrow_forward</span>
         </button>
         <button className="btn ghost sm" onClick={dismiss}>Later</button>
       </div>
@@ -192,7 +192,7 @@ function CongratsOverlay({ onClose }) {
           You've created your first task on Vantage. That's how it starts — one clear next action. Keep going.
         </div>
         <button className="btn primary lg" style={{ width:'100%', justifyContent:'center', fontSize:14 }} onClick={onClose}>
-          Go to my dashboard <Icon name="arrow-right" size={14} />
+          Go to my dashboard <span className="material-symbols-outlined" style={{fontSize:14,lineHeight:1,verticalAlign:'middle'}}>arrow_forward</span>
         </button>
       </div>
     </>
@@ -236,7 +236,7 @@ function SidebarTourCard({ step, stepIdx, total, onNext, onBack, onClose, onComp
               background:'var(--accent-soft)', color:'var(--accent)',
               display:'grid', placeItems:'center', flexShrink:0
             }}>
-              <Icon name={step.icon} size={13} />
+              <span className="material-symbols-outlined" style={{fontSize:14,lineHeight:1}}>{step.icon}</span>
             </div>
             <div style={{ fontFamily:'var(--ff-sub)', fontSize:10, letterSpacing:'0.14em', textTransform:'uppercase', color:'var(--text-3)' }}>
               Step {stepIdx + 1} of {total}
@@ -264,7 +264,7 @@ function SidebarTourCard({ step, stepIdx, total, onNext, onBack, onClose, onComp
             </div>
             <button className="btn primary sm" style={{ justifyContent:'center', width:'100%', fontSize:12 }}
               onClick={() => setShowCongrats(true)}>
-              <Icon name="plus" size={12} /> Create my first task
+              <span className="material-symbols-outlined" style={{fontSize:13,lineHeight:1,verticalAlign:'middle'}}>add</span> Create my first task
             </button>
           </div>
         )}
@@ -285,7 +285,7 @@ function SidebarTourCard({ step, stepIdx, total, onNext, onBack, onClose, onComp
         <div style={{ display:'flex', gap:6, alignItems:'center' }}>
           <button className="btn ghost sm" disabled={stepIdx===0} onClick={onBack}
             style={{ opacity:stepIdx===0?0.3:1, padding:'6px 10px', fontSize:12 }}>
-            <Icon name="chevron-right" size={12} style={{ transform:'rotate(180deg)' }} /> Back
+            <span className="material-symbols-outlined" style={{fontSize:13,lineHeight:1,verticalAlign:'middle',transform:'rotate(180deg)',display:'inline-block'}}>chevron_right</span> Back
           </button>
           <div style={{ flex:1 }} />
           {isFinal
@@ -294,7 +294,7 @@ function SidebarTourCard({ step, stepIdx, total, onNext, onBack, onClose, onComp
           }
           {!isFinal && (
             <button className="btn primary sm" onClick={onNext} style={{ fontSize:12 }}>
-              Next <Icon name="chevron-right" size={12} />
+              Next <span className="material-symbols-outlined" style={{fontSize:13,lineHeight:1,verticalAlign:'middle'}}>chevron_right</span>
             </button>
           )}
         </div>
@@ -343,7 +343,7 @@ function TourStatusBadge({ completed, onRetake }) {
         display:'grid', placeItems:'center',
         color: completed ? '#fff' : 'var(--accent)'
       }}>
-        <Icon name={completed ? 'check' : 'star'} size={14} stroke={completed ? 3 : 1.8} />
+        <span className="material-symbols-outlined" style={{fontSize:14,lineHeight:1}}>{completed ? 'check' : 'star'}</span>
       </div>
       <div>
         <div style={{ fontSize:13, fontWeight:700, color: completed ? 'var(--teal-600)' : 'var(--text)' }}>
@@ -354,7 +354,7 @@ function TourStatusBadge({ completed, onRetake }) {
         </div>
       </div>
       <button className={"btn " + (completed ? "ghost sm" : "primary sm")} onClick={onRetake} style={{ marginLeft:4 }}>
-        {completed ? 'Retake' : 'Start tour'} <Icon name="arrow-right" size={12} />
+        {completed ? 'Retake' : 'Start tour'} <span className="material-symbols-outlined" style={{fontSize:13,lineHeight:1,verticalAlign:'middle'}}>arrow_forward</span>
       </button>
     </div>
   );

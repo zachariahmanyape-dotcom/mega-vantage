@@ -70,7 +70,7 @@ function WinCard({ win, counts, mine, userId }) {
   const subColor = SUBJECTS[win.subject] || '#888';
 
   return (
-    <div className="card" style={{ padding: 22 }}>
+    <div className="bento-card" style={{ padding: 22 }}>
       <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
         <Avatar initials={win.initials} color={win.color} size={38} />
         <div style={{ flex: 1, minWidth: 0 }}>
@@ -133,7 +133,7 @@ function WinsComposer({ onClose, onPost }) {
       <div className="card" style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 480, zIndex: 201, padding: 0, boxShadow: 'var(--shadow-3)' }}>
         <div style={{ padding: '18px 22px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ fontFamily: 'var(--ff-display)', fontSize: 22 }}>Share a win</div>
-          <button onClick={onClose} style={{ color: 'var(--text-3)', fontSize: 14, background: 'none', border: 'none', cursor: 'pointer' }}>✕</button>
+          <button onClick={onClose} style={{ color: 'var(--text-3)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex' }}><span className="material-symbols-outlined" style={{ fontSize:18, lineHeight:1 }}>close</span></button>
         </div>
         <div style={{ padding: '20px 22px' }}>
           <div style={{ display: 'flex', gap: 12, marginBottom: 14 }}>
@@ -159,7 +159,7 @@ function WinsComposer({ onClose, onPost }) {
             <div style={{ display: 'flex', gap: 8 }}>
               <button className="btn" onClick={onClose}>Cancel</button>
               <button className="btn primary" disabled={!text.trim() || posting} onClick={submit}>
-                {posting ? 'Posting…' : 'Post win 🎯'}
+                {posting ? 'Posting…' : 'Post win'}
               </button>
             </div>
           </div>
@@ -230,16 +230,16 @@ function WinsScreen() {
 
   return (
     <>
-      <div className="page-header">
+      <div className="page-header" style={{ marginBottom: 24 }}>
         <div>
-          <div className="eyebrow">Community</div>
-          <h1 className="page-title">Wins Board</h1>
-          <div className="page-sub" style={{ marginTop: 8, color: 'var(--text-2)', maxWidth: 540 }}>
+          <div className="page-eyebrow">Community</div>
+          <h1 className="page-title xl" style={{ margin: '6px 0 0', color: 'var(--text)' }}>Wins board</h1>
+          <div style={{ marginTop: 10, fontSize: 14, color: 'var(--text-2)', maxWidth: 540, lineHeight: 1.6, opacity: 0.8 }}>
             Share your progress and celebrate others. Every win counts — big or small.
           </div>
         </div>
-        <button className="btn primary" onClick={() => setComposing(true)} style={{ width: "135px" }}>
-          <Icon name="plus" size={13} /> Share a win
+        <button className="btn primary" onClick={() => setComposing(true)} style={{ flexShrink: 0 }}>
+          <span className="material-symbols-outlined" style={{fontSize:13,lineHeight:1}}>add</span> Share a win
         </button>
       </div>
 
@@ -257,8 +257,8 @@ function WinsScreen() {
           }
         </div>
         <div style={{ position: 'sticky', top: 20 }}>
-          <div className="card" style={{ padding: 20 }}>
-            <div className="eyebrow" style={{ marginBottom: 12 }}>On the board</div>
+          <div className="bento-card" style={{ padding: 20 }}>
+            <div className="page-eyebrow" style={{ marginBottom: 12 }}>On the board</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {[
               { label: 'Wins shared', v: wins.length },

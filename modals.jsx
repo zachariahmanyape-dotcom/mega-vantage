@@ -28,16 +28,16 @@ function IntentionModal({ tasks, goals, onSet, onSkip }) {
         {/* Header */}
         <div style={{ padding: '28px 28px 20px', background: 'linear-gradient(135deg, var(--accent) 0%, #1a6fd4 100%)', color: '#fff' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-            <Icon name="target" size={20} stroke={1.8} />
+            <span className="material-symbols-outlined" style={{fontSize:20,lineHeight:1}}>my_location</span>
             <span style={{ fontFamily: 'var(--ff-sub)', fontSize: 11, letterSpacing: '0.2em', textTransform: 'uppercase', opacity: 0.85 }}>Daily intention</span>
           </div>
-          <div style={{ fontFamily: 'var(--ff-display)', fontSize: 32, lineHeight: 1, marginBottom: 8 }}>What is your focus today?</div>
-          <div style={{ fontSize: 13, opacity: 0.8, lineHeight: 1.5 }}>Pick one thing that matters most. Everything else is secondary.</div>
+          <div style={{ fontFamily: 'var(--ff-heading)', fontWeight: 800, letterSpacing: '-0.01em', fontSize: 28, lineHeight: 1.1, marginBottom: 8 }}>What is your focus today?</div>
+          <div style={{ fontFamily: 'var(--ff-body)', fontSize: 13, opacity: 0.85, lineHeight: 1.5 }}>Pick one thing that matters most. Everything else is secondary.</div>
         </div>
 
         {/* Search */}
         <div style={{ padding: '16px 28px 0', position: 'relative' }}>
-          <Icon name="search" size={14} style={{ position: 'absolute', left: 40, top: 27, color: 'var(--text-3)' }} />
+          <span className="material-symbols-outlined" style={{fontSize:14,lineHeight:1,position:'absolute',left:40,top:27,color:'var(--text-3)'}}>search</span>
           <input className="input" style={{ paddingLeft: 32, fontSize: 13 }} placeholder="Search tasks and goals…" value={q} onChange={(e) => setQ(e.target.value)} />
         </div>
 
@@ -63,13 +63,16 @@ function IntentionModal({ tasks, goals, onSet, onSkip }) {
                       display: 'grid', placeItems: 'center',
                       color: kind === 'goal' ? 'var(--teal-600)' : 'var(--accent)'
                     }}>
-                        <Icon name={kind === 'goal' ? 'target' : 'tasks'} size={14} />
+                        {kind === 'goal'
+                          ? <span className="material-symbols-outlined" style={{fontSize:14,lineHeight:1}}>my_location</span>
+                          : <span className="material-symbols-outlined" style={{fontSize:14,lineHeight:1}}>assignment_turned_in</span>
+                        }
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{o.label}</div>
                         {o.subject && <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 1 }}>{o.subject}</div>}
                       </div>
-                      {selected?.id === o.id && <Icon name="check" size={14} stroke={2.5} style={{ color: 'var(--accent)', flexShrink: 0 }} />}
+                      {selected?.id === o.id && <span className="material-symbols-outlined" style={{fontSize:14,lineHeight:1,color:'var(--accent)',flexShrink:0}}>check</span>}
                     </button>
                   )}
                 </div>
@@ -83,7 +86,7 @@ function IntentionModal({ tasks, goals, onSet, onSkip }) {
         <div style={{ padding: '16px 28px 24px', borderTop: '1px solid var(--border)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
           <button className="btn primary" style={{ width: '100%', justifyContent: 'center', fontSize: 14 }}
           disabled={!selected} onClick={() => selected && onSet(selected)}>
-            Set my intention <Icon name="arrow-right" size={14} />
+            Set my intention <span className="material-symbols-outlined" style={{fontSize:14,lineHeight:1,verticalAlign:'middle'}}>arrow_forward</span>
           </button>
           <button onClick={onSkip} style={{ fontSize: 12, color: 'var(--text-3)', background: 'none', border: 'none', cursor: 'pointer' }}>Skip for today</button>
         </div>
@@ -110,7 +113,7 @@ function ReflectionModal({ onSubmit, onLater }) {
         {/* Header */}
         <div className="reflection-header" style={{ padding: '28px 32px 20px', borderBottom: '1px solid var(--border)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-            <Icon name="star" size={18} stroke={1.8} className="refl-accent" />
+            <span className="material-symbols-outlined refl-accent" style={{fontSize:18,lineHeight:1}}>star</span>
             <span className="refl-accent" style={{ fontFamily: 'var(--ff-sub)', fontSize: 11, letterSpacing: '0.2em', textTransform: 'uppercase' }}>Friday reflection</span>
           </div>
           <div style={{ fontFamily: 'var(--ff-display)', fontSize: 34, lineHeight: 1, color: 'var(--text)', marginBottom: 6 }}>Weekly Reflection</div>
@@ -186,7 +189,7 @@ function OnboardingWizard({ onComplete }) {
             background: i < step ? 'var(--accent)' : i === step ? 'var(--accent-soft)' : 'transparent',
             display: 'grid', placeItems: 'center', fontSize: 10, fontWeight: 700,
             color: i <= step ? 'var(--accent)' : 'var(--text-3)', transition: 'all .2s'
-          }}>{i < step ? <Icon name="check" size={10} stroke={3} /> : i + 1}</div>
+          }}>{i < step ? <span className="material-symbols-outlined" style={{fontSize:10,lineHeight:1}}>check</span> : i + 1}</div>
             <span style={{ fontSize: 11, color: i === step ? 'var(--text)' : 'var(--text-3)', fontFamily: 'var(--ff-sub)', letterSpacing: '0.08em' }}>{s}</span>
             {i < OB_STEPS.length - 1 && <div style={{ width: 24, height: 1, background: 'var(--border)' }} />}
           </div>
@@ -209,7 +212,7 @@ function OnboardingWizard({ onComplete }) {
             <div style={{ fontSize: 15, color: 'var(--text-2)', lineHeight: 1.65, maxWidth: 420, margin: '0 auto 36px' }}>Your personal development command center. Every session, task, and goal in one place. Designed to make your growth feel real.
 
           </div>
-            <button className="btn primary lg" style={{ fontSize: 16, padding: '14px 36px' }} onClick={next}>Get started <Icon name="arrow-right" size={16} /></button>
+            <button className="btn primary lg" style={{ fontSize: 16, padding: '14px 36px' }} onClick={next}>Get started <span className="material-symbols-outlined" style={{fontSize:16,lineHeight:1,verticalAlign:'middle'}}>arrow_forward</span></button>
           </div>
         }
 
@@ -242,7 +245,7 @@ function OnboardingWizard({ onComplete }) {
                 <input className="input" placeholder="e.g. running, Arabic literature, chess" value={profile.interests} onChange={(e) => setProfile((p) => ({ ...p, interests: e.target.value }))} />
               </div>
             </div>
-            <button className="btn primary" style={{ marginTop: 24, justifyContent: 'center', width: '100%' }} onClick={next}>Continue <Icon name="arrow-right" size={14} /></button>
+            <button className="btn primary" style={{ marginTop: 24, justifyContent: 'center', width: '100%' }} onClick={next}>Continue <span className="material-symbols-outlined" style={{fontSize:14,lineHeight:1,verticalAlign:'middle'}}>arrow_forward</span></button>
           </div>
         }
 
@@ -263,7 +266,7 @@ function OnboardingWizard({ onComplete }) {
               </div>
             </div>
             <div style={{ display: 'flex', gap: 8, marginTop: 24 }}>
-              <button className="btn primary" style={{ flex: 1, justifyContent: 'center' }} onClick={next} disabled={!goal.title}>Set goal & continue <Icon name="arrow-right" size={14} /></button>
+              <button className="btn primary" style={{ flex: 1, justifyContent: 'center' }} onClick={next} disabled={!goal.title}>Set goal & continue <span className="material-symbols-outlined" style={{fontSize:14,lineHeight:1,verticalAlign:'middle'}}>arrow_forward</span></button>
               <button className="btn ghost" onClick={next}>Skip for now</button>
             </div>
           </div>
@@ -277,12 +280,12 @@ function OnboardingWizard({ onComplete }) {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16, marginBottom: 28 }}>
               {[
             { icon: 'star', color: 'var(--coral)', title: 'Points & levels', desc: 'Earn XP by completing tasks, attending sessions, hitting streak milestones, and unlocking badges. Climb 8 tiers from Rookie all the way to Icon — every action moves you up.' },
-            { icon: 'flame', color: 'var(--coral)', title: 'Streaks', desc: 'Log in every weekday to build your streak. Weekends don\'t count. Streaks show consistency — one of the most reliable signals of growth.' },
-            { icon: 'trophy', color: 'var(--accent)', title: 'Badges & milestones', desc: 'Unlock badges for first sessions, subject mastery, streak records, and goals completed. Each badge has a story.' }].
+            { icon: 'local_fire_department', color: 'var(--coral)', title: 'Streaks', desc: 'Log in every weekday to build your streak. Weekends don\'t count. Streaks show consistency — one of the most reliable signals of growth.' },
+            { icon: 'military_tech', color: 'var(--accent)', title: 'Badges & milestones', desc: 'Unlock badges for first sessions, subject mastery, streak records, and goals completed. Each badge has a story.' }].
             map((c) =>
             <div key={c.title} className="card" style={{ padding: 24, textAlign: 'center' }}>
                   <div style={{ width: 52, height: 52, borderRadius: 16, background: c.color + '18', color: c.color, display: 'grid', placeItems: 'center', margin: '0 auto 14px' }}>
-                    <Icon name={c.icon} size={24} />
+                    <span className="material-symbols-outlined" style={{fontSize:24,lineHeight:1}}>{c.icon}</span>
                   </div>
                   <div style={{ fontFamily: 'var(--ff-display)', fontSize: 22, marginBottom: 8 }}>{c.title}</div>
                   <div style={{ fontSize: 13, color: 'var(--text-2)', lineHeight: 1.55 }}>{c.desc}</div>
@@ -290,7 +293,7 @@ function OnboardingWizard({ onComplete }) {
             )}
             </div>
             <div style={{ textAlign: 'center' }}>
-              <button className="btn primary lg" style={{ fontSize: 15, padding: '13px 32px' }} onClick={next}>Got it — let's go <Icon name="arrow-right" size={15} /></button>
+              <button className="btn primary lg" style={{ fontSize: 15, padding: '13px 32px' }} onClick={next}>Got it — let's go <span className="material-symbols-outlined" style={{fontSize:15,lineHeight:1,verticalAlign:'middle'}}>arrow_forward</span></button>
             </div>
           </div>
         }
@@ -315,7 +318,7 @@ function OnboardingWizard({ onComplete }) {
                 </div>
             )}
             </div>
-            <button className="btn primary lg" style={{ fontSize: 16, padding: '14px 36px' }} onClick={onComplete}>Go to my dashboard <Icon name="arrow-right" size={16} /></button>
+            <button className="btn primary lg" style={{ fontSize: 16, padding: '14px 36px' }} onClick={onComplete}>Go to my dashboard <span className="material-symbols-outlined" style={{fontSize:16,lineHeight:1,verticalAlign:'middle'}}>arrow_forward</span></button>
           </div>
         }
       </div>
@@ -403,7 +406,7 @@ function PinnedIntentionCard({ intention, onClear }) {
       display: 'flex', alignItems: 'center', gap: 14
     }}>
       <div style={{ width: 40, height: 40, borderRadius: 12, background: 'var(--accent)', color: '#fff', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
-        <Icon name="target" size={20} />
+        <span className="material-symbols-outlined" style={{fontSize:20,lineHeight:1}}>target</span>
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div className="eyebrow" style={{ marginBottom: 3 }}>Today's intention</div>

@@ -26,6 +26,7 @@ function _BulkMessagingArchived() {
 
   const filtered = ADMIN_MEMBERS.filter(applyFilter);
   const allChecked = filtered.length > 0 && filtered.every(m => selected.has(m.name));
+  const MS = ({n,s}) => <span className="material-symbols-outlined" style={{fontSize:s||14,lineHeight:1}}>{n}</span>;
   const toggleAll = () => {
     if (allChecked) setSelected(new Set());
     else setSelected(new Set(filtered.map(m => m.name)));
@@ -107,7 +108,7 @@ function _BulkMessagingArchived() {
           <div className="card" style={{ padding:0, overflow:'hidden' }}>
             <div style={{ padding:'12px 18px', borderBottom:'1px solid var(--border)', display:'flex', alignItems:'center', gap:10 }}>
               <div className={"check" + (allChecked?' on':'')} onClick={toggleAll}>
-                {allChecked && <Icon name="check" size={11} stroke={3} />}
+                {allChecked && <span className="material-symbols-outlined" style={{fontSize:11,lineHeight:1}}>check</span>}
               </div>
               <div className="eyebrow" style={{ margin:0, flex:1 }}>
                 {selected.size > 0 ? `${selected.size} selected` : `${filtered.length} matched`}
@@ -120,7 +121,7 @@ function _BulkMessagingArchived() {
                 <div key={m.name} style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 18px', borderBottom:'1px solid var(--border)', cursor:'pointer' }}
                   onClick={() => toggleOne(m.name)}>
                   <div className={"check" + (selected.has(m.name)?' on':'')}>
-                    {selected.has(m.name) && <Icon name="check" size={11} stroke={3} />}
+                    {selected.has(m.name) && <span className="material-symbols-outlined" style={{fontSize:11,lineHeight:1}}>check</span>}
                   </div>
                   <Avatar initials={m.initials} color={m.color} size={26} />
                   <div style={{ flex:1, minWidth:0 }}>
@@ -175,7 +176,7 @@ function _BulkMessagingArchived() {
           <button className="btn primary" style={{ justifyContent:'center', fontSize:14 }}
             disabled={!subject || !body}
             onClick={() => setSent(true)}>
-            <Icon name="send" size={14} />
+            <span className="material-symbols-outlined" style={{fontSize:14,lineHeight:1}}>send</span>
             Send to {recipientCount} member{recipientCount>1?'s':''}
           </button>
         </div>
@@ -207,7 +208,7 @@ function PrivateNotes({ memberName }) {
       <div className="row-between" style={{ marginBottom:16 }}>
         <div>
           <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-            <Icon name="edit" size={16} style={{ color:'var(--text-3)' }} />
+            <span className="material-symbols-outlined" style={{fontSize:16,lineHeight:1,color:'var(--text-3)'}}>edit</span>
             <div className="eyebrow" style={{ margin:0 }}>Private coaching notes</div>
             <span style={{ fontFamily:'var(--ff-sub)', fontSize:9, letterSpacing:'0.14em', textTransform:'uppercase',
               background:'var(--coral)', color:'#fff', padding:'2px 7px', borderRadius:4 }}>Admin only</span>
@@ -215,7 +216,7 @@ function PrivateNotes({ memberName }) {
           <div style={{ fontSize:12, color:'var(--text-3)', marginTop:4 }}>Invisible to {memberName}. Each note is timestamped and preserved.</div>
         </div>
         <button className="btn sm" onClick={() => setAdding(a=>!a)}>
-          <Icon name="plus" size={13} /> Add note
+          <span className="material-symbols-outlined" style={{fontSize:13,lineHeight:1}}>add</span> Add note
         </button>
       </div>
 
@@ -327,7 +328,7 @@ function AdminMemberDetail({ member, onBack, onViewAs }) {
       <div className="page-header">
         <div>
           <button className="btn ghost sm" onClick={onBack} style={{ marginBottom:8 }}>
-            <Icon name="chevron-right" size={13} style={{ transform:'rotate(180deg)' }} /> Back to members
+            <span className="material-symbols-outlined" style={{fontSize:13,lineHeight:1,transform:'rotate(180deg)',display:'inline-block'}}>chevron_right</span> Back to members
           </button>
           <div className="eyebrow">Admin · Member detail</div>
           <h1 className="page-title">{name}</h1>
@@ -338,7 +339,7 @@ function AdminMemberDetail({ member, onBack, onViewAs }) {
             {memberStatus === 'pending' && (
               <button className="btn" disabled={resending} onClick={handleResendInvite}
                 style={{ color:'var(--text-2)', borderColor:'var(--border)', gap:7 }}>
-                <Icon name="send" size={13} style={{ color:'var(--text-3)' }} />
+                <span className="material-symbols-outlined" style={{fontSize:13,lineHeight:1,color:'var(--text-3)'}}>send</span>
                 {resending ? 'Sending…' : 'Resend invitation'}
               </button>
             )}
@@ -354,10 +355,10 @@ function AdminMemberDetail({ member, onBack, onViewAs }) {
                   plan,
                 });
               }}>
-              <Icon name="arrow-right" size={13} /> View as
+              <span className="material-symbols-outlined" style={{fontSize:13,lineHeight:1}}>arrow_forward</span> View as
             </button>
-            <button className="btn"><Icon name="tasks" size={13} /> Assign task</button>
-            <button className="btn primary"><Icon name="sessions" size={13} /> Schedule 1:1</button>
+            <button className="btn"><span className="material-symbols-outlined" style={{fontSize:13,lineHeight:1}}>assignment_turned_in</span> Assign task</button>
+            <button className="btn primary"><span className="material-symbols-outlined" style={{fontSize:13,lineHeight:1}}>event</span> Schedule 1:1</button>
           </div>
           {resendResult && (
             <div style={{
@@ -395,7 +396,7 @@ function AdminMemberDetail({ member, onBack, onViewAs }) {
           <div className="row-between" style={{ marginBottom:18 }}>
             <div>
               <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-                <Icon name="edit" size={16} style={{ color:'var(--text-3)' }} />
+                <span className="material-symbols-outlined" style={{fontSize:16,lineHeight:1,color:'var(--text-3)'}}>edit</span>
                 <div className="eyebrow" style={{ margin:0 }}>Edit membership</div>
               </div>
               <div style={{ fontSize:12, color:'var(--text-3)', marginTop:4 }}>Changes apply immediately on save.</div>
@@ -431,7 +432,7 @@ function AdminMemberDetail({ member, onBack, onViewAs }) {
                 <div className="eyebrow" style={{ fontSize:10, margin:0 }}>Trial expiry date</div>
                 <button className="btn sm" style={{ color:'var(--teal-600)', borderColor:'var(--teal-600)' }}
                   onClick={() => setEditTrialExpiry(addDays(14))}>
-                  <Icon name="sessions" size={12} /> Renew +14 days
+                  <span className="material-symbols-outlined" style={{fontSize:12,lineHeight:1}}>event</span> Renew +14 days
                 </button>
               </div>
               <div style={{ display:'flex', gap:8, marginBottom:10 }}>
@@ -465,7 +466,7 @@ function AdminMemberDetail({ member, onBack, onViewAs }) {
           )}
 
           <button className="btn primary" disabled={saving} onClick={handleSave} style={{ gap:8 }}>
-            <Icon name="check" size={13} />
+            <span className="material-symbols-outlined" style={{fontSize:13,lineHeight:1}}>check</span>
             {saving ? 'Saving…' : 'Save changes'}
           </button>
         </div>

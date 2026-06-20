@@ -44,10 +44,10 @@ function getQuadrant(task) {
 }
 
 const QUADRANTS = [
-  { id:'do',       label:'Do Now',      sub:'Urgent + Important',        color:'var(--coral)',    icon:'flame'   },
-  { id:'schedule', label:'Do Next',     sub:'Not Urgent + Important',    color:'var(--accent)',   icon:'sessions'},
-  { id:'delegate', label:'Handle Soon', sub:'Urgent + Lower Priority',   color:'var(--teal-600)', icon:'users'   },
-  { id:'eliminate',label:'Revisit Later',sub:'Not Urgent + Lower Priority',color:'var(--text-3)', icon:'target'  },
+  { id:'do',       label:'Do Now',      sub:'Urgent + Important',        color:'var(--coral)',    icon:'local_fire_department' },
+  { id:'schedule', label:'Do Next',     sub:'Not Urgent + Important',    color:'var(--accent)',   icon:'event'                 },
+  { id:'delegate', label:'Handle Soon', sub:'Urgent + Lower Priority',   color:'var(--teal-600)', icon:'group'                 },
+  { id:'eliminate',label:'Revisit Later',sub:'Not Urgent + Lower Priority',color:'var(--text-3)', icon:'target'                },
 ];
 
 function MatrixTaskCard({ task, compact }) {
@@ -108,7 +108,7 @@ function EisenhowerMatrix({ tasks }) {
             <div style={{ fontFamily:'var(--ff-display)', fontSize:22, marginTop:2 }}>Eisenhower Matrix</div>
           </div>
           <button className="btn sm" onClick={() => setExpanded(true)}>
-            Expand <Icon name="arrow-right" size={12} />
+            Expand <span className="material-symbols-outlined" style={{fontSize:14,lineHeight:1,verticalAlign:'middle'}}>arrow_forward</span>
           </button>
         </div>
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
@@ -122,7 +122,7 @@ function EisenhowerMatrix({ tasks }) {
                 minWidth:0, overflow:'hidden'
               }}>
                 <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:8 }}>
-                  <Icon name={q.icon} size={14} style={{ color:q.color }} />
+                  <span className="material-symbols-outlined" style={{fontSize:14,lineHeight:1,color:q.color}}>{q.icon}</span>
                   <div style={{ fontSize:12, fontWeight:700, color:q.color }}>{q.label}</div>
                 </div>
                 <div className="display" style={{ fontSize:28, lineHeight:1 }}>{count}</div>
@@ -170,7 +170,7 @@ function EisenhowerMatrix({ tasks }) {
               }}>
               <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:14 }}>
                 <div style={{ width:32, height:32, borderRadius:10, background:q.color+'22', display:'grid', placeItems:'center', color:q.color }}>
-                  <Icon name={q.icon} size={16} />
+                  <span className="material-symbols-outlined" style={{fontSize:16,lineHeight:1,color:q.color}}>{q.icon}</span>
                 </div>
                 <div>
                   <div style={{ fontSize:14, fontWeight:700, color:q.color }}>{q.label}</div>

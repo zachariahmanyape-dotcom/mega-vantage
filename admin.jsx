@@ -39,47 +39,51 @@ function AdminOverview({ onPick }) {
 
   return (
     <>
-      <div className="page-header">
+      <div className="page-header" style={{ marginBottom: 24 }}>
         <div>
-          <div className="eyebrow">Admin · Overview</div>
-          <h1 className="page-title">Mission control</h1>
-          <div className="page-sub" style={{ marginTop: 8, color: 'var(--text-2)', maxWidth: 560 }}>
+          <div className="page-eyebrow">Admin · Overview</div>
+          <h1 className="page-title xl" style={{ margin: '6px 0 0', color: 'var(--text)' }}>Mission control</h1>
+          <div style={{ marginTop: 10, fontSize: 14, color: 'var(--text-2)', maxWidth: 560, lineHeight: 1.6, opacity: 0.8 }}>
             {loading ? 'Loading live member data…'
               : `${stats?.active_members ?? 0} active of ${stats?.total_members ?? 0} members · ${stats?.recent_signups ?? 0} joined in the last 30 days.`}
           </div>
         </div>
-        <div style={{ display: 'flex', gap: 10 }}>
-          <button className="btn" onClick={() => onPick('admin-tasks')}><Icon name="plus" size={13} /> New task</button>
-          <button className="btn primary" onClick={() => onPick('admin-sessions')}><Icon name="plus" size={13} /> Schedule session</button>
+        <div style={{ display: 'flex', gap: 10, flexShrink: 0 }}>
+          <button className="btn" onClick={() => onPick('admin-tasks')}><span className="material-symbols-outlined" style={{fontSize:13,lineHeight:1}}>add</span> New task</button>
+          <button className="btn primary" onClick={() => onPick('admin-sessions')}><span className="material-symbols-outlined" style={{fontSize:13,lineHeight:1}}>add</span> Schedule session</button>
         </div>
       </div>
 
-      <div className="card" style={{ padding: 0, marginBottom: 20 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)' }}>
-          {tiles.map((t, i) =>
-          <div key={t.label} style={{ padding: '22px 20px', borderRight: i < 3 ? '1px solid var(--border)' : 'none' }}>
-              <div className="eyebrow" style={{ fontSize: 10 }}>{t.label}</div>
-              <div className="display" style={{ fontSize: 36, marginTop: 4, color: t.coral ? 'var(--coral)' : 'var(--text)' }}>
-                {loading ? '—' : t.v}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
+        {tiles.map((t, i) => {
+          const ICONS = [{ mat: 'group', cls: 'primary' }, { mat: 'task_alt', cls: 'teal' }, { mat: 'event', cls: 'primary' }, { mat: 'warning', cls: 'coral' }];
+          return (
+            <div key={t.label} className="stat-tile">
+              <div className={`stat-tile-icon ${ICONS[i].cls}`}>
+                <span className="material-symbols-outlined" style={{ fontSize: 22, lineHeight: 1, fontVariationSettings: "'FILL' 1" }}>{ICONS[i].mat}</span>
               </div>
-              <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 2 }}>{t.sub}</div>
+              <div>
+                <div className="stat-tile-label">{t.label}</div>
+                <div className="stat-tile-value">{loading ? '—' : t.v}</div>
+                {t.sub && <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 3 }}>{t.sub}</div>}
+              </div>
             </div>
-          )}
-        </div>
+          );
+        })}
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 20 }}>
-        <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+        <div className="bento-card" style={{ padding: 0, overflow: 'hidden' }}>
           <div className="row-between" style={{ padding: '16px 22px', borderBottom: '1px solid var(--border)' }}>
-            <div className="eyebrow" style={{ margin: 0 }}>Members · recent activity</div>
-            <button className="btn ghost sm" onClick={() => onPick('admin-members')}>View all <Icon name="arrow-right" size={12} /></button>
+            <div className="page-eyebrow" style={{ marginBottom: 0 }}>Members · recent activity</div>
+            <button className="btn ghost sm" onClick={() => onPick('admin-members')}>View all <span className="material-symbols-outlined" style={{fontSize:12,lineHeight:1}}>arrow_forward</span></button>
           </div>
           <MembersTable compact onViewAs={() => onPick('admin-members')} members={members} loading={membersLoading} />
         </div>
 
         <div className="stack" style={{ gap: 20 }}>
-          <div className="card" style={{ padding: 22 }}>
-            <div className="eyebrow" style={{ marginBottom: 12 }}>Activity · last 7 days</div>
+          <div className="bento-card" style={{ padding: 22 }}>
+            <div className="page-eyebrow" style={{ marginBottom: 12 }}>Activity · last 7 days</div>
             {loading ? (
               <div style={{ fontSize: 13, color: 'var(--text-3)', padding: '28px 0', textAlign: 'center' }}>Loading…</div>
             ) : !engHasData ? (
@@ -98,8 +102,8 @@ function AdminOverview({ onPick }) {
             )}
           </div>
 
-          <div className="card" style={{ padding: 22 }}>
-            <div className="eyebrow" style={{ marginBottom: 12 }}>Top performers · by XP</div>
+          <div className="bento-card" style={{ padding: 22 }}>
+            <div className="page-eyebrow" style={{ marginBottom: 12 }}>Top performers · by XP</div>
             {loading ? (
               <div style={{ fontSize: 13, color: 'var(--text-3)' }}>Loading…</div>
             ) : performers.length === 0 ? (
@@ -206,7 +210,7 @@ function MembersTable({ compact, onViewAs, onOpenDetail, members = [], loading =
               <td style={{ padding: '12px 16px', fontWeight: 700 }}>{points.toLocaleString()}</td>
               <td style={{ padding: '12px 16px' }}>
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: streak > 0 ? 'var(--coral)' : 'var(--text-3)' }}>
-                  <Icon name="flame" size={12} />{streak}
+                  <span className="material-symbols-outlined" style={{fontSize:12,lineHeight:1}}>local_fire_department</span>{streak}
                 </span>
               </td>
               <td style={{ padding: '12px 16px', color: trialExpiry ? (memberStatus === 'expired' ? 'var(--coral)' : 'var(--text-2)') : 'var(--text-3)', fontSize: 12 }}>
@@ -220,7 +224,7 @@ function MembersTable({ compact, onViewAs, onOpenDetail, members = [], loading =
               <td style={{ padding: '12px 16px' }}>
                 <div style={{ display: 'flex', gap: 6 }}>
                   <button className="btn ghost sm" onClick={() => handleViewAs(m)}>
-                    View as <Icon name="arrow-right" size={11} />
+                    View as <span className="material-symbols-outlined" style={{fontSize:11,lineHeight:1}}>arrow_forward</span>
                   </button>
                   {onOpenDetail && (
                     <button className="btn ghost sm" onClick={() => onOpenDetail(m)}>
@@ -447,21 +451,21 @@ function AdminMembers({ onViewAs, onOpenDetail }) {
 
   return (
     <>
-      <div className="page-header">
+      <div className="page-header" style={{ marginBottom: 24 }}>
         <div>
-          <div className="eyebrow">Admin · Members</div>
-          <h1 className="page-title">All members</h1>
-          <div className="page-sub" style={{ marginTop: 6, color: 'var(--text-2)' }}>Click "View as" to enter read-only member view for any account.</div>
+          <div className="page-eyebrow">Admin · Members</div>
+          <h1 className="page-title" style={{ fontSize: 42, margin: '6px 0 0' }}>All Members</h1>
+          <div style={{ marginTop: 8, fontSize: 14, color: 'var(--text-2)', lineHeight: 1.5, opacity: 0.8 }}>Click "View as" to enter read-only member view for any account.</div>
         </div>
-        <div style={{ display: 'flex', gap: 10 }}>
+        <div style={{ display: 'flex', gap: 10, flexShrink: 0 }}>
           <div style={{ position: 'relative', width: 260 }}>
-            <Icon name="search" size={14} style={{ position: 'absolute', left: 12, top: 12, color: 'var(--text-3)' }} />
+            <span className="material-symbols-outlined" style={{fontSize:14,lineHeight:1,position:'absolute',left:12,top:12,color:'var(--text-3)'}}>search</span>
             <input className="input" style={{ paddingLeft: 34 }} placeholder="Search members…" />
           </div>
-          <button className="btn primary" onClick={() => setShowInvite(true)}><Icon name="plus" size={13} /> Invite member</button>
+          <button className="btn primary" onClick={() => setShowInvite(true)}><span className="material-symbols-outlined" style={{fontSize:13,lineHeight:1}}>add</span> Invite member</button>
         </div>
       </div>
-      <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+      <div className="bento-card" style={{ padding: 0, overflow: 'hidden' }}>
         <MembersTable onViewAs={onViewAs} onOpenDetail={onOpenDetail} members={members} loading={loading} />
       </div>
       {showInvite && (
@@ -477,10 +481,10 @@ function AdminMembers({ onViewAs, onOpenDetail }) {
 function AdminTasks() {
   return (
     <>
-      <div className="page-header">
+      <div className="page-header" style={{ marginBottom: 24 }}>
         <div>
-          <div className="eyebrow">Admin · Tasks & Goals</div>
-          <h1 className="page-title">Assign the next move</h1>
+          <div className="page-eyebrow">Admin · Tasks & Goals</div>
+          <h1 className="page-title" style={{ fontSize: 42, margin: '6px 0 0' }}>Assign the next move</h1>
         </div>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 20 }}>
@@ -543,7 +547,7 @@ function AdminTasks() {
                 <div className="progress" style={{ marginTop: 10, height: 3 }}><span style={{ width: '45%' }} /></div>
               </div>
             )}
-            <button className="btn" style={{ justifyContent: 'center' }}><Icon name="plus" size={13} /> New goal</button>
+            <button className="btn" style={{ justifyContent: 'center' }}><span className="material-symbols-outlined" style={{fontSize:13,lineHeight:1}}>add</span> New goal</button>
           </div>
         </div>
       </div>
@@ -706,11 +710,11 @@ function AdminSessions() {
 
   return (
     <>
-      <div className="page-header">
+      <div className="page-header" style={{ marginBottom: 24 }}>
         <div>
-          <div className="eyebrow">Admin · Sessions</div>
-          <h1 className="page-title">Schedule</h1>
-          <div className="page-sub" style={{ marginTop: 6, color: 'var(--text-2)' }}>
+          <div className="page-eyebrow">Admin · Sessions</div>
+          <h1 className="page-title" style={{ fontSize: 42, margin: '6px 0 0' }}>Schedule</h1>
+          <div style={{ marginTop: 8, fontSize: 14, color: 'var(--text-2)', lineHeight: 1.5, opacity: 0.8 }}>
             Create 1:1s and town halls. 1:1s appear only for the chosen member; town halls appear for everyone.
           </div>
         </div>
@@ -718,7 +722,7 @@ function AdminSessions() {
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 24 }}>
         {/* Calendar */}
-        <div className="card" style={{ padding: 24 }}>
+        <div className="bento-card" style={{ padding: 24 }}>
           <Calendar isAdmin={true} reloadKey={reloadKey} />
         </div>
 
@@ -964,7 +968,7 @@ function AdminResources() {
           <div className="eyebrow">Admin · Resources</div>
           <h1 className="page-title">Resource manager.</h1>
         </div>
-        <button className="btn primary" onClick={() => setModal({})}><Icon name="plus" size={13} /> Upload resource</button>
+        <button className="btn primary" onClick={() => setModal({})}><span className="material-symbols-outlined" style={{fontSize:13,lineHeight:1}}>add</span> Upload resource</button>
       </div>
 
       {err && <div style={{ fontSize: 12, color: 'var(--coral)', background: 'var(--coral-100)', borderRadius: 8, padding: '8px 12px', marginBottom: 12 }}>{err}</div>}
@@ -987,7 +991,7 @@ function AdminResources() {
                 </td>
                 <td style={{ padding: '12px 16px', color: 'var(--text-2)' }}>{RES_FOLDER_LABEL[r.folder] || r.folder}</td>
                 <td style={{ padding: '12px 16px' }}>
-                  <span className="chip"><Icon name={(RES_TYPE_META[r.content_type] || {}).icon || 'link'} size={11} /> {(RES_TYPE_META[r.content_type] || {}).label || r.content_type}</span>
+                  <span className="chip"><span className="material-symbols-outlined" style={{fontSize:11,lineHeight:1}}>{({'video':'videocam','pdf':'picture_as_pdf','template':'description','article':'article'}[(RES_TYPE_META[r.content_type] || {}).icon] || 'link')}</span> {(RES_TYPE_META[r.content_type] || {}).label || r.content_type}</span>
                 </td>
                 <td style={{ padding: '12px 16px' }}><span className={'chip ' + (RES_ACCESS_CHIP[r.access_tier] || '')}>{RES_ACCESS_LABEL[r.access_tier] || r.access_tier}</span></td>
                 <td style={{ padding: '12px 16px' }}>{r.subject_area ? <SubjectTag subject={r.subject_area} /> : <span style={{ color: 'var(--text-3)' }}>—</span>}</td>
@@ -995,10 +999,10 @@ function AdminResources() {
                 <td style={{ padding: '12px 16px' }}>
                   <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
                     <button className="btn ghost sm" onClick={() => copyLink(r)}>
-                      <Icon name={copiedId === r.id ? 'check' : 'link'} size={11} /> {copiedId === r.id ? 'Copied' : 'Copy link'}
+                      <span className="material-symbols-outlined" style={{fontSize:11,lineHeight:1}}>{copiedId === r.id ? 'check' : 'content_copy'}</span> {copiedId === r.id ? 'Copied' : 'Copy link'}
                     </button>
-                    <button className="btn ghost sm" onClick={() => setModal(r)}><Icon name="edit" size={11} /> Edit</button>
-                    <button className="btn ghost sm" onClick={() => del(r)} style={{ color: 'var(--coral)' }}><Icon name="trash" size={11} /></button>
+                    <button className="btn ghost sm" onClick={() => setModal(r)}><span className="material-symbols-outlined" style={{fontSize:11,lineHeight:1}}>edit</span> Edit</button>
+                    <button className="btn ghost sm" onClick={() => del(r)} style={{ color: 'var(--coral)' }}><span className="material-symbols-outlined" style={{fontSize:11,lineHeight:1}}>delete</span></button>
                   </div>
                 </td>
               </tr>

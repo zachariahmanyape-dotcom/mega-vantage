@@ -161,7 +161,7 @@ function BadgeTile({ badge, theme }) {
     <div style={{ padding:'16px 14px', borderRadius:14, border:'1px solid '+(e&&pr?'#E8B24C':'var(--border)'), background:e?'var(--bg-elev)':'var(--bg-sunken)', opacity:e?1:0.55, textAlign:'center', position:'relative' }}>
       {pr && <span style={{ position:'absolute', top:7, right:7, fontSize:7, fontFamily:'var(--ff-sub)', letterSpacing:'0.1em', textTransform:'uppercase', color:prestigeColor }}>Prestige</span>}
       <div style={{ width:52, height:52, margin:'0 auto 10px', borderRadius:14, background:iconBg, display:'grid', placeItems:'center', color:'#fff' }}>
-        <Icon name={e ? (pr ? 'trophy' : 'star') : 'trophy'} size={22} />
+        <span className="material-symbols-outlined" style={{fontSize:22,lineHeight:1}}>{e ? (pr ? 'military_tech' : 'star') : 'military_tech'}</span>
       </div>
       <div style={{ fontSize:12, fontWeight:700, lineHeight:1.2 }}>{badge.name}</div>
       <div style={{ fontSize:10, color:'var(--text-3)', marginTop:4, lineHeight:1.4 }}>{badge.desc}</div>
@@ -181,7 +181,7 @@ function BadgeModal({ categories, earnedCount, total, theme, onClose }) {
           </div>
           <div style={{ display:'flex', alignItems:'center', gap:16 }}>
             <div style={{ fontSize:13, color:'var(--text-3)' }}>{earnedCount} of {total} earned</div>
-            <button onClick={onClose} style={{ color:'var(--text-3)', fontSize:16, background:'none', border:'none', cursor:'pointer' }}>✕</button>
+            <button onClick={onClose} style={{ color:'var(--text-3)', background:'none', border:'none', cursor:'pointer', display:'inline-flex' }}><span className="material-symbols-outlined" style={{fontSize:18,lineHeight:1}}>close</span></button>
           </div>
         </div>
         <div style={{ padding:'4px 24px 24px', overflowY:'auto' }}>
@@ -358,49 +358,51 @@ function ProfileScreen({ member, theme, setTheme, onSignOut, onProfileSaved }) {
 
   return (
     <>
-      <div className="page-header">
+      <div className="page-header" style={{ marginBottom: 24 }}>
         <div>
-          <div className="eyebrow">Profile</div>
-          <h1 className="page-title">{member.firstName} {member.lastName}</h1>
+          <div className="page-eyebrow">Profile</div>
+          <h1 className="page-title" style={{ fontSize: 42, margin: '6px 0 0' }}>{member.firstName} {member.lastName}</h1>
         </div>
-        <button className="btn" onClick={startEdit}><Icon name="edit" size={13} /> Edit profile</button>
+        <button className="btn" onClick={startEdit} style={{ flexShrink: 0 }}><span className="material-symbols-outlined" style={{fontSize:13,lineHeight:1}}>edit</span> Edit profile</button>
       </div>
 
       {/* Identity card */}
-      <div className="card" style={{ padding:0, overflow:'hidden', marginBottom:20 }}>
-        <div style={{ padding:'28px 28px 24px', display:'flex', gap:24, alignItems:'center' }}>
-          <Avatar initials={member.initials} color={member.avatarColor} size={88} style={{ fontSize:32 }} />
-          <div style={{ flex:1 }}>
-            <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
-              <span className="chip sapphire"><span className="dot"/>{member.product}</span>
-              <span className="chip teal"><span className="dot"/>{member.plan}</span>
-            </div>
-            <div className="display" style={{ fontSize:36, marginTop:10, lineHeight:1 }}>{member.firstName} {member.lastName}</div>
-            <div style={{ fontSize:13, color:'var(--text-2)', marginTop:6 }}>
-              {member.email} · Joined {member.joinedAt
-                ? new Date(member.joinedAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
-                : 'Recently joined'}
-            </div>
+      <div className="bento-card" style={{ padding:'28px 28px 24px', marginBottom:16, display:'flex', gap:24, alignItems:'center', flexWrap:'wrap' }}>
+        <Avatar initials={member.initials} color={member.avatarColor} size={88} style={{ fontSize:32 }} />
+        <div style={{ flex:1, minWidth:200 }}>
+          <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+            <span className="chip sapphire"><span className="dot"/>{member.product}</span>
+            <span className="chip teal"><span className="dot"/>{member.plan}</span>
           </div>
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:20, textAlign:'right' }}>
-            <div>
-              <div className="display" style={{ fontSize:32, color:'var(--accent)' }}>{(member.xp || 0).toLocaleString()}</div>
-              <div className="eyebrow">XP</div>
-            </div>
-            <div>
-              <div className="display" style={{ fontSize:32, color:'var(--coral)' }}>{member.streakDays}</div>
-              <div className="eyebrow">Day streak</div>
-            </div>
+          <div style={{ fontSize:14, color:'var(--text-2)', marginTop:12 }}>
+            {member.email}
+          </div>
+          <div style={{ fontSize:13, color:'var(--text-3)', marginTop:3 }}>
+            Joined {member.joinedAt
+              ? new Date(member.joinedAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+              : 'Recently'}
           </div>
         </div>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', borderTop:'1px solid var(--border)' }}>
-          {[['Total learning', totalLearning],['Sessions', `${pastSessions.length} done`],['Upcoming', `${upcomingCount} scheduled`]].map(([l,v],i) => (
-            <div key={l} style={{ padding:'16px 20px', borderRight:i<2?'1px solid var(--border)':'none' }}>
-              <div className="eyebrow" style={{ fontSize:10 }}>{l}</div>
-              <div style={{ fontSize:17, fontWeight:700, marginTop:4 }}>{v}</div>
-            </div>
-          ))}
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:24, textAlign:'right' }}>
+          <div>
+            <div className="display" style={{ fontSize:34, color:'var(--accent)', lineHeight:1 }}>{(member.xp || 0).toLocaleString()}</div>
+            <div className="eyebrow" style={{ marginTop:4 }}>Total XP</div>
+          </div>
+          <div>
+            <div className="display" style={{ fontSize:34, color:'var(--coral)', lineHeight:1 }}>{member.streakDays}</div>
+            <div className="eyebrow" style={{ marginTop:4 }}>Day streak</div>
+          </div>
         </div>
+      </div>
+
+      {/* Stat overview tiles */}
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(3,minmax(0,1fr))', gap:16, marginBottom:20 }}>
+        {[['Total learning', totalLearning, false],['Sessions', `${pastSessions.length} done`, false],['Upcoming', `${upcomingCount} scheduled`, true]].map(([l,v,accent]) => (
+          <div key={l} className="bento-card" style={{ padding:'18px 20px', borderLeft: accent ? '3px solid var(--accent)' : undefined }}>
+            <div className="eyebrow" style={{ fontSize:10, color: accent ? 'var(--accent)' : undefined }}>{l}</div>
+            <div className="display" style={{ fontSize:22, fontWeight:700, marginTop:6 }}>{v}</div>
+          </div>
+        ))}
       </div>
 
       {/* Milestone timeline */}
@@ -410,7 +412,7 @@ function ProfileScreen({ member, theme, setTheme, onSignOut, onProfileSaved }) {
 
       <div style={{ display:'grid', gridTemplateColumns:'1.4fr 1fr', gap:20 }}>
         {/* Badge wall */}
-        <div className="card" style={{ padding:22 }}>
+        <div className="bento-card" style={{ padding:22 }}>
           <div className="row-between">
             <div>
               <div className="eyebrow">Achievements</div>
@@ -419,7 +421,7 @@ function ProfileScreen({ member, theme, setTheme, onSignOut, onProfileSaved }) {
             <div style={{ textAlign:'right' }}>
               <div style={{ fontSize:12, color:'var(--text-3)' }}>{earned} of {allBadges.length} earned</div>
               <button onClick={() => setShowAllBadges(true)} style={{ marginTop:6, background:'none', border:'none', padding:0, cursor:'pointer', color:'var(--accent)', fontSize:12, fontWeight:600, display:'inline-flex', alignItems:'center', gap:4 }}>
-                View all <Icon name="chevron-right" size={12} />
+                View all <span className="material-symbols-outlined" style={{fontSize:12,lineHeight:1}}>chevron_right</span>
               </button>
             </div>
           </div>
@@ -430,11 +432,11 @@ function ProfileScreen({ member, theme, setTheme, onSignOut, onProfileSaved }) {
 
         <div className="stack" style={{ gap:20 }}>
           {/* Personal info */}
-          <div className="card" style={{ padding:22 }}>
+          <div className="bento-card" style={{ padding:22 }}>
             <div className="row-between" style={{ marginBottom:14 }}>
               <div className="eyebrow" style={{ margin:0 }}>Personal info</div>
               <button onClick={startEdit} style={{ background:'none', border:'none', padding:0, cursor:'pointer', color:'var(--accent)', fontSize:12, fontWeight:600, display:'inline-flex', alignItems:'center', gap:4 }}>
-                <Icon name="edit" size={12} /> Edit
+                <span className="material-symbols-outlined" style={{fontSize:12,lineHeight:1}}>edit</span> Edit
               </button>
             </div>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'14px 18px' }}>
@@ -455,7 +457,7 @@ function ProfileScreen({ member, theme, setTheme, onSignOut, onProfileSaved }) {
           </div>
 
           {/* Settings */}
-          <div className="card" style={{ padding:22 }}>
+          <div className="bento-card" style={{ padding:22 }}>
             <div className="eyebrow" style={{ marginBottom:12 }}>Appearance</div>
             <div className="row-between" style={{ marginBottom:14 }}>
               <div style={{ fontSize:13, fontWeight:500 }}>Theme</div>
@@ -495,7 +497,7 @@ function ProfileScreen({ member, theme, setTheme, onSignOut, onProfileSaved }) {
           onClick={onSignOut}
           style={{ color:'var(--coral)', borderColor:'var(--coral)', gap:8 }}
         >
-          <Icon name="arrow-right" size={13} style={{ transform:'rotate(180deg)', color:'var(--coral)' }} />
+          <span className="material-symbols-outlined" style={{fontSize:13,lineHeight:1,transform:'rotate(180deg)',color:'var(--coral)'}}>arrow_forward</span>
           Sign out
         </button>
       </div>
@@ -516,7 +518,7 @@ function ProfileScreen({ member, theme, setTheme, onSignOut, onProfileSaved }) {
                   <div className="eyebrow">Profile</div>
                   <div className="display" style={{ fontSize:24, marginTop:2, lineHeight:1.1 }}>Edit your profile</div>
                 </div>
-                <button onClick={closeEdit} style={{ color:'var(--text-3)', fontSize:16, background:'none', border:'none', cursor:'pointer', lineHeight:1 }}>✕</button>
+                <button onClick={closeEdit} style={{ color:'var(--text-3)', background:'none', border:'none', cursor:'pointer', lineHeight:1, display:'inline-flex' }}><span className="material-symbols-outlined" style={{fontSize:18,lineHeight:1}}>close</span></button>
               </div>
 
               <div style={{ padding:'20px 24px' }}>

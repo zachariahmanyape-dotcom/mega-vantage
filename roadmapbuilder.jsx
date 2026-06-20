@@ -85,7 +85,7 @@ function RbTaskRow({ task, onChange, onRemove }) {
           style={{ width: '100%', fontSize: 12.5, color: 'var(--text-2)', border: 'none', outline: 'none', background: 'transparent', resize: 'vertical', lineHeight: 1.5, fontFamily: 'var(--ff-body)' }} />
         {task.estimated_time && (
           <div className="eyebrow" style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 4 }}>
-            <Icon name="clock" size={12} /> {task.estimated_time}
+            <span className="material-symbols-outlined" style={{fontSize:12,lineHeight:1}}>schedule</span> {task.estimated_time}
           </div>
         )}
       </div>
@@ -369,7 +369,7 @@ RULES:
       {/* Member selector */}
       <div className="card" style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20 }}>
         <div style={{ width: 44, height: 44, borderRadius: 12, background: 'var(--accent-soft)', color: 'var(--accent)', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
-          <Icon name="users" size={20} />
+          <span className="material-symbols-outlined" style={{fontSize:20,lineHeight:1}}>group</span>
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div className="eyebrow" style={{ marginBottom: 6 }}>Active session</div>
@@ -384,7 +384,7 @@ RULES:
         </div>
         {member && (
           <span className="chip sapphire" style={{ flexShrink: 0 }}>
-            <Icon name="profile" size={13} /> {member.full_name}
+            <span className="material-symbols-outlined" style={{fontSize:13,lineHeight:1}}>person</span> {member.full_name}
           </span>
         )}
       </div>
@@ -494,7 +494,7 @@ RULES:
           <div style={{ textAlign: 'center', margin: '28px 0' }}>
             <button className="btn primary lg" onClick={generate} disabled={!canGenerate}
               style={{ padding: '16px 44px', fontSize: 16, borderRadius: 14, opacity: canGenerate ? 1 : 0.5 }}>
-              <Icon name="roadmap" size={18} /> Generate Roadmap
+              <span className="material-symbols-outlined" style={{fontSize:18,lineHeight:1}}>auto_awesome</span> Generate Roadmap
             </button>
             {!canGenerate && (
               <div style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 10 }}>
@@ -522,7 +522,7 @@ RULES:
             </div>
             <div style={{ fontSize: 14, opacity: 0.9, maxWidth: 600, lineHeight: 1.5 }}>{goalTitle}</div>
             <div style={{ display: 'flex', gap: 10, marginTop: 16, flexWrap: 'wrap' }}>
-              <span className="rb-meta-chip"><Icon name="clock" size={13} /> {timeline}</span>
+              <span className="rb-meta-chip"><span className="material-symbols-outlined" style={{fontSize:13,lineHeight:1}}>schedule</span> {timeline}</span>
               <span className="rb-meta-chip">Mindset {diag.mindset}/5</span>
               <span className="rb-meta-chip">Structure {diag.structure}/5</span>
               <span className="rb-meta-chip">Competence {diag.competence}/5</span>
@@ -541,7 +541,7 @@ RULES:
           <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', marginTop: 24 }}>
             <button className="btn" onClick={regenerate} disabled={saving}>↺ Regenerate</button>
             <button className="btn primary" onClick={save} disabled={saving}>
-              <Icon name="check" size={15} /> {saving ? 'Saving…' : 'Save to Vantage'}
+              <span className="material-symbols-outlined" style={{fontSize:15,lineHeight:1}}>save</span> {saving ? 'Saving…' : 'Save to Vantage'}
             </button>
           </div>
         </>
@@ -550,14 +550,14 @@ RULES:
       {stage === 'saved' && (
         <div className="card" style={{ textAlign: 'center', padding: '52px 32px' }}>
           <div style={{ width: 56, height: 56, borderRadius: 16, background: 'var(--teal-50)', color: 'var(--teal-600)', display: 'grid', placeItems: 'center', margin: '0 auto 18px' }}>
-            <Icon name="check" size={28} stroke={2.5} />
+            <span className="material-symbols-outlined" style={{fontSize:28,lineHeight:1}}>check_circle</span>
           </div>
           <div style={{ fontFamily: 'var(--ff-display)', fontSize: 30, letterSpacing: '0.02em', marginBottom: 8 }}>Roadmap saved</div>
           <div style={{ fontSize: 14, color: 'var(--text-2)', maxWidth: 460, margin: '0 auto 24px', lineHeight: 1.5 }}>
             {member?.full_name || 'The member'}'s roadmap is now live on their Vantage. Build another, or head back to start.
           </div>
           <button className="btn primary" onClick={resetAll} style={{ margin: '0 auto' }}>
-            <Icon name="plus" size={15} /> Build another roadmap
+            <span className="material-symbols-outlined" style={{fontSize:15,lineHeight:1}}>add</span> Build another roadmap
           </button>
         </div>
       )}
@@ -652,12 +652,12 @@ function RbRoadmapHistory({ memberNameById, refreshKey }) {
     <div className="card" style={{ marginBottom: 20, padding: 0, overflow: 'hidden' }}>
       <button type="button" onClick={() => setOpen((o) => !o)}
         style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '18px 22px', background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
-        <Icon name="roadmap" size={18} style={{ color: 'var(--accent)' }} />
+        <span className="material-symbols-outlined" style={{fontSize:18,lineHeight:1,color:'var(--accent)'}}>timeline</span>
         <div style={{ flex: 1 }}>
           <div style={{ fontFamily: 'var(--ff-sub)', fontSize: 15, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text)' }}>Roadmap History</div>
           <div style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 2 }}>Previously saved roadmaps{goals.length ? ` · ${goals.length}` : ''}</div>
         </div>
-        <Icon name="chevron-right" size={16} style={{ color: 'var(--text-3)', transform: open ? 'rotate(90deg)' : 'none', transition: 'transform .15s' }} />
+        <span className="material-symbols-outlined" style={{fontSize:16,lineHeight:1,color:'var(--text-3)',transform:open?'rotate(90deg)':'none',display:'inline-block',transition:'transform .15s'}}>chevron_right</span>
       </button>
 
       {open && (
@@ -679,7 +679,7 @@ function RbRoadmapHistory({ memberNameById, refreshKey }) {
                       <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--text)' }}>{g.title}</div>
                       <div style={{ fontSize: 11.5, color: 'var(--text-3)', marginTop: 2 }}>{name} · {fmtDate(g.created_at)}{g.status ? ` · ${g.status}` : ''}</div>
                     </div>
-                    <Icon name="chevron-right" size={14} style={{ color: 'var(--text-3)', transform: isOpen ? 'rotate(90deg)' : 'none', transition: 'transform .15s' }} />
+                    <span className="material-symbols-outlined" style={{fontSize:14,lineHeight:1,color:'var(--text-3)',transform:isOpen?'rotate(90deg)':'none',display:'inline-block',transition:'transform .15s'}}>chevron_right</span>
                   </button>
                   {isOpen && (
                     <div style={{ padding: '2px 0 16px' }}>

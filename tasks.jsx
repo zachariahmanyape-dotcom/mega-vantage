@@ -15,10 +15,11 @@ function PriorityBadge({ priority }) {
   if (!cfg) return null;
   return (
     <span style={{
-      fontSize: 10, padding: '2px 7px', borderRadius: 999,
+      fontSize: 10, padding: '3px 8px', borderRadius: 5,
       background: cfg.bg, color: cfg.color,
       border: '1px solid ' + cfg.color + '55',
-      fontFamily: 'var(--ff-sub)', fontWeight: 700, letterSpacing: '0.08em'
+      fontFamily: 'var(--ff-sub)', fontWeight: 700, letterSpacing: '0.06em',
+      textTransform: 'uppercase', lineHeight: 1
     }}>{priority}</span>);
 
 }
@@ -29,8 +30,8 @@ function DueDateBadge({ due, dueSort }) {
   if (dueSort <= 1) {color = 'var(--coral)';bg = 'var(--coral-100)';} // overdue/today
   else if (dueSort <= 2) {color = '#C88A1A';bg = 'rgba(232,178,76,0.12)';} // within 48h
   return (
-    <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 999, background: bg, color, fontFamily: 'var(--ff-sub)', fontWeight: 600 }}>
-      📅 {due}
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, padding: '3px 8px', borderRadius: 6, background: bg, color, fontFamily: 'var(--ff-sub)', fontWeight: 700, lineHeight: 1 }}>
+      <span className="material-symbols-outlined" style={{ fontSize: 13, lineHeight: 1 }}>calendar_month</span>{due}
     </span>);
 
 }
@@ -209,7 +210,7 @@ function TaskDetailPanel({ task, onTaskMetaChange, focus, focusTick, onEdit }) {
       <div style={{ minWidth: 0 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
           <div className="eyebrow" style={{ margin: 0 }}>Details</div>
-          <button className="btn ghost sm" onClick={() => onEdit && onEdit(task)} style={{ padding: '4px 8px' }}><Icon name="edit" size={12} /> Edit task</button>
+          <button className="btn ghost sm" onClick={() => onEdit && onEdit(task)} style={{ padding: '4px 8px' }}><span className="material-symbols-outlined" style={{ fontSize:12, lineHeight:1 }}>edit</span> Edit task</button>
         </div>
         <div style={{ fontSize: 13, color: task.notes ? 'var(--text-2)' : 'var(--text-3)', lineHeight: 1.5, marginBottom: 16 }}>
           {task.notes || 'No description.'}
@@ -224,7 +225,7 @@ function TaskDetailPanel({ task, onTaskMetaChange, focus, focusTick, onEdit }) {
                   {subs.map((s) =>
                     <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 8, background: 'var(--bg-elev)', border: '1px solid var(--border)' }}>
                       <div className={"check" + (s.is_completed ? " on" : "")} onClick={() => toggleSub(s.id)}>
-                        {s.is_completed && <Icon name="check" size={11} stroke={3} />}
+                        {s.is_completed && <span className="material-symbols-outlined" style={{ fontSize:11, lineHeight:1 }}>check</span>}
                       </div>
                       {editingSubId === s.id
                         ? <input className="input" value={editingText} autoFocus
@@ -236,9 +237,9 @@ function TaskDetailPanel({ task, onTaskMetaChange, focus, focusTick, onEdit }) {
                       }
                       <SubtaskTag source={s.source} />
                       {editingSubId !== s.id &&
-                        <button onClick={() => startEditSub(s)} title="Edit subtask" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-3)', padding: 2, display: 'flex', flexShrink: 0 }}><Icon name="edit" size={12} /></button>
+                        <button onClick={() => startEditSub(s)} title="Edit subtask" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-3)', padding: 2, display: 'flex', flexShrink: 0 }}><span className="material-symbols-outlined" style={{ fontSize:12, lineHeight:1 }}>edit</span></button>
                       }
-                      <button onClick={() => deleteSub(s.id)} title="Delete subtask" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-3)', padding: 2, fontSize: 13, lineHeight: 1, flexShrink: 0 }}>✕</button>
+                      <button onClick={() => deleteSub(s.id)} title="Delete subtask" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-3)', padding: 2, display: 'flex', lineHeight: 1, flexShrink: 0 }}><span className="material-symbols-outlined" style={{ fontSize: 13, lineHeight: 1 }}>close</span></button>
                     </div>
                   )}
                 </div>
@@ -267,13 +268,13 @@ function TaskDetailPanel({ task, onTaskMetaChange, focus, focusTick, onEdit }) {
 
         <div style={{ borderTop: '1px solid var(--border)', margin: '14px 0 0', paddingTop: 14 }}>
           {!hasSubs &&
-            <button className="btn primary sm" style={{ width: '100%', justifyContent: 'center' }} disabled={generating} onClick={() => generate(false)}>
-              {generating ? 'Breaking down…' : '✦ Break this down'}
+            <button className="btn primary sm" style={{ width: '100%', justifyContent: 'center', gap: 6 }} disabled={generating} onClick={() => generate(false)}>
+              <span className="material-symbols-outlined" style={{ fontSize: 13, lineHeight: 1 }}>auto_awesome</span>{generating ? 'Breaking down…' : 'Break this down'}
             </button>
           }
           {hasSubs && !confirmRegen && regenCount < 3 &&
-            <button className="btn sm" style={{ width: '100%', justifyContent: 'center' }} disabled={generating} onClick={() => setConfirmRegen(true)}>
-              {generating ? 'Regenerating…' : '↻ Regenerate'}
+            <button className="btn sm" style={{ width: '100%', justifyContent: 'center', gap: 6 }} disabled={generating} onClick={() => setConfirmRegen(true)}>
+              <span className="material-symbols-outlined" style={{ fontSize: 13, lineHeight: 1 }}>refresh</span>{generating ? 'Regenerating…' : 'Regenerate'}
             </button>
           }
           {hasSubs && regenCount >= 3 && !confirmRegen &&
@@ -317,32 +318,32 @@ function TaskRow({ task, expanded, onToggle, onCheck, onTaskMetaChange, focus, f
   const tss = String(tRemain % 60).padStart(2, '0');
 
   return (
-    <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px 20px', cursor: 'pointer' }} onClick={onToggle}>
+    <div className="task-row">
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '20px 22px', cursor: 'pointer' }} onClick={onToggle}>
         <div className={"check" + (completed ? " on" : "")} onClick={(e) => {e.stopPropagation();onCheck();}}>
-          {completed && <Icon name="check" size={12} stroke={3} />}
+          {completed && <span className="material-symbols-outlined" style={{ fontSize:13, lineHeight:1 }}>check</span>}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-            <div style={{ fontSize: 14, fontWeight: 600, textDecoration: completed ? 'line-through' : 'none', color: completed ? 'var(--text-3)' : 'var(--text)' }}>{task.title}</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            <div style={{ fontSize: 15, fontWeight: 700, textDecoration: completed ? 'line-through' : 'none', color: completed ? 'var(--text-3)' : 'var(--text)' }}>{task.title}</div>
             {task.priority && <PriorityBadge priority={task.priority} />}
             <SubjectTag subject={task.subject} />
           </div>
-          <div style={{ display: 'flex', gap: 10, marginTop: 8, alignItems: 'center', fontSize: 12, color: 'var(--text-3)', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 10, marginTop: 10, alignItems: 'center', fontSize: 12, color: 'var(--text-3)', flexWrap: 'wrap' }}>
             <DueDateBadge due={task.due} dueSort={task.dueSort} />
             {hasSubs && <><span>{done} of {task.subtasks.length} subtasks</span><span style={{ opacity: 0.5 }}>·</span></>}
             <span className="sub" style={{ color: 'var(--text-2)' }}>+{task.points} XP</span>
-            {timeSpent > 0 && <span style={{ color: 'var(--teal-600)', fontWeight: 600 }}>⏱ {timeSpent}m focused</span>}
+            {timeSpent > 0 && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: 'var(--teal-600)', fontWeight: 600 }}><span className="material-symbols-outlined" style={{ fontSize: 13, lineHeight: 1 }}>timer</span>{timeSpent}m focused</span>}
           </div>
-          <div className="progress" style={{ marginTop: 10, height: 3 }}><span style={{ width: pct + '%' }} /></div>
+          <div className="progress" style={{ marginTop: 12, height: 3 }}><span style={{ width: pct + '%' }} /></div>
         </div>
         {timing &&
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 9px', borderRadius: 999, background: 'var(--accent-soft)', color: 'var(--accent)', fontFamily: 'var(--ff-mono)', fontWeight: 700, fontSize: 12, flexShrink: 0 }}>
-            {ft.paused ? '⏸' : '⏱'} {tmm}:{tss}
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 999, background: 'var(--accent-soft)', color: 'var(--accent)', fontFamily: 'var(--ff-mono)', fontWeight: 700, fontSize: 12, flexShrink: 0 }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 13, lineHeight: 1 }}>{ft.paused ? 'pause' : 'timer'}</span>{tmm}:{tss}
           </span>
         }
         <button className="btn ghost sm" onClick={(e) => {e.stopPropagation();onToggle();}}>
-          <Icon name={expanded ? 'chevron-down' : 'chevron-right'} size={14} />
+          <span className="material-symbols-outlined" style={{ fontSize:14, lineHeight:1 }}>{expanded ? 'expand_more' : 'chevron_right'}</span>
         </button>
       </div>
 
@@ -356,7 +357,7 @@ function GoalCard({ goal, tasks, onComplete }) {
   const GoalChevron = () => (
     <button onClick={() => setOpen((o) => !o)} aria-label={open ? 'Collapse goal' : 'Expand goal'}
       style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', color: 'var(--text-3)' }}>
-      <Icon name={open ? 'chevron-down' : 'chevron-right'} size={16} />
+      <span className="material-symbols-outlined" style={{ fontSize:16, lineHeight:1 }}>{open ? 'expand_more' : 'chevron_right'}</span>
     </button>
   );
   // ── Legacy hardcoded shape (taskIds present) ──────────────────────────────
@@ -380,7 +381,7 @@ function GoalCard({ goal, tasks, onComplete }) {
           <div style={{ textAlign: 'right', minWidth: 120 }}>
             <div className="display" style={{ fontSize: 48, color: 'var(--accent)', lineHeight: 1 }}>{pct}<span style={{ fontSize: 20, color: 'var(--text-3)' }}>%</span></div>
             <div className="eyebrow" style={{ marginTop: 4 }}>{doneSub} of {totalSub} steps</div>
-            {totalTime > 0 && <div style={{ fontSize: 11, color: 'var(--teal-600)', marginTop: 4 }}>⏱ {totalTime}m total focus</div>}
+            {totalTime > 0 && <div style={{ fontSize: 11, color: 'var(--teal-600)', marginTop: 4, display: 'inline-flex', alignItems: 'center', gap: 4 }}><span className="material-symbols-outlined" style={{ fontSize: 12, lineHeight: 1 }}>timer</span>{totalTime}m total focus</div>}
           </div>
         </div>
         {open && <>
@@ -445,13 +446,13 @@ function GoalCard({ goal, tasks, onComplete }) {
           )}
           {targetDate && (
             <div style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 10, display: 'flex', alignItems: 'center', gap: 5 }}>
-              <Icon name="sessions" size={12} style={{ color: 'var(--text-3)' }} />
+              <span className="material-symbols-outlined" style={{ fontSize:12, lineHeight:1, color:'var(--text-3)' }}>event</span>
               Target: {targetDate}
             </div>
           )}
           {onComplete && goal.status !== 'completed' && (
             <button className="btn ghost sm" onClick={() => onComplete(goal.id)} style={{ marginTop: 14 }}>
-              <Icon name="check" size={12} stroke={3} /> Mark goal complete
+              <span className="material-symbols-outlined" style={{ fontSize:12, lineHeight:1 }}>check</span> Mark goal complete
             </button>
           )}
         </div>
@@ -476,8 +477,8 @@ function GoalCard({ goal, tasks, onComplete }) {
                   {t.roadmap_step?.title && <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 3 }}>{t.roadmap_step.title}</div>}
                 </div>
                 {t.due && <DueDateBadge due={t.due} dueSort={t.dueSort} />}
-                <div style={{ fontSize: 11, color: t.is_completed ? 'var(--teal-600)' : 'var(--text-3)', fontWeight: 600 }}>
-                  {t.is_completed ? '✓' : '—'}
+                <div style={{ display: 'flex', fontSize: 11, color: t.is_completed ? 'var(--teal-600)' : 'var(--text-3)', fontWeight: 600 }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: 15, lineHeight: 1 }}>{t.is_completed ? 'check_circle' : 'radio_button_unchecked'}</span>
                 </div>
               </div>
             ))}
@@ -503,7 +504,7 @@ function FocusStats() {
   if (rows.length === 0) {
     return (
       <div className="card" style={{ padding:40, textAlign:'center', color:'var(--text-3)' }}>
-        <div style={{ fontSize:32, marginBottom:12 }}>⏱️</div>
+        <div style={{ width:56, height:56, borderRadius:16, margin:'0 auto 14px', display:'grid', placeItems:'center', background:'var(--accent-soft)', color:'var(--accent)' }}><span className="material-symbols-outlined" style={{ fontSize:28, lineHeight:1 }}>timer</span></div>
         <div style={{ fontFamily:'var(--ff-display)', fontSize:22, marginBottom:8, color:'var(--text)' }}>No focus sessions yet</div>
         <div style={{ fontSize:14 }}>Start a focus timer on your dashboard and hit Save — your stats will show up here.</div>
       </div>
@@ -686,7 +687,7 @@ function FocusStats() {
             return (
               <div key={r.id} style={{ display:'flex', alignItems:'center', gap:12, padding:'10px 0', borderTop:i===0?'none':'1px solid var(--border)' }}>
                 <div style={{ width:34, height:34, borderRadius:9, background:'var(--accent-soft)', color:'var(--accent)', display:'grid', placeItems:'center', flexShrink:0 }}>
-                  <Icon name="clock" size={15} />
+                  <span className="material-symbols-outlined" style={{ fontSize:15, lineHeight:1, color:'var(--accent)' }}>timer</span>
                 </div>
                 <div style={{ flex:1, minWidth:0 }}>
                   <div style={{ fontSize:13, fontWeight:600, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{r.label || 'Focus session'}</div>
@@ -783,7 +784,7 @@ function CreateItemModal({ goals, defaultKind, onClose, onTaskCreated, onGoalCre
       <div className="card" style={{ position:'fixed', top:'50%', left:'50%', transform:'translate(-50%,-50%)', width:480, maxHeight:'86vh', overflow:'auto', zIndex:201, padding:0, boxShadow:'var(--shadow-3)' }}>
         <div style={{ padding:'18px 22px', borderBottom:'1px solid var(--border)', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
           <div style={{ fontFamily:'var(--ff-display)', fontSize:22 }}>Create new</div>
-          <button onClick={onClose} style={{ color:'var(--text-3)', fontSize:14, background:'none', border:'none', cursor:'pointer' }}>✕</button>
+          <button onClick={onClose} style={{ color:'var(--text-3)', background:'none', border:'none', cursor:'pointer', display:'flex' }}><span className="material-symbols-outlined" style={{ fontSize:18, lineHeight:1 }}>close</span></button>
         </div>
         <div style={{ padding:'18px 22px' }}>
           <div className="seg" style={{ width:'100%', marginBottom:16 }}>
@@ -846,12 +847,12 @@ function CreateItemModal({ goals, defaultKind, onClose, onTaskCreated, onGoalCre
                         <div key={i} style={{ display:'flex', gap:8, alignItems:'center' }}>
                           <input className="input" placeholder="Task title" value={t.title} onChange={e=>updateGoalTask(i,'title',e.target.value)} style={{ flex:1, fontSize:13 }} />
                           <input className="input" type="date" value={t.due} onChange={e=>updateGoalTask(i,'due',e.target.value)} style={{ width:140, fontSize:13 }} title="Due date (optional)" />
-                          <button className="btn ghost sm" onClick={()=>removeGoalTask(i)} style={{ flexShrink:0 }}>✕</button>
+                          <button className="btn ghost sm" onClick={()=>removeGoalTask(i)} style={{ flexShrink:0 }}><span className="material-symbols-outlined" style={{ fontSize:14, lineHeight:1 }}>close</span></button>
                         </div>
                       )}
                     </div>
                   }
-                  <button className="btn ghost sm" onClick={addGoalTask}><Icon name="plus" size={12} /> Add task</button>
+                  <button className="btn ghost sm" onClick={addGoalTask}><span className="material-symbols-outlined" style={{ fontSize:12, lineHeight:1 }}>add</span> Add task</button>
                 </div>
               </>
             )}
@@ -903,7 +904,7 @@ function EditTaskModal({ task, goals, onClose, onSaved }) {
       <div className="card" style={{ position:'fixed', top:'50%', left:'50%', transform:'translate(-50%,-50%)', width:480, maxHeight:'86vh', overflow:'auto', zIndex:201, padding:0, boxShadow:'var(--shadow-3)' }}>
         <div style={{ padding:'18px 22px', borderBottom:'1px solid var(--border)', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
           <div style={{ fontFamily:'var(--ff-display)', fontSize:22 }}>Edit task</div>
-          <button onClick={onClose} style={{ color:'var(--text-3)', fontSize:14, background:'none', border:'none', cursor:'pointer' }}>✕</button>
+          <button onClick={onClose} style={{ color:'var(--text-3)', background:'none', border:'none', cursor:'pointer', display:'flex' }}><span className="material-symbols-outlined" style={{ fontSize:18, lineHeight:1 }}>close</span></button>
         </div>
         <div style={{ padding:'18px 22px' }}>
           <div className="stack" style={{ gap:12 }}>
@@ -957,13 +958,37 @@ function EditTaskModal({ task, goals, onClose, onSaved }) {
   );
 }
 
+// Compact task card used in the Board (Kanban) view. Clicking it jumps to the
+// List view with that task expanded so the full detail panel is reachable.
+function TaskBoardCard({ task, onCheck, onOpen }) {
+  const completed = !!task.is_completed;
+  const subjectColor = SUBJECTS[task.subject] || 'var(--border-strong)';
+  return (
+    <div onClick={() => onOpen(task.id)} style={{ background:'var(--bg-elev)', border:'1px solid var(--border)', borderRadius:12, padding:'12px 14px', cursor:'pointer', display:'flex', flexDirection:'column', gap:8 }}>
+      <div style={{ display:'flex', alignItems:'flex-start', gap:10 }}>
+        <div className={"check" + (completed ? " on" : "")} onClick={(e) => { e.stopPropagation(); onCheck(); }} style={{ marginTop:1 }}>
+          {completed && <span className="material-symbols-outlined" style={{ fontSize:11, lineHeight:1 }}>check</span>}
+        </div>
+        <div style={{ flex:1, minWidth:0, fontSize:13, fontWeight:600, lineHeight:1.35, textDecoration: completed ? 'line-through' : 'none', color: completed ? 'var(--text-3)' : 'var(--text)' }}>{task.title}</div>
+        <div style={{ width:8, height:8, borderRadius:'50%', background:subjectColor, flexShrink:0, marginTop:5 }} />
+      </div>
+      {task.due && <div style={{ paddingLeft:28 }}><DueDateBadge due={task.due} dueSort={task.dueSort} /></div>}
+    </div>
+  );
+}
+
 function TasksScreen({ tasks, setTasks, goals, setGoals, dataLoading, focus, focusTick, onReward }) {
   const [tab, setTab] = useState('tasks');
   const [expandedIds, setExpandedIds] = useState(() => new Set());
   const [creating, setCreating] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
   const [taskFilter, setTaskFilter] = useState('all');
+  const [taskView, setTaskView] = useState('list'); // list | board | subject
+  const [goalView, setGoalView] = useState('stacked'); // stacked | grid
   const [showCompleted, setShowCompleted] = useState(false);
+
+  // Jump from the Board view into the List view with a task opened.
+  const openInList = (id) => { setTaskView('list'); setExpandedIds((prev) => new Set(prev).add(id)); };
 
   // Panels stay open until explicitly closed (independent toggles).
   const toggleExpanded = (id) => setExpandedIds((prev) => {
@@ -1023,58 +1048,112 @@ function TasksScreen({ tasks, setTasks, goals, setGoals, dataLoading, focus, foc
     setTasks((ts) => ts.map((t) => t.id === id ? { ...t, ...patch } : t));
   };
 
+  const renderRow = (t) => (
+    <TaskRow key={t.id} task={t}
+      expanded={expandedIds.has(t.id)}
+      onToggle={() => toggleExpanded(t.id)}
+      onCheck={() => completeTask(t.id)}
+      onTaskMetaChange={updateTaskMeta}
+      focus={focus} focusTick={focusTick}
+      onEdit={setEditingTask} />
+  );
+
+  const VIEW_OPTS = [['list', 'view_list', 'List'], ['board', 'view_kanban', 'Board'], ['subject', 'category', 'By subject']];
+  const PRIORITIES = Object.keys(PRIORITY_CONFIG);
+
   return (
     <>
-      <div className="page-header">
+      <div className="page-header" style={{ marginBottom: 24 }}>
         <div>
-          <div className="eyebrow">Tasks & Goals</div>
-          <h1 className="page-title">Ship the work</h1>
-          <div className="page-sub" style={{ marginTop: 8, color: 'var(--text-2)', maxWidth: 580 }}>
+          <div className="page-eyebrow">Tasks & Goals</div>
+          <h1 className="page-title xl" style={{ margin: '6px 0 0', color: 'var(--text)' }}>Ship the work</h1>
+          <div style={{ marginTop: 10, fontSize: 14, color: 'var(--text-2)', maxWidth: 560, lineHeight: 1.6, opacity: 0.8 }}>
             Every task has a priority label and due date. Critical + due soon → Do First.
           </div>
         </div>
-        <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+        <div style={{ display:'flex', alignItems:'center', gap:12, flexShrink: 0 }}>
           <div className="tabs">
             <button className={tab === 'tasks' ? 'on' : ''} onClick={() => setTab('tasks')}>Tasks ({tasks.length})</button>
             <button className={tab === 'goals' ? 'on' : ''} onClick={() => setTab('goals')}>Goals ({goals.length})</button>
             <button className={tab === 'focus' ? 'on' : ''} onClick={() => setTab('focus')}>Focus Metrics</button>
           </div>
-          <button className="btn primary" onClick={() => setCreating(true)} style={{ flexShrink:0 }}><Icon name="plus" size={13} /> New</button>
+          <button className="btn primary" onClick={() => setCreating(true)} style={{ flexShrink:0 }}><span className="material-symbols-outlined" style={{ fontSize:13, lineHeight:1 }}>add</span> New</button>
         </div>
       </div>
 
       {tab === 'tasks' &&
       <div>
-          <div className="seg" style={{ marginBottom: 16, display: 'inline-flex', flexWrap: 'wrap' }}>
-            {[['today', 'Today'], ['tomorrow', 'Tomorrow'], ['week', 'Next 7 days'], ['all', 'All']].map(([k, label]) =>
-            <button key={k} className={taskFilter === k ? 'on' : ''} onClick={() => setTaskFilter(k)}>{label} ({openCount(k)})</button>
-            )}
+          <div className="row-between" style={{ marginBottom: 16, gap: 12, flexWrap: 'wrap' }}>
+            <div className="seg" style={{ display: 'inline-flex', flexWrap: 'wrap' }}>
+              {[['today', 'Today'], ['tomorrow', 'Tomorrow'], ['week', 'Next 7 days'], ['all', 'All']].map(([k, label]) =>
+              <button key={k} className={taskFilter === k ? 'on' : ''} onClick={() => setTaskFilter(k)}>{label} ({openCount(k)})</button>
+              )}
+            </div>
+            <div className="seg" style={{ display: 'inline-flex', flexShrink: 0 }}>
+              {VIEW_OPTS.map(([k, icon, label]) =>
+              <button key={k} className={taskView === k ? 'on' : ''} onClick={() => setTaskView(k)} title={label}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                <span className="material-symbols-outlined" style={{ fontSize: 16, lineHeight: 1 }}>{icon}</span>
+                <span className="view-opt-label">{label}</span>
+              </button>
+              )}
+            </div>
           </div>
           {tasksLoading
             ? <div style={{ color: 'var(--text-3)', fontSize: 14, padding: 20 }}>Loading tasks...</div>
             : <>
                 {visibleOpen.length === 0
                   ? <div className="card" style={{ padding: 32, textAlign: 'center', color: 'var(--text-3)' }}>
-                      <div style={{ fontSize: 32, marginBottom: 12 }}>{openTasks.length === 0 ? '✅' : '🗓️'}</div>
+                      <div style={{ width:56, height:56, borderRadius:16, margin:'0 auto 14px', display:'grid', placeItems:'center', background:'var(--accent-soft)', color:'var(--accent)' }}><span className="material-symbols-outlined" style={{ fontSize:28, lineHeight:1 }}>{openTasks.length === 0 ? 'task_alt' : 'event_busy'}</span></div>
                       <div style={{ fontFamily: 'var(--ff-display)', fontSize: 22, marginBottom: 8 }}>{openTasks.length === 0 ? 'No open tasks' : 'Nothing in this view'}</div>
                       <div style={{ fontSize: 14 }}>{openTasks.length === 0 ? 'Create one with the + New button.' : 'No tasks match this date range.'}</div>
                     </div>
+                  : taskView === 'board'
+                  ? <div style={{ display: 'grid', gridTemplateColumns: `repeat(${PRIORITIES.length}, minmax(0,1fr))`, gap: 14, alignItems: 'start' }}>
+                      {PRIORITIES.map((p) => {
+                        const col = visibleOpen.filter((t) => (t.priority || 'Routine') === p);
+                        const cfg = PRIORITY_CONFIG[p] || {};
+                        return (
+                          <div key={p} style={{ minWidth: 0 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, paddingBottom: 8, borderBottom: '2px solid ' + (cfg.color || 'var(--border)') }}>
+                              <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: cfg.color || 'var(--text-2)' }}>{p}</span>
+                              <span style={{ fontSize: 11, color: 'var(--text-3)' }}>{col.length}</span>
+                            </div>
+                            <div className="stack" style={{ gap: 10 }}>
+                              {col.length === 0
+                                ? <div style={{ fontSize: 12, color: 'var(--text-3)', padding: '6px 2px' }}>—</div>
+                                : col.map((t) => <TaskBoardCard key={t.id} task={t} onCheck={() => completeTask(t.id)} onOpen={openInList} />)}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  : taskView === 'subject'
+                  ? <div className="stack" style={{ gap: 22 }}>
+                      {Object.entries(visibleOpen.reduce((acc, t) => { const k = t.subject || 'General'; (acc[k] = acc[k] || []).push(t); return acc; }, {}))
+                        .sort((a, b) => b[1].length - a[1].length)
+                        .map(([subj, list]) => {
+                          const color = SUBJECTS[subj] || 'var(--border-strong)';
+                          return (
+                            <div key={subj}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                                <span style={{ width: 9, height: 9, borderRadius: '50%', background: color }} />
+                                <span className="eyebrow" style={{ margin: 0 }}>{subj}</span>
+                                <span style={{ fontSize: 11, color: 'var(--text-3)' }}>{list.length}</span>
+                              </div>
+                              <div className="stack" style={{ gap: 12 }}>{list.map(renderRow)}</div>
+                            </div>
+                          );
+                        })}
+                    </div>
                   : <div className="stack" style={{ gap: 12 }}>
-                      {visibleOpen.map((t) =>
-                      <TaskRow key={t.id} task={t}
-                        expanded={expandedIds.has(t.id)}
-                        onToggle={() => toggleExpanded(t.id)}
-                        onCheck={() => completeTask(t.id)}
-                        onTaskMetaChange={updateTaskMeta}
-                        focus={focus} focusTick={focusTick}
-                        onEdit={setEditingTask} />
-                      )}
+                      {visibleOpen.map(renderRow)}
                     </div>
                 }
                 {completedTasks.length > 0 &&
                 <div style={{ marginTop: 24 }}>
                     <button onClick={() => setShowCompleted(s => !s)} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-2)', fontSize: 13, fontWeight: 600, padding: '4px 0' }}>
-                      <Icon name={showCompleted ? 'chevron-down' : 'chevron-right'} size={14} />
+                      <span className="material-symbols-outlined" style={{ fontSize:14, lineHeight:1 }}>{showCompleted ? 'expand_more' : 'chevron_right'}</span>
                       Completed ({completedTasks.length})
                     </button>
                     {showCompleted &&
@@ -1098,16 +1177,33 @@ function TasksScreen({ tasks, setTasks, goals, setGoals, dataLoading, focus, foc
       }
 
       {tab === 'goals' &&
-      <div className="stack" style={{ gap: 16 }}>
+      <div>
+          {!goalsLoading && goals.length > 0 &&
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
+              <div className="seg" style={{ display: 'inline-flex' }}>
+                {[['stacked', 'view_agenda', 'Stacked'], ['grid', 'grid_view', 'Grid']].map(([k, icon, label]) =>
+                <button key={k} className={goalView === k ? 'on' : ''} onClick={() => setGoalView(k)} title={label}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: 16, lineHeight: 1 }}>{icon}</span>
+                  <span className="view-opt-label">{label}</span>
+                </button>
+                )}
+              </div>
+            </div>
+          }
           {goalsLoading
             ? <div style={{ color: 'var(--text-3)', fontSize: 14, padding: 20 }}>Loading goals...</div>
             : goals.length === 0
             ? <div className="card" style={{ padding: 32, textAlign: 'center', color: 'var(--text-3)' }}>
-                <div style={{ fontSize: 32, marginBottom: 12 }}>🎯</div>
+                <div style={{ width:56, height:56, borderRadius:16, margin:'0 auto 14px', display:'grid', placeItems:'center', background:'var(--accent-soft)', color:'var(--accent)' }}><span className="material-symbols-outlined" style={{ fontSize:28, lineHeight:1 }}>flag</span></div>
                 <div style={{ fontFamily: 'var(--ff-display)', fontSize: 22, marginBottom: 8 }}>No goals yet</div>
                 <div style={{ fontSize: 14 }}>Your growth roadmap goals will appear here.</div>
               </div>
-            : goals.map((g) => <GoalCard key={g.id} goal={g} tasks={tasks} onComplete={completeGoal} />)
+            : <div style={ goalView === 'grid'
+                ? { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))', gap: 16, alignItems: 'start' }
+                : { display: 'flex', flexDirection: 'column', gap: 16 } }>
+                {goals.map((g) => <GoalCard key={g.id} goal={g} tasks={tasks} onComplete={completeGoal} />)}
+              </div>
           }
         </div>
       }

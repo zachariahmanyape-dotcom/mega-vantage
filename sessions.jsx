@@ -38,7 +38,7 @@ function SessionsScreen({ onJoin, isAdmin }) {
             <div style={{
               width: 88, padding: '22px 16px', textAlign: 'center',
               borderRight: '1px solid var(--border)',
-              background: past ? 'var(--bg-sunken)' : isTown ? 'rgba(255,107,107,0.05)' : 'var(--sapphire-100)'
+              background: 'var(--bg-sunken)'
             }}>
               <div className="eyebrow" style={{ fontSize: 9, marginBottom: 4, color: 'var(--sapphire)' }}>{s.date.split(',')[0]}</div>
               <div className="display" style={{ fontSize: 30, lineHeight: 1, color: 'var(--sapphire)' }}>
@@ -51,7 +51,7 @@ function SessionsScreen({ onJoin, isAdmin }) {
             <div style={{ flex: 1, padding: '18px 22px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                 <span className={"chip " + (isTown ? "coral" : "sapphire")}><span className="dot" />{s.type}</span>
-                {past && <span className="chip teal"><Icon name="check" size={10} stroke={3} />Completed</span>}
+                {past && <span className="chip teal"><span className="material-symbols-outlined" style={{ fontSize:10, lineHeight:1 }}>check</span>Completed</span>}
                 <span style={{ fontSize: 12, color: 'var(--text-3)' }}>{s.time}</span>
               </div>
               <div className="display" style={{ fontSize: 20, marginTop: 8, lineHeight: 1.15 }}>{s.title}</div>
@@ -67,11 +67,11 @@ function SessionsScreen({ onJoin, isAdmin }) {
             </div>
             <div style={{ padding: '18px 22px', display: 'flex', flexDirection: 'column', gap: 8, justifyContent: 'center', borderLeft: '1px solid var(--border)', minWidth: 170 }}>
               <button className="btn" onClick={() => setOpen(true)} style={{ justifyContent: 'center' }}>
-                <Icon name="sessions" size={13} /> View agenda
+                <span className="material-symbols-outlined" style={{ fontSize:13, lineHeight:1 }}>event</span> View agenda
               </button>
               {!past &&
               <>
-                  <button className="btn primary" onClick={() => onJoin(s)} style={{ justifyContent: 'center' }}>Join <Icon name="external" size={12} /></button>
+                  <button className="btn primary" onClick={() => onJoin(s)} style={{ justifyContent: 'center' }}>Join <span className="material-symbols-outlined" style={{ fontSize:12, lineHeight:1 }}>open_in_new</span></button>
                   <button className="btn ghost sm" style={{ justifyContent: 'center' }}>Reschedule</button>
                 </>
               }
@@ -86,17 +86,17 @@ function SessionsScreen({ onJoin, isAdmin }) {
 
   return (
     <>
-      <div className="page-header">
+      <div className="page-header" style={{ marginBottom: 24 }}>
         <div>
-          <div className="eyebrow">Sessions</div>
-          <h1 className="page-title">Your calendar</h1>
-          <div className="page-sub" style={{ marginTop: 8, color: 'var(--text-2)', maxWidth: 580 }}>
+          <div className="page-eyebrow">Sessions</div>
+          <h1 className="page-title xl" style={{ margin: '6px 0 0', color: 'var(--text)' }}>Your calendar</h1>
+          <div style={{ marginTop: 10, fontSize: 14, color: 'var(--text-2)', maxWidth: 560, lineHeight: 1.6, opacity: 0.8 }}>
             Every 1:1 and town hall in one place. Reminders fire 90 minutes before you start.
           </div>
         </div>
-        <div className="tabs">
-          <button className={view === 'calendar' ? 'on' : ''} onClick={() => setView('calendar')}><Icon name="sessions" size={13} style={{ marginRight: 6 }} />Calendar</button>
-          <button className={view === 'list' ? 'on' : ''} onClick={() => setView('list')}><Icon name="list" size={13} style={{ marginRight: 6 }} />List</button>
+        <div className="tabs" style={{ flexShrink: 0 }}>
+          <button className={view === 'calendar' ? 'on' : ''} onClick={() => setView('calendar')}><span className="material-symbols-outlined" style={{ fontSize:13, lineHeight:1, marginRight:6 }}>event</span>Calendar</button>
+          <button className={view === 'list' ? 'on' : ''} onClick={() => setView('list')}><span className="material-symbols-outlined" style={{ fontSize:13, lineHeight:1, marginRight:6 }}>list</span>List</button>
         </div>
       </div>
 
@@ -123,7 +123,7 @@ function SessionsScreen({ onJoin, isAdmin }) {
 
             <>
                 <button onClick={() => setShowPast((p) => !p)} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-2)', fontSize: 13, fontWeight: 600, padding: '4px 0', marginBottom: 10 }}>
-                  <Icon name={showPast ? 'chevron-down' : 'chevron-right'} size={14} />
+                  <span className="material-symbols-outlined" style={{ fontSize:14, lineHeight:1 }}>{showPast ? 'expand_more' : 'chevron_right'}</span>
                   Past ({past.length})
                 </button>
                 {showPast &&

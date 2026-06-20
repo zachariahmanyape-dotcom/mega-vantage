@@ -105,6 +105,25 @@ Object.assign(window, {
   RES_FOLDERS, RES_FOLDER_LABEL, RES_ACCESS_LABEL, RES_ACCESS_CHIP, RES_TYPES, RES_TYPE_META, RES_SUBJECTS,
   resRelTime, resVideoEmbed, resPdfEmbed, resDomain, resUserType, resVisibleFolders, resCardState });
 
+// ============================================================
+// DEMO FALLBACK — preview-only sample library.
+// Renders ONLY when the live `resources` table returns 0 rows,
+// so you can preview the 3D library design before real content
+// is published. No DB writes. Delete this block (and the
+// RES_DEMO_FALLBACK usage in ResourcesScreen) to remove.
+// ============================================================
+const RES_DEMO_FALLBACK = false;
+const _demoDays = (n) => new Date(Date.now() - n * 86400000).toISOString();
+const RES_DEMO = [
+  { id: 'demo-1', title: 'Mastering Professional Email', description: 'A practical walkthrough of structuring emails that get replies — subject lines, openers, asks, and sign-offs that read as confident, not pushy.', content_type: 'video', folder: 'foundations', subject_area: 'Professional Communication', access_tier: 'foundations', url: 'https://www.youtube.com/watch?v=arj7oStGLkU', thumbnail_url: null, duration_minutes: 18, published: true, created_at: _demoDays(1) },
+  { id: 'demo-2', title: 'The One-Page CV Template', description: 'A recruiter-tested one-page CV layout with annotated guidance on what to include in each section and what to cut.', content_type: 'pdf', folder: 'foundations', subject_area: 'CV Development', access_tier: 'foundations', url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', thumbnail_url: null, duration_minutes: null, published: true, created_at: _demoDays(3) },
+  { id: 'demo-3', title: 'Why Small Wins Compound', description: 'On the psychology of momentum: how stacking tiny, visible wins rewires motivation and beats relying on willpower.', content_type: 'article', folder: 'foundations', subject_area: 'Growth Mindset', access_tier: 'foundations', url: 'https://jamesclear.com/small-habits', thumbnail_url: null, duration_minutes: null, published: true, created_at: _demoDays(5) },
+  { id: 'demo-4', title: 'Weekly Planning Template', description: 'A simple, repeatable weekly planning sheet — priorities, time blocks, and a Friday reflection prompt.', content_type: 'template', folder: 'foundations', subject_area: 'Time Management', access_tier: 'foundations', url: 'https://www.notion.so', thumbnail_url: null, duration_minutes: null, published: true, created_at: _demoDays(8) },
+  { id: 'demo-5', title: 'Building Your LinkedIn Presence', description: 'Turn a dormant profile into a magnet for opportunities — headline, about section, and a posting cadence you can sustain.', content_type: 'video', folder: 'foundations', subject_area: 'Personal Branding', access_tier: 'foundations', url: 'https://www.youtube.com/watch?v=arj7oStGLkU', thumbnail_url: null, duration_minutes: 24, published: true, created_at: _demoDays(11) },
+  { id: 'demo-6', title: 'Closing High-Value Deals', description: 'A framework for navigating the final stretch of a deal — handling objections, creating urgency, and asking for the close.', content_type: 'video', folder: 'breakthrough', subject_area: 'Strategic Sales', access_tier: 'breakthrough', url: 'https://www.youtube.com/watch?v=arj7oStGLkU', thumbnail_url: null, duration_minutes: 32, published: true, created_at: _demoDays(13) },
+  { id: 'demo-7', title: 'Commanding the Room', description: 'Presence techniques for high-stakes presentations — voice, pacing, and the structure of a memorable talk.', content_type: 'article', folder: 'breakthrough', subject_area: 'Public Speaking & Presentation', access_tier: 'breakthrough', url: 'https://hbr.org', thumbnail_url: null, duration_minutes: null, published: true, created_at: _demoDays(16) },
+  { id: 'demo-8', title: 'The Management Operating Model', description: 'How high-performing teams run their week — rituals, metrics, and decision rights that scale.', content_type: 'pdf', folder: 'mega_management', subject_area: 'Consulting', access_tier: 'mega_management', url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', thumbnail_url: null, duration_minutes: null, published: true, created_at: _demoDays(20) },
+];
 
 // ---------- Resource viewer modal ----------
 function ResourceViewer({ resource: r, onClose }) {
@@ -125,7 +144,7 @@ function ResourceViewer({ resource: r, onClose }) {
           <iframe src={resPdfEmbed(r.url)} title={r.title} style={{ width: '100%', height: '100%', border: 'none' }} />
         </div>
         <a className="btn" href={r.url} target="_blank" rel="noopener noreferrer" style={{ alignSelf: 'flex-start' }}>
-          <Icon name="external" size={13} /> Open PDF
+          <span className="material-symbols-outlined" style={{fontSize:13,lineHeight:1}}>open_in_new</span> Open PDF
         </a>
       </div>;
 
@@ -135,7 +154,7 @@ function ResourceViewer({ resource: r, onClose }) {
     body =
     <div className="card" style={{ padding: 32, textAlign: 'center', display: 'grid', placeItems: 'center', gap: 14, background: 'var(--bg-sunken)' }}>
         <div style={{ width: 56, height: 56, borderRadius: 14, display: 'grid', placeItems: 'center', background: subjColor + '1A', color: subjColor }}>
-          <Icon name={isArticle ? 'doc' : 'link'} size={26} stroke={1.4} />
+          <span className="material-symbols-outlined" style={{fontSize:26,lineHeight:1}}>{isArticle ? 'article' : 'description'}</span>
         </div>
         <div>
           <div style={{ fontFamily: 'var(--ff-display)', fontSize: 24, marginBottom: 6 }}>{r.title}</div>
@@ -146,7 +165,7 @@ function ResourceViewer({ resource: r, onClose }) {
           {isArticle && <span style={{ fontSize: 11, color: 'var(--text-3)', fontFamily: 'var(--ff-sub)' }}>{resDomain(r.url)}</span>}
         </div>
         <a className="btn primary" href={r.url} target="_blank" rel="noopener noreferrer" onClick={() => window.logResourceView(r.id)} style={{ marginTop: 4 }}>
-          <Icon name="external" size={13} /> {isArticle ? 'Read Article' : 'Open Template'}
+          <span className="material-symbols-outlined" style={{fontSize:13,lineHeight:1}}>open_in_new</span> {isArticle ? 'Read Article' : 'Open Template'}
         </a>
       </div>;
 
@@ -159,12 +178,12 @@ function ResourceViewer({ resource: r, onClose }) {
         <div style={{ padding: '16px 22px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16 }}>
           <div style={{ minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-              <span className="chip"><Icon name={RES_TYPE_META[r.content_type].icon} size={11} /> {RES_TYPE_META[r.content_type].label}</span>
+              <span className="chip"><span className="material-symbols-outlined" style={{fontSize:11,lineHeight:1}}>{r.content_type === 'video' ? 'videocam' : r.content_type === 'pdf' ? 'picture_as_pdf' : r.content_type === 'template' ? 'description' : 'article'}</span> {RES_TYPE_META[r.content_type].label}</span>
               {r.duration_minutes ? <span style={{ fontSize: 11, color: 'var(--text-3)', fontFamily: 'var(--ff-sub)' }}>{r.duration_minutes} min</span> : null}
             </div>
             <div style={{ fontFamily: 'var(--ff-display)', fontSize: 22, lineHeight: 1.1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.title}</div>
           </div>
-          <button onClick={onClose} style={{ color: 'var(--text-3)', fontSize: 16, background: 'none', border: 'none', cursor: 'pointer', flexShrink: 0 }}>✕</button>
+          <button onClick={onClose} style={{ color: 'var(--text-3)', background: 'none', border: 'none', cursor: 'pointer', flexShrink: 0, display: 'flex' }}><span className="material-symbols-outlined" style={{ fontSize: 18, lineHeight: 1 }}>close</span></button>
         </div>
         <div style={{ padding: 22 }}>
           {(r.content_type === 'video' || r.content_type === 'pdf') && r.description &&
@@ -184,7 +203,7 @@ function ResourceUpgrade({ resource: r, onClose }) {
       <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(10,10,10,0.6)', zIndex: 200, backdropFilter: 'blur(3px)' }} />
       <div className="card" style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 'min(440px, 92vw)', zIndex: 201, padding: 28, boxShadow: 'var(--shadow-3)', textAlign: 'center' }}>
         <div style={{ width: 52, height: 52, borderRadius: 14, display: 'grid', placeItems: 'center', background: 'var(--sapphire-100)', color: 'var(--sapphire)', margin: '0 auto 14px' }}>
-          <Icon name="lock" size={24} stroke={1.5} />
+          <span className="material-symbols-outlined" style={{fontSize:24,lineHeight:1}}>lock</span>
         </div>
         <div style={{ fontFamily: 'var(--ff-display)', fontSize: 24, marginBottom: 8 }}>Unlock with Breakthrough</div>
         <div style={{ fontSize: 13, color: 'var(--text-2)', lineHeight: 1.55, marginBottom: 6 }}>
@@ -202,74 +221,117 @@ function ResourceUpgrade({ resource: r, onClose }) {
 
 }
 
-function ResourceCard({ r, state, onOpen, onLocked }) {
+// Book "byline" — we have no authors, so use the subject area (imprint feel),
+// falling back to the folder label or MEGA.
+function resByline(r) {
+  return r.subject_area || RES_FOLDER_LABEL[r.folder] || 'MEGA';
+}
+// Self-contained book colour: subject hue, darkened so cream text always reads.
+function resBookColor(r) {
+  return SUBJECTS[r.subject_area] || '#5B6472';
+}
+
+// ---------- Library grid item: a forward-facing book cover with a 3D tilt ----------
+function ResourceCover({ r, state, onOpen, onLocked }) {
   const locked = state === 'locked';
-  const color = SUBJECTS[r.subject_area] || '#888';
-  const meta = RES_TYPE_META[r.content_type] || RES_TYPE_META.article;
-  const [viewed, setViewed] = useState(false);
-  const click = () => {
-    if (locked) {onLocked(r);return;}
-    setViewed(true);
-    window.logResourceView(r.id);
-    onOpen(r);
+  const color = resBookColor(r);
+  const ref = React.useRef(null);
+  const click = () => { if (locked) { onLocked(r); return; } onOpen(r); };
+  const typeIcon = r.content_type === 'video' ? 'videocam' : r.content_type === 'pdf' ? 'picture_as_pdf' : r.content_type === 'template' ? 'description' : 'article';
+
+  // Pointer-tracked 3D tilt (direct style mutation — no per-move re-render).
+  const onMove = (e) => {
+    const el = ref.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const px = (e.clientX - rect.left) / rect.width;
+    const py = (e.clientY - rect.top) / rect.height;
+    el.style.transform = `rotateY(${(px - 0.5) * 18}deg) rotateX(${(0.5 - py) * 18}deg) translateZ(16px)`;
+    el.style.setProperty('--mx', px * 100 + '%');
+    el.style.setProperty('--my', py * 100 + '%');
   };
+  const onLeave = () => { const el = ref.current; if (el) el.style.transform = ''; };
+
   return (
-    <div className="card" onClick={click} style={{ padding: 0, overflow: 'hidden', cursor: 'pointer', position: 'relative', transition: 'transform .14s ease, box-shadow .14s ease' }}
-    onMouseEnter={(e) => {e.currentTarget.style.transform = 'translateY(-2px)';e.currentTarget.style.boxShadow = 'var(--shadow-2)';}}
-    onMouseLeave={(e) => {e.currentTarget.style.transform = '';e.currentTarget.style.boxShadow = '';}}>
-      {locked &&
-      <span style={{ position: 'absolute', top: 8, right: 8, zIndex: 3, display: 'inline-flex', alignItems: 'center', gap: 4,
-        background: 'var(--sapphire)', color: '#fff', fontSize: 9, fontFamily: 'var(--ff-sub)', letterSpacing: '0.08em',
-        textTransform: 'uppercase', padding: '3px 7px', borderRadius: 6 }}>
-          <Icon name="lock" size={9} /> Locked
-        </span>
-      }
-      {viewed && !locked &&
-      <span style={{ position: 'absolute', top: 8, left: 8, zIndex: 2, display: 'inline-flex', alignItems: 'center', gap: 4,
-        background: 'var(--teal-600)', color: '#fff', fontSize: 9, fontFamily: 'var(--ff-sub)', letterSpacing: '0.08em',
-        textTransform: 'uppercase', padding: '3px 7px', borderRadius: 6 }}>
-          <Icon name="check" size={9} /> Opened
-        </span>
-      }
-      {/* Media */}
-      {r.thumbnail_url ?
-      <div style={{ aspectRatio: '16/9', borderBottom: '1px solid var(--border)', position: 'relative', backgroundImage: `url(${r.thumbnail_url})`, backgroundSize: 'cover', backgroundPosition: 'center', filter: locked ? 'grayscale(0.4) brightness(0.8)' : 'none' }}>
-          {r.content_type === 'video' && !locked &&
-        <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center' }}>
-              <div style={{ width: 44, height: 44, borderRadius: 999, background: 'rgba(10,10,10,0.7)', color: '#fff', display: 'grid', placeItems: 'center' }}><Icon name="play" size={16} /></div>
-            </div>
-        }
-          {locked && <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', color: '#fff' }}><Icon name="lock" size={26} /></div>}
-        </div> :
-      r.content_type === 'video' ?
-      <div className="ph-img" style={{ aspectRatio: '16/9', borderRadius: 0, border: 'none', borderBottom: '1px solid var(--border)', position: 'relative', filter: locked ? 'grayscale(0.4) brightness(0.85)' : 'none' }}>
-          <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center' }}>
-            <div style={{ width: 44, height: 44, borderRadius: 999, background: 'rgba(10,10,10,0.7)', color: '#fff', display: 'grid', placeItems: 'center' }}>
-              <Icon name={locked ? 'lock' : 'play'} size={16} />
-            </div>
+    <div className="rb-cover-wrap">
+      <div ref={ref} className={"rb-cover" + (locked ? " locked" : "")} onClick={click} onMouseMove={onMove} onMouseLeave={onLeave}
+        style={{ backgroundColor: color, backgroundImage: 'linear-gradient(155deg, rgba(255,255,255,0.18), rgba(0,0,0,0.55))' }}>
+        <span className="material-symbols-outlined rb-cover-watermark" style={{ fontSize: 120, lineHeight: 1 }}>{typeIcon}</span>
+        <div className="rb-cover-inner">
+          <div className="rb-cover-top">
+            <span className="rb-cover-type"><span className="material-symbols-outlined" style={{ fontSize: 12, lineHeight: 1 }}>{typeIcon}</span>{r.content_type === 'video' && r.duration_minutes ? r.duration_minutes + ' min' : RES_TYPE_META[r.content_type].label}</span>
+            <span className="rb-cover-mark">V</span>
           </div>
-          {r.duration_minutes ? <div style={{ position: 'absolute', bottom: 8, right: 10, background: 'rgba(10,10,10,0.7)', color: '#fff', fontSize: 10, padding: '2px 6px', borderRadius: 4, fontFamily: 'var(--ff-sub)' }}>{r.duration_minutes} min</div> : null}
-        </div> :
-
-      <div style={{ aspectRatio: '16/9', background: color + '12', borderBottom: '1px solid var(--border)', display: 'grid', placeItems: 'center', color: locked ? 'var(--text-3)' : color, filter: locked ? 'grayscale(0.5)' : 'none' }}>
-          <Icon name={locked ? 'lock' : meta.icon} size={40} stroke={1.2} />
+          <div className="rb-cover-byline">{resByline(r)}</div>
+          <div className="rb-cover-title">{r.title}</div>
         </div>
-      }
-      <div style={{ padding: 16 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-          {r.subject_area ? <SubjectTag subject={r.subject_area} /> : <span />}
-          <span style={{ fontSize: 10, color: 'var(--text-3)', fontFamily: 'var(--ff-sub)', letterSpacing: '0.08em' }}>{resRelTime(r.created_at)}</span>
-        </div>
-        <div style={{ fontSize: 14, fontWeight: 600, lineHeight: 1.35 }}>{r.title}</div>
-        {locked ?
-        <div style={{ fontSize: 11, color: 'var(--sapphire)', marginTop: 6, lineHeight: 1.4 }}>
-            Unlocked with Breakthrough. Includes 1:1 mentorship and personalized guidance.
-          </div> :
-
-        <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Icon name="folder" size={11} /> {RES_FOLDER_LABEL[r.folder] || r.folder}
-          </div>
+        {locked &&
+        <div className="rb-cover-lock"><span className="material-symbols-outlined" style={{ fontSize: 30, lineHeight: 1 }}>lock</span></div>
         }
+        <div className="rb-cover-glare" />
+      </div>
+    </div>);
+
+}
+
+// ---------- Standing 3D book (cover + spine + page edges) for the detail view ----------
+function ResourceBook3D({ r, w = 300, h = 420, d = 46 }) {
+  const color = resBookColor(r);
+  return (
+    <div className="rb-book" style={{ '--bw': w + 'px', '--bh': h + 'px', '--bd': d + 'px' }}>
+      <div className="rb-book__inner">
+        <div className="rb-book__cover" style={{ backgroundColor: color, backgroundImage: 'linear-gradient(160deg, rgba(255,255,255,0.16), rgba(0,0,0,0.55))' }}>
+          <div className="rb-book__mark">V</div>
+          <div className="rb-book__title">{r.title}</div>
+          <div className="rb-book__byline">{resByline(r)}</div>
+        </div>
+      </div>
+    </div>);
+
+}
+
+// ---------- Detail "sub-page" (Stripe Press style) ----------
+function ResourceDetail({ r, onBack, onOpenContent }) {
+  const isArticle = r.content_type === 'article';
+  const isLink = r.content_type === 'template' || isArticle;
+  const meta = RES_TYPE_META[r.content_type] || RES_TYPE_META.article;
+  const typeIcon = r.content_type === 'video' ? 'videocam' : r.content_type === 'pdf' ? 'picture_as_pdf' : r.content_type === 'template' ? 'description' : 'article';
+  const ctaLabel = r.content_type === 'video' ? 'Watch now' : r.content_type === 'pdf' ? 'Open document' : isArticle ? 'Read article' : 'Open template';
+  return (
+    <div>
+      <button className="btn ghost sm" onClick={onBack} style={{ marginBottom: 24 }}>
+        <span className="material-symbols-outlined" style={{ fontSize: 15, lineHeight: 1 }}>arrow_back</span> Back to library
+      </button>
+      <div className="rb-detail">
+        <div style={{ display: 'grid', placeItems: 'center', padding: '24px 0' }}>
+          <ResourceBook3D r={r} />
+        </div>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
+            <span className="chip"><span className="material-symbols-outlined" style={{ fontSize: 11, lineHeight: 1 }}>{typeIcon}</span> {meta.label}</span>
+            {r.duration_minutes ? <span className="chip"><span className="material-symbols-outlined" style={{ fontSize: 11, lineHeight: 1 }}>schedule</span> {r.duration_minutes} min</span> : null}
+            {r.subject_area && <SubjectTag subject={r.subject_area} />}
+            <span style={{ fontSize: 11, color: 'var(--text-3)', fontFamily: 'var(--ff-sub)' }}>{resRelTime(r.created_at)}</span>
+          </div>
+          <h2 style={{ fontFamily: 'var(--ff-heading)', fontWeight: 800, fontSize: 38, lineHeight: 1.08, letterSpacing: '-0.02em', margin: 0, color: 'var(--text)' }}>{r.title}</h2>
+          <div style={{ fontSize: 13, color: 'var(--text-3)', marginTop: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 13, lineHeight: 1 }}>folder</span>{RES_FOLDER_LABEL[r.folder] || r.folder}
+          </div>
+          {r.description &&
+          <p style={{ fontSize: 15, color: 'var(--text-2)', lineHeight: 1.65, marginTop: 20, maxWidth: 560 }}>{r.description}</p>
+          }
+          <div style={{ display: 'flex', gap: 10, marginTop: 28, flexWrap: 'wrap' }}>
+            {isLink ?
+            <a className="btn primary" href={r.url} target="_blank" rel="noopener noreferrer" onClick={() => window.logResourceView(r.id)}>
+                <span className="material-symbols-outlined" style={{ fontSize: 14, lineHeight: 1 }}>open_in_new</span> {ctaLabel}
+              </a> :
+            <button className="btn primary" onClick={() => onOpenContent(r)}>
+                <span className="material-symbols-outlined" style={{ fontSize: 14, lineHeight: 1 }}>{r.content_type === 'video' ? 'play_arrow' : 'visibility'}</span> {ctaLabel}
+              </button>
+            }
+            <button className="btn" onClick={onBack}>Back to library</button>
+          </div>
+        </div>
       </div>
     </div>);
 
@@ -286,6 +348,7 @@ function ResourcesScreen({ member, adminAll, onStartTour, tourCompleted }) {
   const [subjectFilter, setSubjectFilter] = useState(null);
   const [viewing, setViewing] = useState(null);
   const [upgrading, setUpgrading] = useState(null);
+  const [selected, setSelected] = useState(null);
 
   useEffect(() => {
     let alive = true;
@@ -306,9 +369,14 @@ function ResourcesScreen({ member, adminAll, onStartTour, tourCompleted }) {
     return () => {alive = false;};
   }, [userType]);
 
-  const withState = rows.map((r) => ({ r, state: resCardState(r, userType) }));
+  // DEMO FALLBACK: if the live table is empty, preview with sample books.
+  const baseRows = (!loading && rows.length === 0 && RES_DEMO_FALLBACK)
+    ? RES_DEMO.filter((r) => resCardState(r, userType) !== 'hidden')
+    : rows;
+
+  const withState = baseRows.map((r) => ({ r, state: resCardState(r, userType) }));
   const recent = withState.slice(0, 3);
-  const subjects = [...new Set(rows.map((r) => r.subject_area).filter(Boolean))];
+  const subjects = [...new Set(baseRows.map((r) => r.subject_area).filter(Boolean))];
 
   const filtered = withState.filter(({ r }) =>
   r.folder === folder && (
@@ -317,19 +385,20 @@ function ResourcesScreen({ member, adminAll, onStartTour, tourCompleted }) {
   );
   const folderCount = (key) => withState.filter(({ r }) => r.folder === key).length;
 
-  const openCard = (r) => setViewing(r);
+  const openCard = (r) => setSelected(r);           // spine click → detail sub-page
   const lockCard = (r) => setUpgrading(r);
+  const openContent = (r) => { window.logResourceView(r.id); setViewing(r); }; // detail CTA → player
 
   const header =
-  <div className="page-header">
+  <div className="page-header" style={{ marginBottom: 24 }}>
       <div>
-        <div className="eyebrow">Library</div>
-        <h1 className="page-title">Resources</h1>
-        <div className="page-sub" style={{ marginTop: 8, color: 'var(--text-2)', maxWidth: 560 }}>All of your resources, organized and ready when you need them.</div>
+        <div className="page-eyebrow">Library</div>
+        <h1 className="page-title xl" style={{ margin: '6px 0 0', color: 'var(--text)' }}>Resources</h1>
+        <div style={{ marginTop: 10, fontSize: 14, color: 'var(--text-2)', maxWidth: 560, lineHeight: 1.6, opacity: 0.8 }}>All of your resources, organized and ready when you need them.</div>
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 10 }}>
-        <div style={{ position: 'relative', width: 320 }}>
-          <Icon name="search" size={15} style={{ position: 'absolute', left: 12, top: 12, color: 'var(--text-3)' }} />
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 10, flexShrink: 0 }}>
+        <div style={{ position: 'relative', width: 300 }}>
+          <span className="material-symbols-outlined" style={{fontSize:15,lineHeight:1,position:'absolute',left:12,top:12,color:'var(--text-3)'}}>search</span>
           <input className="input" style={{ paddingLeft: 36 }} placeholder="Search by title or subject…" value={q} onChange={(e) => setQ(e.target.value)} />
         </div>
         <TourStatusBadge completed={tourCompleted} onRetake={onStartTour} />
@@ -338,17 +407,28 @@ function ResourcesScreen({ member, adminAll, onStartTour, tourCompleted }) {
 
 
   // Empty state — no published resources visible to this member at all.
-  if (!loading && rows.length === 0) {
+  if (!loading && baseRows.length === 0) {
     return (
       <>
         {header}
         <div className="card" style={{ padding: '64px 32px', textAlign: 'center', display: 'grid', placeItems: 'center', gap: 16, color: 'var(--text-3)', marginTop: 8 }}>
           <div style={{ width: 64, height: 64, borderRadius: 18, display: 'grid', placeItems: 'center', background: 'var(--bg-sunken)', color: 'var(--text-2)' }}>
-            <Icon name="resources" size={30} stroke={1.4} />
+            <span className="material-symbols-outlined" style={{fontSize:30,lineHeight:1}}>menu_book</span>
           </div>
           <div style={{ fontFamily: 'var(--ff-display)', fontSize: 24, color: 'var(--text-1)' }}>Hang on tight</div>
           <div style={{ fontSize: 14, maxWidth: 380, lineHeight: 1.55 }}>Resources will be added to the library shortly.</div>
         </div>
+      </>);
+
+  }
+
+  // Detail "sub-page" replaces the library browse area when a book is opened.
+  if (selected) {
+    return (
+      <>
+        {header}
+        <ResourceDetail r={selected} onBack={() => setSelected(null)} onOpenContent={openContent} />
+        {viewing && <ResourceViewer resource={viewing} onClose={() => setViewing(null)} />}
       </>);
 
   }
@@ -363,8 +443,8 @@ function ResourcesScreen({ member, adminAll, onStartTour, tourCompleted }) {
           <div className="row-between" style={{ marginBottom: 12 }}>
             <div className="eyebrow">Recently added</div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
-            {recent.map(({ r, state }) => <ResourceCard key={r.id} r={r} state={state} onOpen={openCard} onLocked={lockCard} />)}
+          <div className="rb-grid">
+            {recent.map(({ r, state }) => <ResourceCover key={r.id} r={r} state={state} onOpen={openCard} onLocked={lockCard} />)}
           </div>
         </div>
       }
@@ -377,7 +457,7 @@ function ResourcesScreen({ member, adminAll, onStartTour, tourCompleted }) {
             <button key={key} className={"sb-item" + (folder === key ? " active" : "")}
             onClick={() => setFolder(key)}
             style={{ padding: '9px 12px', fontSize: 13 }}>
-                <span className="sb-icon"><Icon name="folder" size={15} /></span>
+                <span className="sb-icon"><span className="material-symbols-outlined" style={{fontSize:15,lineHeight:1}}>folder</span></span>
                 <span style={{ flex: 1, textAlign: 'left' }}>{RES_FOLDER_LABEL[key]}</span>
                 <span style={{ fontSize: 11, color: 'var(--text-3)' }}>{folderCount(key)}</span>
               </button>
@@ -408,8 +488,8 @@ function ResourcesScreen({ member, adminAll, onStartTour, tourCompleted }) {
             {RES_FOLDER_LABEL[folder]} · <span style={{ color: 'var(--text-3)' }}>{filtered.length}</span>
             {subjectFilter && <span style={{ color: 'var(--text-3)' }}> · {subjectFilter} <button onClick={() => setSubjectFilter(null)} style={{ background: 'none', border: 'none', color: 'var(--coral)', cursor: 'pointer', fontSize: 11 }}>clear</button></span>}
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
-            {filtered.map(({ r, state }) => <ResourceCard key={r.id} r={r} state={state} onOpen={openCard} onLocked={lockCard} />)}
+          <div className="rb-grid">
+            {filtered.map(({ r, state }) => <ResourceCover key={r.id} r={r} state={state} onOpen={openCard} onLocked={lockCard} />)}
           </div>
           {!loading && filtered.length === 0 &&
           <div className="card" style={{ padding: 40, textAlign: 'center', color: 'var(--text-3)' }}>

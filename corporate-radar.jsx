@@ -65,7 +65,7 @@ function CRFilterPanel({ filters, setFilters }) {
   return (
     <div className="cr-filters">
       <div className="cr-filter-head">
-        <Icon name="sliders" size={15} /> Filters
+        <span className="material-symbols-outlined" style={{fontSize:15,lineHeight:1}}>tune</span> Filters
       </div>
 
       <div className="cr-fg">
@@ -85,7 +85,7 @@ function CRFilterPanel({ filters, setFilters }) {
             <input type="checkbox" checked={filters.sizes.includes(s)}
               onChange={() => toggle('sizes', s)} />
             <span className="cr-check-mark">
-              <Icon name="check" size={10} />
+              <span className="material-symbols-outlined" style={{fontSize:10,lineHeight:1}}>check</span>
             </span>
             <span>{s}</span>
           </label>
@@ -153,7 +153,21 @@ function crIsRecentlyAdded(company) {
 }
 
 /* ── Company card ── */
+/* Auto-generated abbreviations vary in length (1–5 chars). Cap the displayed
+   text and scale the font so it never clips the edges of the logo box. */
+function crAbbrText(c) {
+  return (c.abbreviation || (c.name || '?').charAt(0) || '?').toString().slice(0, 4);
+}
+function crAbbrSize(txt, base) {
+  const n = (txt || '').length;
+  // base = font-size for a 1–2 char abbreviation; step down for longer ones.
+  if (n >= 4) return Math.round(base * 0.7);
+  if (n === 3) return Math.round(base * 0.82);
+  return base;
+}
+
 function CRCompanyCard({ company, matchScore, saved, onToggleSave }) {
+  const abbr = crAbbrText(company);
   const barColor = matchScore >= 80 ? 'var(--sapphire)' : matchScore >= 70 ? 'var(--teal-600)' : 'var(--coral)';
   const now = Date.now();
   const recentlyChecked = company.hiring_last_checked &&
@@ -170,17 +184,17 @@ function CRCompanyCard({ company, matchScore, saved, onToggleSave }) {
   return (
     <div className="cr-card">
       <div className="cr-card-top">
-        <div className="cr-logo" style={{ background: company.logo_color || 'var(--sapphire)' }}>
-          {company.abbreviation || company.name.charAt(0)}
+        <div className="cr-logo" style={{ background: company.logo_color || 'var(--sapphire)', fontSize: crAbbrSize(abbr, 15) }}>
+          {abbr}
         </div>
         <div className="cr-card-acts">
           <button className={'cr-act' + (saved ? ' saved' : '')} onClick={() => onToggleSave(company.id)}
             title={saved ? 'Unsave' : 'Save'}>
-            <Icon name={saved ? 'star' : 'star'} size={16} style={saved ? { fill: 'var(--coral)', color: 'var(--coral)' } : {}} />
+            <span className="material-symbols-outlined" style={saved ? {fontSize:16,lineHeight:1,color:'var(--coral)'} : {fontSize:16,lineHeight:1}}>{saved ? 'favorite' : 'favorite_border'}</span>
           </button>
           {company.website_url && (
             <a className="cr-act" href={company.website_url} target="_blank" rel="noopener noreferrer" title="Visit website">
-              <Icon name="external" size={16} />
+              <span className="material-symbols-outlined" style={{fontSize:16,lineHeight:1}}>open_in_new</span>
             </a>
           )}
         </div>
@@ -190,7 +204,7 @@ function CRCompanyCard({ company, matchScore, saved, onToggleSave }) {
       {company.description && <p className="cr-card-desc">{company.description}</p>}
       <div className="cr-card-badges">
         <span className="cr-badge-size">
-          <Icon name="users" size={11} /> {company.size_tier}
+          <span className="material-symbols-outlined" style={{fontSize:11,lineHeight:1}}>group</span> {company.size_tier}
         </span>
         <span className={'cr-badge-hire' + (hiringActive ? ' on' : '')}>
           {hiringLabel}
@@ -222,13 +236,13 @@ function CRTagPicker({ selected, onToggle, tagGroups, label }) {
         {selected.map(t => (
           <span key={t} className="cr-tag">
             {t}
-            <button onClick={() => onToggle(t)}>✕</button>
+            <button onClick={() => onToggle(t)}><span className="material-symbols-outlined" style={{fontSize:12,lineHeight:1}}>close</span></button>
           </span>
         ))}
       </div>
       {!open ? (
         <button className="cr-add-btn" onClick={() => setOpen(true)}>
-          <Icon name="plus" size={12} /> Add {label.toLowerCase()}
+          <span className="material-symbols-outlined" style={{fontSize:12,lineHeight:1}}>add</span> Add {label.toLowerCase()}
         </button>
       ) : (
         <div className="cr-tag-picker">
@@ -244,7 +258,7 @@ function CRTagPicker({ selected, onToggle, tagGroups, label }) {
             </div>
           ))}
           <button className="cr-add-btn" onClick={() => setOpen(false)} style={{ marginTop: 6 }}>
-            <Icon name="chevron-down" size={12} style={{ transform: 'rotate(180deg)' }} /> Close
+            <span className="material-symbols-outlined" style={{fontSize:12,lineHeight:1,transform:'rotate(180deg)'}}>expand_more</span> Close
           </button>
         </div>
       )}
@@ -264,12 +278,12 @@ function CRPrefsPanel({ interests, roleTargets, onToggleInterest, onToggleRole,
       {isOverlay && (
         <div className="cr-prefs-overlay-header">
           <span className="cr-prefs-head" style={{ margin: 0 }}>
-            <Icon name="sliders" size={15} /> My Preferences
+            <span className="material-symbols-outlined" style={{fontSize:15,lineHeight:1}}>tune</span> My Preferences
           </span>
-          <button className="cr-icon-btn" onClick={onClose}>✕</button>
+          <button className="cr-icon-btn" onClick={onClose}><span className="material-symbols-outlined" style={{fontSize:16,lineHeight:1}}>close</span></button>
         </div>
       )}
-      {!isOverlay && <div className="cr-prefs-head"><Icon name="sliders" size={15} /> Preferences</div>}
+      {!isOverlay && <div className="cr-prefs-head"><span className="material-symbols-outlined" style={{fontSize:15,lineHeight:1}}>tune</span> Preferences</div>}
 
       <CRTagPicker selected={interests} onToggle={onToggleInterest}
         tagGroups={CR_INTEREST_TAGS} label="Your Interests" />
@@ -287,8 +301,8 @@ function CRPrefsPanel({ interests, roleTargets, onToggleInterest, onToggleRole,
           const isPaid = member.membershipTier === 'breakthrough' || member.membershipTier === 'management';
           return (
             <div key={sc.id} className="cr-saved-row">
-              <div className="cr-saved-dot" style={{ background: c.logo_color || 'var(--sapphire)' }}>
-                {c.abbreviation || c.name.charAt(0)}
+              <div className="cr-saved-dot" style={{ background: c.logo_color || 'var(--sapphire)', fontSize: crAbbrSize(crAbbrText(c), 11) }}>
+                {crAbbrText(c)}
               </div>
               <div className="cr-saved-meta">
                 <div className="cr-saved-name">{c.name}</div>
@@ -305,7 +319,7 @@ function CRPrefsPanel({ interests, roleTargets, onToggleInterest, onToggleRole,
                   onNotify(c.name, false, sc.id, !sc.notify);
                 }}
                 title={isPaid ? 'Get alerts' : 'Upgrade to enable alerts'}>
-                <Icon name="bell" size={13} />
+                <span className="material-symbols-outlined" style={{fontSize:13,lineHeight:1}}>{sc.notify ? 'notifications_active' : 'notifications'}</span>
               </button>
             </div>
           );
@@ -332,9 +346,9 @@ function CRToast({ message, onClose }) {
   if (!message) return null;
   return (
     <div className="cr-toast">
-      <Icon name="bell" size={16} />
+      <span className="material-symbols-outlined" style={{fontSize:16,lineHeight:1}}>notifications</span>
       <span>{message}</span>
-      <button onClick={onClose}>✕</button>
+      <button onClick={onClose}><span className="material-symbols-outlined" style={{fontSize:15,lineHeight:1}}>close</span></button>
     </div>
   );
 }
@@ -349,7 +363,7 @@ function CRDraftPanel({ drafts, onPublish, onDiscard }) {
     <div className="cr-draft-panel">
       <button className="cr-draft-toggle" onClick={() => setOpen(!open)}>
         <span className="cr-draft-toggle-left">
-          <Icon name="chevron-down" size={14} style={{ transform: open ? 'rotate(0)' : 'rotate(-90deg)', transition: 'transform 0.2s' }} />
+          <span className="material-symbols-outlined" style={{fontSize:14,lineHeight:1,transform:open?'rotate(0)':'rotate(-90deg)',transition:'transform 0.2s'}}>expand_more</span>
           Draft Companies
         </span>
         <span className="cr-draft-count">{drafts.length}</span>
@@ -372,8 +386,8 @@ function CRDraftPanel({ drafts, onPublish, onDiscard }) {
                 <tr key={c.id}>
                   <td>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <div className="cr-draft-dot" style={{ background: c.logo_color || 'var(--sapphire)' }}>
-                        {c.abbreviation || c.name.charAt(0)}
+                      <div className="cr-draft-dot" style={{ background: c.logo_color || 'var(--sapphire)', fontSize: crAbbrSize(crAbbrText(c), 11) }}>
+                        {crAbbrText(c)}
                       </div>
                       {c.name}
                     </div>
@@ -425,6 +439,11 @@ function CorporateRadarScreen({ member }) {
   const [prefsOverlay, setPrefsOverlay] = useState(false);
   const [notifications, setNotifications] = useState({ hiring: true, newCompanies: false });
   const [toast, setToast] = useState(null);
+  /* How many cards to show before the "See more" button (keeps initial scroll short). */
+  const CR_PAGE = 12;
+  const [visibleCount, setVisibleCount] = useState(CR_PAGE);
+  /* Collapse back to the first page whenever the result set changes. */
+  useEffect(() => { setVisibleCount(CR_PAGE); }, [search, sort, filters]);
   const prefsRef = useRef(null);
   const toastTimer = useRef(null);
 
@@ -642,24 +661,20 @@ function CorporateRadarScreen({ member }) {
       <div className="cr-header">
         <div className="cr-header-left">
           <h1 className="cr-title">Corporate Radar</h1>
-          <span className="cr-uae-badge">
-            <span className="cr-uae-flag"></span>
-            UAE
-          </span>
         </div>
         <div className="cr-header-center">
           <div className="cr-search">
-            <Icon name="search" size={16} />
+            <span className="material-symbols-outlined" style={{fontSize:16,lineHeight:1}}>search</span>
             <input type="text" placeholder="Search companies..." value={search}
               onChange={e => setSearch(e.target.value)} />
             {search && (
-              <button className="cr-search-x" onClick={() => setSearch('')}>✕</button>
+              <button className="cr-search-x" onClick={() => setSearch('')}><span className="material-symbols-outlined" style={{fontSize:14,lineHeight:1}}>close</span></button>
             )}
           </div>
         </div>
         <div className="cr-header-right">
           <button className="cr-btn-coral" onClick={handlePrefsClick}>
-            <Icon name="star" size={14} /> <span className="cr-btn-label">My Preferences</span>
+            <span className="material-symbols-outlined" style={{fontSize:14,lineHeight:1}}>tune</span> <span className="cr-btn-label">My Preferences</span>
           </button>
         </div>
       </div>
@@ -678,7 +693,11 @@ function CorporateRadarScreen({ member }) {
             lastRefreshed={lastRefreshed} />
 
           <div className="cr-grid-toolbar">
-            <span className="cr-grid-count">{sorted.length} {sorted.length === 1 ? 'company' : 'companies'}</span>
+            <span className="cr-grid-count">
+              {sorted.length > visibleCount
+                ? `Showing ${visibleCount} of ${sorted.length} companies`
+                : `${sorted.length} ${sorted.length === 1 ? 'company' : 'companies'}`}
+            </span>
             <select className="cr-sort" value={sort} onChange={e => setSort(e.target.value)}>
               <option value="match">Best match</option>
               <option value="hiring">Recently hiring</option>
@@ -687,15 +706,29 @@ function CorporateRadarScreen({ member }) {
           </div>
 
           <div className="cr-grid">
-            {sorted.map(c => (
+            {sorted.slice(0, visibleCount).map(c => (
               <CRCompanyCard key={c.id} company={c} matchScore={scoreMap[c.id] || 50}
                 saved={savedIdSet.has(c.id)} onToggleSave={toggleSave} />
             ))}
           </div>
 
+          {sorted.length > visibleCount && (
+            <div className="cr-more">
+              <button className="cr-more-btn" onClick={() => setVisibleCount(v => v + CR_PAGE)}>
+                See more companies
+                <span className="cr-more-count">{sorted.length - visibleCount} more</span>
+              </button>
+              {sorted.length - visibleCount > CR_PAGE && (
+                <button className="cr-more-all" onClick={() => setVisibleCount(sorted.length)}>
+                  See all
+                </button>
+              )}
+            </div>
+          )}
+
           {sorted.length === 0 && (
             <div className="cr-empty-state">
-              <Icon name="radar" size={36} style={{ opacity: 0.3, display: 'block', marginBottom: 12 }} />
+              <span className="material-symbols-outlined" style={{fontSize:36,lineHeight:1,opacity:0.3,display:'block',marginBottom:12}}>radar</span>
               <p>No companies match your current filters.</p>
               <button onClick={() => {
                 setFilters({ sectors: [], sizes: [], hiringWeek: false, hiringMonth: false, matchFilter: 'all' });
