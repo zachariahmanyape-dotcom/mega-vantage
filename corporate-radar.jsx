@@ -43,7 +43,32 @@ function crFormatRefreshDate(dateStr) {
   return 'Last refreshed: ' + new Date(dateStr).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
-/* ── Match score algorithm (brief §Match Score Calculation) ── */
+/* ── Semantic matching (Voyage embeddings + pgvector cosine) ──
+   crFetchSemanticScores pulls the precomputed cosine scores via the
+   radar_match_scores RPC (returns null when the member has no interest
+   embedding yet, or pgvector/the key isn't available — callers then fall
+   back to the tag-overlap calculateMatchScore below).
+   crReembedMember re-embeds the member's saved interests/roles (Voyage) and
+   then re-pulls the scores; call it after a preference change. */
+async function crFetchSemanticScores(uid) {
+  try {
+    const { data, error } = await window._supabase.rpc('radar_match_scores', { p_member: uid });
+    if (error || !data || !data.length) return null;
+    const map = {};
+    data.forEach(r => { map[r.company_id] = r.score; });
+    return map;
+  } catch (_) { return null; }
+}
+
+async function crReembedMember(uid) {
+  try {
+    await window._supabase.functions.invoke('radar-embeddings', { body: { mode: 'member', memberId: uid } });
+  } catch (_) { /* embedding is optional; tag scoring stays in place */ }
+  return crFetchSemanticScores(uid);
+}
+
+/* ── Match score algorithm (brief §Match Score Calculation) — tag-overlap
+   fallback used until/unless a semantic score exists for the company ── */
 function calculateMatchScore(company, memberInterests) {
   if (!memberInterests || memberInterests.length === 0) return 50;
   const companyTags = company.sector_tags.map(t => t.toLowerCase());
@@ -424,6 +449,8 @@ function CorporateRadarScreen({ member }) {
   const [savedCompanies, setSavedCompanies] = useState([]);
   const [interests, setInterests] = useState([]);
   const [roleTargets, setRoleTargets] = useState([]);
+  /* Semantic cosine scores keyed by company_id (null = none yet → tag fallback). */
+  const [semanticScores, setSemanticScores] = useState(null);
   const [loading, setLoading] = useState(true);
 
   /* Derived: published companies (what the grid shows) and drafts (admin only) */
@@ -453,19 +480,26 @@ function CorporateRadarScreen({ member }) {
     toastTimer.current = setTimeout(() => setToast(null), 3000);
   };
 
-  /* ── Debounced Supabase upserts (400ms) ── */
+  /* ── Debounced Supabase upserts → then re-embed prefs + refresh semantic
+     scores (Voyage). The profile write must land before crReembedMember reads
+     it back, so we await the update first. setSemanticScores is a stable
+     useState setter, safe to capture in the once-created ref. ── */
   const debouncedSaveInterests = useRef(
     crDebounce(async (newInterests) => {
       const uid = await window.getActiveUserId();
       await sb.from('profiles').update({ radar_interests: newInterests }).eq('id', uid);
-    }, 400)
+      const scores = await crReembedMember(uid);
+      setSemanticScores(scores);
+    }, 600)
   ).current;
 
   const debouncedSaveRoleTargets = useRef(
     crDebounce(async (newTargets) => {
       const uid = await window.getActiveUserId();
       await sb.from('profiles').update({ radar_role_targets: newTargets }).eq('id', uid);
-    }, 400)
+      const scores = await crReembedMember(uid);
+      setSemanticScores(scores);
+    }, 600)
   ).current;
 
   /* ── Load data on mount ── */
@@ -485,6 +519,8 @@ function CorporateRadarScreen({ member }) {
         setInterests(profileRes.data.radar_interests || []);
         setRoleTargets(profileRes.data.radar_role_targets || []);
       }
+      /* Pull any precomputed semantic scores (null → tag fallback). */
+      setSemanticScores(await crFetchSemanticScores(uid));
       setLoading(false);
     }
     load();
@@ -558,12 +594,18 @@ function CorporateRadarScreen({ member }) {
     }
   }, []);
 
-  /* ── Match scores (recalculated on every render when interests change) ── */
+  /* ── Match scores: prefer the semantic cosine score per company; fall back
+     to tag-overlap when the member has no embedding yet (or for a company that
+     somehow lacks one). Recomputes when interests or semantic scores change. ── */
   const scoreMap = useMemo(() => {
     const map = {};
-    companies.forEach(c => { map[c.id] = calculateMatchScore(c, interests); });
+    companies.forEach(c => {
+      map[c.id] = (semanticScores && semanticScores[c.id] != null)
+        ? semanticScores[c.id]
+        : calculateMatchScore(c, interests);
+    });
     return map;
-  }, [companies, interests]);
+  }, [companies, interests, semanticScores]);
 
   const savedIdSet = useMemo(() => new Set(savedCompanies.map(sc => sc.company_id)), [savedCompanies]);
 
