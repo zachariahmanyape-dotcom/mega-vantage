@@ -203,6 +203,21 @@ function MembersTable({ compact, onViewAs, onOpenDetail, members = [], loading =
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <Avatar initials={initials} color={color} size={28} />
                   <span style={{ fontWeight: 600 }}>{name}</span>
+                  {m.age_gate_state === 'manual_review' && (
+                    <span className="chip" title="Under 16 — needs a manual safeguarding decision" style={{ color: 'var(--coral)', borderColor: 'var(--coral)55', background: 'var(--coral)15' }}>
+                      <span className="material-symbols-outlined" style={{ fontSize: 11, lineHeight: 1 }}>shield_person</span>Review
+                    </span>
+                  )}
+                  {m.age_gate_state === 'awaiting_consent' && (
+                    <span className="chip" title="16–17 — awaiting parental consent" style={{ color: '#C88A1A', borderColor: '#C88A1A55', background: '#C88A1A15' }}>
+                      <span className="material-symbols-outlined" style={{ fontSize: 11, lineHeight: 1 }}>hourglass_top</span>Consent
+                    </span>
+                  )}
+                  {m.age_gate_state === 'blocked' && (
+                    <span className="chip" title="Under 13 — blocked" style={{ color: 'var(--text-3)', borderColor: 'var(--text-3)55', background: 'var(--text-3)15' }}>
+                      <span className="material-symbols-outlined" style={{ fontSize: 11, lineHeight: 1 }}>block</span>Under 13
+                    </span>
+                  )}
                 </div>
               </td>
               <td style={{ padding: '12px 16px', color: 'var(--text-2)' }}>{plan}</td>

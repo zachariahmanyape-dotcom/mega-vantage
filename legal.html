@@ -262,6 +262,112 @@
   .doc-footer p { font-size: 12px; color: var(--gray-light); margin: 0; }
   .doc-footer a { color: var(--blue); text-decoration: none; font-size: 12px; font-weight: 600; }
 
+  /* CONSENT FORM */
+  .consent-form {
+    background: var(--white);
+    border: 1px solid var(--gray-rule);
+    border-radius: 10px;
+    padding: 32px 30px;
+    margin-top: 8px;
+  }
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px 20px;
+  }
+  .form-field { display: flex; flex-direction: column; gap: 6px; }
+  .form-field.full { grid-column: 1 / -1; }
+  .form-field label {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--gray-mid);
+  }
+  .form-field label .req { color: var(--blue); margin-left: 2px; }
+  .form-field input,
+  .form-field select {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 15px;
+    color: var(--black);
+    background: var(--bg);
+    border: 1px solid var(--gray-rule);
+    border-radius: 7px;
+    padding: 11px 13px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    width: 100%;
+  }
+  .form-field input:focus,
+  .form-field select:focus {
+    outline: none;
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px var(--blue-light);
+  }
+  .form-field input[readonly] {
+    background: var(--gray-rule);
+    color: var(--gray-mid);
+    cursor: not-allowed;
+  }
+  .form-field .field-hint { font-size: 12px; color: var(--gray-light); font-weight: 500; }
+
+  .consent-checks {
+    margin-top: 26px;
+    padding-top: 24px;
+    border-top: 1px solid var(--gray-rule);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .check-row {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    cursor: pointer;
+  }
+  .check-row input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin-top: 2px;
+    flex-shrink: 0;
+    accent-color: var(--blue);
+    cursor: pointer;
+  }
+  .check-row span { font-size: 14px; color: var(--gray-mid); line-height: 1.6; }
+
+  .form-actions { margin-top: 28px; }
+  .btn-submit {
+    background: var(--blue);
+    color: var(--white);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    border: none;
+    border-radius: 8px;
+    padding: 14px 34px;
+    cursor: pointer;
+    transition: background 0.15s, opacity 0.15s;
+  }
+  .btn-submit:hover { background: var(--blue-dark); }
+  .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .form-note {
+    font-size: 13px;
+    color: var(--gray-light);
+    margin-top: 14px;
+    line-height: 1.6;
+  }
+  .form-msg {
+    border-radius: 7px;
+    padding: 13px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 20px;
+  }
+  .form-msg.error { background: #FDECEC; color: #B42318; border: 1px solid #F5C6C6; }
+  .form-msg.success { background: #E7F6EC; color: #1A7F40; border: 1px solid #BBE3C9; }
+  .form-msg.info { background: var(--blue-light); color: var(--blue-dark); border: 1px solid #C7D9F4; }
+  .form-hidden { display: none !important; }
+
   /* RESPONSIVE */
   @media (max-width: 640px) {
     .site-header { padding: 0 20px; }
@@ -271,6 +377,8 @@
     .page-wrapper { padding: 40px 20px 80px; }
     .doc-title { font-size: 32px; }
     .doc-meta { gap: 16px; }
+    .form-grid { grid-template-columns: 1fr; }
+    .consent-form { padding: 24px 18px; }
   }
 </style>
 </head>
@@ -290,6 +398,7 @@
 <nav class="doc-nav">
   <button class="doc-nav-tab active" onclick="switchDoc('privacy', this)">Privacy Policy</button>
   <button class="doc-nav-tab" onclick="switchDoc('terms', this)">Terms of Use</button>
+  <button class="doc-nav-tab" onclick="switchDoc('consent', this)">Parental Consent</button>
 </nav>
 
 <div class="page-wrapper">
@@ -387,8 +496,10 @@
 
     <div class="sec">
       <h2 class="sec-heading" id="pp-5"><span class="num">05</span>Minors and Parental Consent</h2>
-      <p>The Platform is available to users aged 13 and above. Users between the ages of 13 and 17 may access the Platform only with the verified consent of a parent or legal guardian. By completing the account registration process on behalf of a minor, the parent or guardian confirms that they have reviewed and accepted this Privacy Policy and our Terms of Use on the minor's behalf.</p>
-      <p>We do not knowingly collect personal data from children under the age of 13. If we become aware that we have inadvertently collected data from a user under 13 without verified parental consent, we will take immediate steps to delete that data. If you believe we may hold data from a child under 13, please contact us at <a href="mailto:contact@mega-mentorship.com" class="inline">contact@mega-mentorship.com</a>.</p>
+      <p>The Platform is generally available to users aged 16 and above. Users who are 16 or 17 years old may access the Platform only with the verified consent of a parent or legal guardian. By completing the parental consent process, the parent or guardian confirms that they have reviewed and accepted this Privacy Policy and our Terms of Use on the minor's behalf.</p>
+      <p>In exceptional circumstances, MEGA may, at its sole discretion, extend access to members aged 13 to 15 through verified institutional partnerships, subject to additional safeguarding measures and direct written consent from a parent or legal guardian. Access for this age group is not self-serve and is granted only following individual review by MEGA.</p>
+      <p>We do not knowingly collect personal data from children under the age of 13, and the Platform is not available to users under 13 under any circumstances. If we become aware that we have inadvertently collected data from a user under 13, we will take immediate steps to delete that data. If you believe we may hold data from a child under 13, please contact us at <a href="mailto:contact@mega-mentorship.com" class="inline">contact@mega-mentorship.com</a>.</p>
+      <p>Parental and guardian consent is collected through our <a href="#" onclick="switchDoc('consent', document.querySelectorAll('.doc-nav-tab')[2]); return false;" class="inline">Parental Consent</a> form. We retain a record of each consent, including the identity of the consenting adult, the consent timestamp, and the originating IP address.</p>
     </div>
 
     <div class="sec">
@@ -502,12 +613,13 @@
     <div class="sec">
       <h2 class="sec-heading" id="tu-2"><span class="num">02</span>Eligibility and Account Access</h2>
       <p>Access to the Platform is restricted exclusively to individuals who hold an active MEGA membership in good standing. The Platform is not available to the general public. Your access is contingent on the continued validity of your MEGA membership. If your membership is suspended, cancelled, or expires, your access to the Platform will be suspended accordingly.</p>
-      <p>You must be at least 13 years of age to use the Platform. Users aged 13 to 17 require verified parental or guardian consent as described in Section 3.</p>
+      <p>The Platform is generally available to users aged 16 and above. Users who are 16 or 17 years old require verified parental or guardian consent as described in Section 3. Access for users aged 13 to 15 is not self-serve and is granted only in exceptional circumstances through verified institutional partnerships, as described in Section 3. The Platform is not available to users under the age of 13 under any circumstances.</p>
     </div>
 
     <div class="sec">
       <h2 class="sec-heading" id="tu-3"><span class="num">03</span>Minors and Parental Consent</h2>
-      <p>If you are between the ages of 13 and 17, your parent or legal guardian must review and accept these Terms on your behalf before you may access the Platform. By completing the registration process for a minor user, the parent or guardian represents and warrants that they have the legal authority to do so and that they accept these Terms and our Privacy Policy on the minor's behalf.</p>
+      <p>If you are 16 or 17 years old, your parent or legal guardian must review and accept these Terms on your behalf, through our <a href="#" onclick="switchDoc('consent', document.querySelectorAll('.doc-nav-tab')[2]); return false;" class="inline">Parental Consent</a> form, before your account is activated. By completing the consent process for a minor user, the parent or guardian represents and warrants that they have the legal authority to do so and that they accept these Terms and our Privacy Policy on the minor's behalf.</p>
+      <p>The Platform is generally available from age 16. In exceptional circumstances, MEGA may, at its sole discretion, extend access to members aged 13 to 15 through verified institutional partnerships (for example, school or programme placements), subject to additional safeguarding measures and direct written consent from a parent or legal guardian. This is not a self-serve path: each case is reviewed individually by MEGA before any access is granted.</p>
       <p>MEGA reserves the right to request verification of parental consent at any time. The Platform is not available to users under the age of 13 under any circumstances.</p>
     </div>
 
@@ -611,6 +723,139 @@
 
   </div>
 
+
+  <!-- PARENTAL CONSENT -->
+  <div id="consent" class="doc-section">
+
+    <div class="doc-header">
+      <div class="doc-badge">Vantage by MEGA</div>
+      <h1 class="doc-title">Parental Consent</h1>
+      <div class="doc-meta">
+        <div class="doc-meta-item"><strong>Effective Date:</strong> 7 May 2026</div>
+        <div class="doc-meta-item"><strong>Last Updated:</strong> 7 May 2026</div>
+        <div class="doc-meta-item"><strong>Jurisdiction:</strong> United Arab Emirates</div>
+      </div>
+    </div>
+
+    <div class="toc">
+      <div class="toc-title">Contents</div>
+      <ul class="toc-list">
+        <li><a href="#pc-1">1. About This Form</a></li>
+        <li><a href="#pc-2">2. Who Should Complete It</a></li>
+        <li><a href="#pc-3">3. What You Are Consenting To</a></li>
+        <li><a href="#pc-4">4. Consent Form</a></li>
+      </ul>
+    </div>
+
+    <div class="highlight-box">
+      <p>This form allows a parent or legal guardian to provide consent for a member under the age of 18 to access Vantage by MEGA. A member's account is not activated until valid consent has been received. If you reached this page from a link in an email we sent you, the form below will already show the member's details.</p>
+    </div>
+
+    <div class="sec">
+      <h2 class="sec-heading" id="pc-1"><span class="num">01</span>About This Form</h2>
+      <p>MEGA (Middle East Growth Academy) requires verified parental or guardian consent before activating a Vantage account for any member under the age of 18. We collect this consent to comply with our obligations under the UAE Federal Decree-Law No. 45 of 2021 on the Protection of Personal Data (UAE PDPL) and to ensure that an adult responsible for the minor has reviewed how the Platform works and how the minor's data is handled.</p>
+      <p>The information you provide on this form is used solely to record and verify your consent. It is stored securely and is not used for marketing or shared with third parties for commercial purposes. For full detail on how we handle personal data, please review our <a href="#" onclick="switchDoc('privacy', document.querySelectorAll('.doc-nav-tab')[0]); return false;" class="inline">Privacy Policy</a>.</p>
+    </div>
+
+    <div class="sec">
+      <h2 class="sec-heading" id="pc-2"><span class="num">02</span>Who Should Complete It</h2>
+      <p>This form must be completed by a parent or legal guardian of the member, not by the member themselves. By completing it, you confirm that you have the legal authority to provide consent on the minor's behalf.</p>
+      <p>Members aged 16 or 17 may access the Platform once a parent or guardian completes this form. Access for members aged 13 to 15 is offered only in exceptional circumstances through verified institutional partnerships and follows an additional individual safeguarding review by MEGA before this consent step applies.</p>
+    </div>
+
+    <div class="sec">
+      <h2 class="sec-heading" id="pc-3"><span class="num">03</span>What You Are Consenting To</h2>
+      <p>By completing this form, you provide consent for the following, each of which is confirmed separately below:</p>
+      <ul class="legal-list">
+        <li>MEGA's processing of the minor's personal data in accordance with our Privacy Policy</li>
+        <li>The minor's participation in MEGA Mentorship programming, including one-to-one mentor sessions where applicable to their membership</li>
+        <li>Your acknowledgment that you have read and accept the Terms of Use and Privacy Policy on the minor's behalf</li>
+      </ul>
+      <p>You may withdraw your consent at any time by contacting us at <a href="mailto:contact@mega-mentorship.com" class="inline">contact@mega-mentorship.com</a>. Withdrawing consent will result in deactivation of the minor's account.</p>
+    </div>
+
+    <div class="sec">
+      <h2 class="sec-heading" id="pc-4"><span class="num">04</span>Consent Form</h2>
+
+      <div id="consent-gate-msg" class="form-msg info form-hidden"></div>
+
+      <form class="consent-form" id="consent-form" onsubmit="return submitConsent(event)">
+        <div class="form-grid">
+          <div class="form-field full">
+            <label for="cf-member-name">Member's full name <span class="req">*</span></label>
+            <input type="text" id="cf-member-name" name="member_name" required autocomplete="off">
+          </div>
+          <div class="form-field">
+            <label for="cf-member-dob">Member's date of birth <span class="req">*</span></label>
+            <input type="date" id="cf-member-dob" name="member_dob" required>
+          </div>
+          <div class="form-field">
+            <label for="cf-partner">Partner / source organization</label>
+            <input type="text" id="cf-partner" name="partner_source" placeholder="e.g. TKS, DIFC Academy" autocomplete="off">
+          </div>
+          <div class="form-field">
+            <label for="cf-parent-name">Parent / guardian full name <span class="req">*</span></label>
+            <input type="text" id="cf-parent-name" name="parent_name" required autocomplete="off">
+          </div>
+          <div class="form-field">
+            <label for="cf-relationship">Relationship to minor <span class="req">*</span></label>
+            <select id="cf-relationship" name="parent_relationship" required>
+              <option value="">Select…</option>
+              <option>Mother</option>
+              <option>Father</option>
+              <option>Legal guardian</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label for="cf-parent-email">Parent / guardian email <span class="req">*</span></label>
+            <input type="email" id="cf-parent-email" name="parent_email" required autocomplete="off">
+          </div>
+          <div class="form-field">
+            <label for="cf-parent-phone">Parent / guardian phone</label>
+            <input type="tel" id="cf-parent-phone" name="parent_phone" placeholder="Optional" autocomplete="off">
+          </div>
+        </div>
+
+        <div class="consent-checks">
+          <label class="check-row">
+            <input type="checkbox" id="cf-c1" name="consent_data_processing">
+            <span>I consent to MEGA processing my child's personal data as described in the Privacy Policy.</span>
+          </label>
+          <label class="check-row">
+            <input type="checkbox" id="cf-c2" name="consent_program_participation">
+            <span>I consent to my child's participation in MEGA Mentorship programming, including one-to-one mentor sessions where applicable.</span>
+          </label>
+          <label class="check-row">
+            <input type="checkbox" id="cf-c3" name="consent_terms_acknowledged">
+            <span>I confirm that I have read and accept the Terms of Use and Privacy Policy on my child's behalf.</span>
+          </label>
+        </div>
+
+        <div class="form-grid" style="margin-top:24px;">
+          <div class="form-field full">
+            <label for="cf-signature">Type your full name as signature <span class="req">*</span></label>
+            <input type="text" id="cf-signature" name="signature_name" required autocomplete="off">
+            <div class="field-hint">Typing your name here serves as your electronic signature. We also record the date, time, and IP address of submission.</div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn-submit" id="cf-submit">Submit consent</button>
+          <p class="form-note">A copy of this consent is retained by MEGA. Once submitted, the member's account will be activated.</p>
+        </div>
+      </form>
+
+      <div id="consent-form-msg" class="form-msg form-hidden" style="margin-top:20px;"></div>
+    </div>
+
+    <div class="doc-footer">
+      <p>© 2026 MEGA (Middle East Growth Academy). All rights reserved.</p>
+      <a href="#" onclick="switchDoc('privacy', document.querySelectorAll('.doc-nav-tab')[0]); return false;">← Read Privacy Policy</a>
+    </div>
+
+  </div>
+
 </div>
 
 <script>
@@ -632,6 +877,144 @@
       }
     });
   });
+
+  // ── Parental consent: token routing, pre-fill, submission ──────────────────
+  const SUPABASE_URL = 'https://npsfarsblfewdclhoquo.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5wc2ZhcnNibGZld2RjbGhvcXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NjM4OTEsImV4cCI6MjA5NTAzOTg5MX0.RdxYHNCu8giVF1tNGe3Rdz4UmMeqJA5GeuxtMGiQ27w';
+  const FN_HEADERS = {
+    'Content-Type': 'application/json',
+    'apikey': SUPABASE_ANON_KEY,
+    'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+  };
+
+  let consentToken = null;
+
+  function consentParams() {
+    const url = new URL(window.location.href);
+    // Support ?consent_for=TOKEN and #consent / #consent=TOKEN
+    let token = url.searchParams.get('consent_for');
+    const hash = window.location.hash || '';
+    if (!token && hash.indexOf('consent') === 0) {
+      const eq = hash.indexOf('=');
+      if (eq > -1) token = decodeURIComponent(hash.slice(eq + 1));
+    }
+    const wantsConsent = !!token || hash.indexOf('#consent') === 0;
+    return { token, wantsConsent };
+  }
+
+  function showGate(text, kind) {
+    const el = document.getElementById('consent-gate-msg');
+    const form = document.getElementById('consent-form');
+    if (!el) return;
+    el.textContent = text;
+    el.className = 'form-msg ' + (kind || 'info');
+    el.classList.remove('form-hidden');
+    if (kind === 'error' && form) form.classList.add('form-hidden');
+  }
+
+  async function resolveConsentToken(token) {
+    try {
+      const res = await fetch(SUPABASE_URL + '/functions/v1/minor-consent-resolve', {
+        method: 'POST', headers: FN_HEADERS, body: JSON.stringify({ token }),
+      });
+      const data = await res.json();
+      if (!data || !data.valid) {
+        const reason = data && data.reason;
+        const msg = reason === 'expired'
+          ? 'This consent link has expired. Please contact MEGA at contact@mega-mentorship.com to request a new one.'
+          : reason === 'already_submitted'
+          ? 'Consent for this member has already been provided. No further action is needed.'
+          : 'This consent link is not valid. Please check the link in your email, or contact MEGA at contact@mega-mentorship.com.';
+        showGate(msg, 'error');
+        return;
+      }
+      consentToken = token;
+      // Pre-fill known, non-sensitive fields. Member name becomes read-only.
+      const nameEl = document.getElementById('cf-member-name');
+      if (data.member_name) { nameEl.value = data.member_name; nameEl.setAttribute('readonly', 'readonly'); }
+      if (data.date_of_birth) document.getElementById('cf-member-dob').value = data.date_of_birth;
+      if (data.partner_source) document.getElementById('cf-partner').value = data.partner_source;
+      showGate('Please review the details below and provide your consent for ' + (data.member_name || 'this member') + '.', 'info');
+    } catch (e) {
+      showGate('We could not load this consent form right now. Please try again shortly, or contact MEGA at contact@mega-mentorship.com.', 'error');
+    }
+  }
+
+  async function submitConsent(e) {
+    e.preventDefault();
+    const msg = document.getElementById('consent-form-msg');
+    const btn = document.getElementById('cf-submit');
+    const show = (text, kind) => {
+      msg.textContent = text; msg.className = 'form-msg ' + kind; msg.classList.remove('form-hidden');
+    };
+
+    const c1 = document.getElementById('cf-c1').checked;
+    const c2 = document.getElementById('cf-c2').checked;
+    const c3 = document.getElementById('cf-c3').checked;
+    if (!c1 || !c2 || !c3) {
+      show('Please confirm all three consent statements before submitting.', 'error');
+      return false;
+    }
+
+    const payload = {
+      token: consentToken,
+      member_name: document.getElementById('cf-member-name').value.trim(),
+      member_dob: document.getElementById('cf-member-dob').value,
+      partner_source: document.getElementById('cf-partner').value.trim(),
+      parent_name: document.getElementById('cf-parent-name').value.trim(),
+      parent_relationship: document.getElementById('cf-relationship').value,
+      parent_email: document.getElementById('cf-parent-email').value.trim(),
+      parent_phone: document.getElementById('cf-parent-phone').value.trim(),
+      signature_name: document.getElementById('cf-signature').value.trim(),
+      consent_data_processing: c1,
+      consent_program_participation: c2,
+      consent_terms_acknowledged: c3,
+    };
+
+    if (!consentToken) {
+      show('This form must be opened from the consent link we emailed you. Please use that link, or contact MEGA at contact@mega-mentorship.com.', 'error');
+      return false;
+    }
+
+    btn.disabled = true; btn.textContent = 'Submitting…';
+    try {
+      const res = await fetch(SUPABASE_URL + '/functions/v1/minor-consent-submit', {
+        method: 'POST', headers: FN_HEADERS, body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        document.getElementById('consent-form').classList.add('form-hidden');
+        show('Thank you. Your consent has been recorded and the member’s account is now active. You may close this page.', 'success');
+        msg.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else {
+        const err = data && data.error;
+        const text = err === 'already_submitted' ? 'Consent for this member has already been provided.'
+          : err === 'expired' ? 'This consent link has expired. Please contact MEGA for a new one.'
+          : err === 'all_consents_required' ? 'Please confirm all three consent statements.'
+          : err === 'missing_fields' ? 'Please complete all required fields.'
+          : 'We could not submit your consent. Please try again, or contact MEGA at contact@mega-mentorship.com.';
+        show(text, 'error');
+        btn.disabled = false; btn.textContent = 'Submit consent';
+      }
+    } catch (e) {
+      show('We could not submit your consent right now. Please try again shortly.', 'error');
+      btn.disabled = false; btn.textContent = 'Submit consent';
+    }
+    return false;
+  }
+
+  // On load: if a consent token / #consent is present, land on the consent tab.
+  (function initConsentRouting() {
+    const { token, wantsConsent } = consentParams();
+    if (!wantsConsent) return;
+    switchDoc('consent', document.querySelectorAll('.doc-nav-tab')[2]);
+    if (token) {
+      resolveConsentToken(token);
+    } else {
+      // Reached the tab without a token (e.g. internal link) — usable only via emailed link.
+      showGate('To complete a consent form, please use the personalised link MEGA emailed to you.', 'info');
+    }
+  })();
 </script>
 </body>
 </html>

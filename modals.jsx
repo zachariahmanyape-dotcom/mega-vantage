@@ -171,9 +171,12 @@ function OnboardingWizard({ onComplete }) {
   const [step, setStep] = useState(0);
   const [profile, setProfile] = useState({ role: '', status: 'professional', subject: '', interests: '' });
   const [goal, setGoal] = useState({ title: '', desc: '' });
+  const [dob, setDob] = useState('');
 
   const next = () => setStep((s) => Math.min(s + 1, OB_STEPS.length - 1));
   const isLast = step === OB_STEPS.length - 1;
+  // Max selectable DOB = today (no future dates); the gate logic itself lives in App.
+  const todayStr = new Date().toISOString().slice(0, 10);
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'var(--bg)', zIndex: 400, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
@@ -227,6 +230,11 @@ function OnboardingWizard({ onComplete }) {
                 <input className="input" placeholder="e.g. Marketing Analyst, Business Student" value={profile.role} onChange={(e) => setProfile((p) => ({ ...p, role: e.target.value }))} />
               </div>
               <div>
+                <div className="eyebrow" style={{ marginBottom: 6 }}>Date of birth</div>
+                <input className="input" type="date" max={todayStr} value={dob} onChange={(e) => setDob(e.target.value)} />
+                <div style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 6, lineHeight: 1.5 }}>We ask so we can confirm you meet the age requirements for the platform. Members under 18 need a parent or guardian to provide consent before full access.</div>
+              </div>
+              <div>
                 <div className="eyebrow" style={{ marginBottom: 8 }}>You are a…</div>
                 <div className="seg">
                   <button className={profile.status === 'student' ? 'on' : ''} onClick={() => setProfile((p) => ({ ...p, status: 'student' }))}>Student</button>
@@ -245,7 +253,8 @@ function OnboardingWizard({ onComplete }) {
                 <input className="input" placeholder="e.g. running, Arabic literature, chess" value={profile.interests} onChange={(e) => setProfile((p) => ({ ...p, interests: e.target.value }))} />
               </div>
             </div>
-            <button className="btn primary" style={{ marginTop: 24, justifyContent: 'center', width: '100%' }} onClick={next}>Continue <span className="material-symbols-outlined" style={{fontSize:14,lineHeight:1,verticalAlign:'middle'}}>arrow_forward</span></button>
+            <button className="btn primary" style={{ marginTop: 24, justifyContent: 'center', width: '100%' }} onClick={next} disabled={!dob}>Continue <span className="material-symbols-outlined" style={{fontSize:14,lineHeight:1,verticalAlign:'middle'}}>arrow_forward</span></button>
+            {!dob && <div style={{ fontSize: 12, color: 'var(--text-3)', textAlign: 'center', marginTop: 10 }}>Please enter your date of birth to continue.</div>}
           </div>
         }
 
@@ -318,7 +327,7 @@ function OnboardingWizard({ onComplete }) {
                 </div>
             )}
             </div>
-            <button className="btn primary lg" style={{ fontSize: 16, padding: '14px 36px' }} onClick={onComplete}>Go to my dashboard <span className="material-symbols-outlined" style={{fontSize:16,lineHeight:1,verticalAlign:'middle'}}>arrow_forward</span></button>
+            <button className="btn primary lg" style={{ fontSize: 16, padding: '14px 36px' }} onClick={() => onComplete({ dateOfBirth: dob })}>Go to my dashboard <span className="material-symbols-outlined" style={{fontSize:16,lineHeight:1,verticalAlign:'middle'}}>arrow_forward</span></button>
           </div>
         }
       </div>

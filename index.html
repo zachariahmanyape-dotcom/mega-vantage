@@ -907,8 +907,12 @@ function App() {
       // Apply trial expiry check first
       profile = await checkAndApplyTrialExpiry(profile, userId);
 
-      // If still pending (not expired), mark active on first login
-      if (profile.member_status === 'pending') {
+      // If still pending (not expired), mark active on first login — BUT only
+      // once the age gate is cleared. Brand-new accounts (age_gate_state IS NULL)
+      // defer activation until onboarding captures DOB and resolves the gate, and
+      // minors awaiting consent / review stay pending. Every existing member was
+      // backfilled to 'cleared', so this never affects them.
+      if (profile.member_status === 'pending' && profile.age_gate_state === 'cleared') {
         await window._supabase.from('profiles')
           .update({ member_status: 'active' })
           .eq('id', userId);
@@ -1193,6 +1197,54 @@ function App() {
     );
   }
 
+  // 3.6. Age gate — minors who are awaiting parental consent / under review get a
+  // full-screen lock. Keyed on the REAL signed-in profile (liveProfile), never on
+  // an impersonated one, and admins are exempt. 'cleared' and null pass straight
+  // through, so existing members are never affected.
+  const gateState = liveProfile.age_gate_state;
+  const ageGated = liveProfile.role !== 'admin' &&
+    (gateState === 'awaiting_consent' || gateState === 'manual_review' || gateState === 'blocked');
+
+  if (ageGated) {
+    const gateCopy = gateState === 'awaiting_consent'
+      ? { heading: <>Almost<br />there.</>, eyebrow: 'Awaiting parental consent', accent: '#0F52BA',
+          body: <>Because you're under 18, a parent or guardian needs to confirm their consent before your account is activated. We've sent them a secure link. Your workspace will open as soon as they complete it.</> }
+      : gateState === 'manual_review'
+      ? { heading: <>Under<br />review.</>, eyebrow: 'Access being reviewed', accent: '#E8B24C',
+          body: <>Thanks for joining through your programme. Because of your age, our team carries out an additional safeguarding review before activating access. We'll be in touch with your next steps shortly.</> }
+      : { heading: <>Not<br />available.</>, eyebrow: 'Age requirement', accent: '#FF6B6B',
+          body: <>Vantage isn't available for your age group at this time. If you believe this is a mistake, please get in touch.</> };
+    return (
+      <div style={{ position: 'fixed', inset: 0, background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, zIndex: 999 }}>
+        <div style={{ width: '100%', maxWidth: 480, textAlign: 'center' }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 12, marginBottom: 40 }}>
+            <div style={{ width: 44, height: 44, borderRadius: 12, background: '#0F52BA', display: 'grid', placeItems: 'center' }}><img src="logo-white.svg" alt="Vantage" style={{ width: 26, height: 26, objectFit: 'contain' }} /></div>
+            <div style={{ textAlign: 'left' }}>
+              <div style={{ fontFamily: 'Bebas Neue, sans-serif', fontSize: 20, letterSpacing: 4, color: 'var(--text)' }}>VANTAGE</div>
+              <div style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 11, fontWeight: 600, letterSpacing: 3, textTransform: 'uppercase', color: 'var(--text-3)' }}>by MEGA</div>
+            </div>
+          </div>
+          <div style={{ width: 48, height: 4, borderRadius: 999, background: gateCopy.accent, margin: '0 auto 28px' }} />
+          <div style={{ fontFamily: 'Bebas Neue, sans-serif', fontSize: 52, lineHeight: 0.95, letterSpacing: 2, color: 'var(--text)', marginBottom: 20 }}>
+            {gateCopy.heading}
+          </div>
+          <div style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 13, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', color: gateCopy.accent, marginBottom: 24 }}>
+            {gateCopy.eyebrow}
+          </div>
+          <div style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 14, color: 'var(--text-2)', lineHeight: 1.8, marginBottom: 36 }}>
+            {gateCopy.body}<br /><br />Questions? Contact us at{' '}
+            <a href="mailto:contact@mega-mentorship.com" style={{ color: '#0F52BA', fontWeight: 700, textDecoration: 'none' }}>contact@mega-mentorship.com</a>
+          </div>
+          <button
+            onClick={handleSignOut}
+            style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 12, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', color: 'var(--text-3)', background: 'none', border: '1px solid var(--border)', borderRadius: 8, padding: '10px 24px', cursor: 'pointer' }}>
+            Sign out
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   // 4. Logged in and profile ready — build member object and show platform
   // In View As mode, the visible profile fields come from the impersonated member (viewProfile).
   // The real admin's identity stays on `isAdmin` so capability checks remain correct.
@@ -1343,14 +1395,42 @@ function App() {
       )}
 
       {!showLegalConsent && showOnboarding && (
-        <OnboardingWizard onComplete={async () => {
-          setShowOnboarding(false);
+        <OnboardingWizard onComplete={async ({ dateOfBirth } = {}) => {
           const nowIso = new Date().toISOString();
           const { data: { user } } = await window._supabase.auth.getUser();
-          if (user) {
-            await window._supabase.from('profiles').update({ onboarded_at: nowIso }).eq('id', user.id);
-            setLiveProfile(p => p ? { ...p, onboarded_at: nowIso } : p);
+
+          // Resolve the age gate from DOB. CRITICAL: we never downgrade an
+          // already-cleared account (every existing member is 'cleared'), so
+          // existing members can never be locked out by this flow.
+          const prior = liveProfile && liveProfile.age_gate_state;
+          const age = ageFromDob(dateOfBirth);
+          let gate = prior || 'cleared';
+          if (prior == null) {
+            if (age == null)      gate = 'cleared';        // unknown DOB -> never lock
+            else if (age < 13)    gate = 'blocked';
+            else if (age <= 15)   gate = 'manual_review';  // 13–15: admin review
+            else if (age <= 17)   gate = 'awaiting_consent'; // 16–17: parental consent
+            else                  gate = 'cleared';        // 18+
           }
+
+          const upd = { onboarded_at: nowIso, age_gate_state: gate };
+          if (dateOfBirth) upd.date_of_birth = dateOfBirth;
+          // Activate only when cleared; minors stay/return to pending until resolved.
+          if (gate === 'cleared') {
+            if (liveProfile && liveProfile.member_status === 'pending') upd.member_status = 'active';
+          } else if (gate === 'awaiting_consent' || gate === 'manual_review') {
+            upd.member_status = 'pending';
+          }
+
+          if (user) {
+            await window._supabase.from('profiles').update(upd).eq('id', user.id);
+            setLiveProfile(p => p ? { ...p, ...upd } : p);
+          }
+          setShowOnboarding(false);
+
+          // Under 13: hard block — sign out immediately (the gate screen also
+          // backstops this on next load).
+          if (gate === 'blocked') { await handleSignOut(); }
         }} />
       )}
       {!showLegalConsent && !showOnboarding && showReflection && (

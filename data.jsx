@@ -73,6 +73,18 @@ function xpTier(total) {
   return { ...current, index: i, isMax: !next, next, into, span, toNext, pct, xp };
 }
 
+// ── Age helper (parental-consent age gate) — returns whole years, or null ──────
+function ageFromDob(dob) {
+  if (!dob) return null;
+  const d = new Date(dob);
+  if (isNaN(d.getTime())) return null;
+  const now = new Date();
+  let age = now.getFullYear() - d.getFullYear();
+  const m = now.getMonth() - d.getMonth();
+  if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age--;
+  return age;
+}
+
 const TASKS = [
   {
     id: "t1",
@@ -273,4 +285,4 @@ function Icon({name, size=18, stroke=1.8, style, className}) {
 }
 
 // exports
-Object.assign(window, { Icon, SUBJECTS, MEMBER, LEVELS, XP_TIERS, xpTier, TASKS, GOALS, RESOURCES, CHANNELS, CHAT_MESSAGES, ADMIN_MEMBERS });
+Object.assign(window, { Icon, SUBJECTS, MEMBER, LEVELS, XP_TIERS, xpTier, ageFromDob, TASKS, GOALS, RESOURCES, CHANNELS, CHAT_MESSAGES, ADMIN_MEMBERS });

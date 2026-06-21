@@ -282,6 +282,52 @@ function AdminMemberDetail({ member, onBack, onViewAs }) {
   const [resending,         setResending]         = useState(false);
   const [resendResult,      setResendResult]      = useState(null);
 
+  // ── Age gate / parental consent ────────────────────────────────────────────
+  const dob = member.date_of_birth || null;
+  const age = window.ageFromDob(dob);
+  const [gate,        setGate]        = useState(member.age_gate_state || 'cleared');
+  const [parentEmail, setParentEmail] = useState('');
+  const [consentRow,  setConsentRow]  = useState(undefined); // undefined = loading
+  const [gateBusy,    setGateBusy]    = useState(false);
+  const [gateMsg,     setGateMsg]     = useState(null);
+
+  useEffect(() => {
+    if (!memberId) { setConsentRow(null); return; }
+    let active = true;
+    window._supabase.from('minor_consents')
+      .select('status, parent_email, parent_name, consent_timestamp, token_expires_at')
+      .eq('member_id', memberId).order('created_at', { ascending: false }).limit(1).maybeSingle()
+      .then(({ data }) => { if (active) setConsentRow(data || null); });
+    return () => { active = false; };
+  }, [memberId, gate]);
+
+  const sendConsentRequest = async () => {
+    if (!parentEmail.includes('@')) { setGateMsg({ type:'error', msg:'Enter a valid parent/guardian email.' }); return; }
+    setGateBusy(true); setGateMsg(null);
+    const { data, error } = await window._supabase.functions.invoke('minor-consent-request', {
+      body: { member_id: memberId, parent_email: parentEmail },
+    });
+    setGateBusy(false);
+    if (error || (data && data.error)) {
+      setGateMsg({ type:'error', msg: (data && data.error) || error?.message || 'Could not send consent request.' });
+      return;
+    }
+    setGate('awaiting_consent');
+    setGateMsg({ type:'success', msg: 'Consent request sent to ' + parentEmail + '.' });
+  };
+
+  const reviewDecision = async (decision) => {
+    setGateBusy(true); setGateMsg(null);
+    const upd = decision === 'approve'
+      ? { age_gate_state: 'cleared', member_status: 'active' }
+      : { age_gate_state: 'blocked' };
+    const { error } = await window._supabase.from('profiles').update(upd).eq('id', memberId);
+    setGateBusy(false);
+    if (error) { setGateMsg({ type:'error', msg: error.message || 'Update failed.' }); return; }
+    setGate(upd.age_gate_state);
+    setGateMsg({ type:'success', msg: decision === 'approve' ? 'Member approved and activated.' : 'Member kept blocked.' });
+  };
+
   const handleResendInvite = async () => {
     if (!member.email) { setResendResult({ type:'error', msg:'No email address on record.' }); return; }
     setResending(true); setResendResult(null);
@@ -394,6 +440,105 @@ function AdminMemberDetail({ member, onBack, onViewAs }) {
           ))}
         </div>
       </div>
+
+      {/* Age gate / parental consent */}
+      {memberId && (gate !== 'cleared' || dob) && (() => {
+        const gateMeta = {
+          awaiting_consent: { label: 'Awaiting parental consent', color: '#C88A1A', icon: 'hourglass_top' },
+          manual_review:    { label: 'Manual review (under 16)',   color: 'var(--coral)', icon: 'shield_person' },
+          blocked:          { label: 'Blocked (under 13)',          color: 'var(--text-3)', icon: 'block' },
+          cleared:          { label: 'Cleared',                     color: 'var(--teal-600)', icon: 'verified_user' },
+        }[gate] || { label: gate, color: 'var(--text-3)', icon: 'help' };
+        return (
+          <div className="card" style={{ padding:22, marginBottom:20, borderLeft: '3px solid ' + gateMeta.color }}>
+            <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:4 }}>
+              <span className="material-symbols-outlined" style={{fontSize:16,lineHeight:1,color:'var(--text-3)'}}>family_restroom</span>
+              <div className="eyebrow" style={{ margin:0 }}>Age &amp; parental consent</div>
+            </div>
+            <div style={{ fontSize:12, color:'var(--text-3)', marginBottom:16 }}>Age verification and minor safeguarding for this account.</div>
+
+            <div style={{ display:'flex', gap:24, flexWrap:'wrap', marginBottom: gate==='cleared' ? 0 : 18 }}>
+              <div>
+                <div className="eyebrow" style={{ fontSize:10 }}>Date of birth</div>
+                <div style={{ fontSize:15, fontWeight:700, marginTop:3 }}>
+                  {dob ? new Date(dob + 'T12:00:00').toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' }) : 'Not on record'}
+                </div>
+              </div>
+              <div>
+                <div className="eyebrow" style={{ fontSize:10 }}>Age</div>
+                <div style={{ fontSize:15, fontWeight:700, marginTop:3 }}>{age != null ? age + ' years' : '—'}</div>
+              </div>
+              <div>
+                <div className="eyebrow" style={{ fontSize:10 }}>Gate status</div>
+                <div style={{ fontSize:15, fontWeight:700, marginTop:3, color: gateMeta.color, display:'flex', alignItems:'center', gap:6 }}>
+                  <span className="material-symbols-outlined" style={{fontSize:15,lineHeight:1}}>{gateMeta.icon}</span>{gateMeta.label}
+                </div>
+              </div>
+            </div>
+
+            {/* Consent record (if any) */}
+            {gate !== 'cleared' && consentRow && (
+              <div style={{ padding:'12px 14px', borderRadius:10, background:'var(--bg-sunken)', border:'1px solid var(--border)', marginBottom:16, fontSize:13, color:'var(--text-2)' }}>
+                {consentRow.status === 'submitted'
+                  ? <>Consent provided by <strong>{consentRow.parent_name || 'guardian'}</strong>{consentRow.consent_timestamp ? ' on ' + new Date(consentRow.consent_timestamp).toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' }) : ''}.</>
+                  : <>Consent request pending{consentRow.parent_email ? ' — sent to ' + consentRow.parent_email : ''}. Link valid until {consentRow.token_expires_at ? new Date(consentRow.token_expires_at).toLocaleDateString('en-GB', { day:'numeric', month:'short' }) : '—'}.</>}
+              </div>
+            )}
+
+            {/* 16–17: send / resend parental consent request */}
+            {(gate === 'awaiting_consent' || (age != null && age >= 16 && age <= 17)) && (
+              <div style={{ padding:'14px 16px', borderRadius:12, background:'var(--bg-sunken)', border:'1px solid var(--border)', marginBottom:12 }}>
+                <div className="eyebrow" style={{ fontSize:10, marginBottom:8 }}>{consentRow && consentRow.status==='pending' ? 'Resend parental consent request' : 'Send parental consent request'}</div>
+                <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+                  <input className="input" type="email" placeholder="parent / guardian email" value={parentEmail}
+                    onChange={e => setParentEmail(e.target.value)} style={{ flex:1, minWidth:200, fontSize:13 }} />
+                  <button className="btn primary" disabled={gateBusy} onClick={sendConsentRequest} style={{ gap:7 }}>
+                    <span className="material-symbols-outlined" style={{fontSize:13,lineHeight:1}}>send</span>
+                    {gateBusy ? 'Sending…' : 'Send link'}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* 13–15: manual safeguarding decision */}
+            {gate === 'manual_review' && (
+              <div style={{ padding:'14px 16px', borderRadius:12, background:'rgba(255,107,107,0.07)', border:'1px solid rgba(255,107,107,0.25)', marginBottom:12 }}>
+                <div style={{ fontSize:13, color:'var(--text-2)', lineHeight:1.6, marginBottom:12 }}>
+                  This member is under 16 and requires an individual safeguarding decision before access. Approve only once your offline checks (institutional partner verification + guardian consent) are complete.
+                </div>
+                <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+                  <button className="btn primary" disabled={gateBusy} onClick={() => reviewDecision('approve')} style={{ gap:7 }}>
+                    <span className="material-symbols-outlined" style={{fontSize:13,lineHeight:1}}>check</span>Approve &amp; activate
+                  </button>
+                  <button className="btn" disabled={gateBusy} onClick={() => reviewDecision('block')}
+                    style={{ gap:7, color:'var(--coral)', borderColor:'rgba(255,107,107,0.4)' }}>
+                    <span className="material-symbols-outlined" style={{fontSize:13,lineHeight:1}}>block</span>Keep blocked
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Blocked: allow re-opening to review (e.g. wrong DOB / appeal) */}
+            {gate === 'blocked' && (
+              <button className="btn" disabled={gateBusy} onClick={() => reviewDecision('approve')}
+                style={{ gap:7, marginBottom:12 }}>
+                <span className="material-symbols-outlined" style={{fontSize:13,lineHeight:1}}>lock_open</span>Override &amp; grant access
+              </button>
+            )}
+
+            {gateMsg && (
+              <div style={{
+                padding:'10px 14px', borderRadius:8, fontSize:12, lineHeight:1.5,
+                background: gateMsg.type==='success' ? 'rgba(163,228,219,0.2)' : 'rgba(255,107,107,0.1)',
+                border: '1px solid '+(gateMsg.type==='success' ? 'rgba(163,228,219,0.5)' : 'rgba(255,107,107,0.3)'),
+                color: gateMsg.type==='success' ? '#2E8A7B' : '#c0392b',
+              }}>
+                {gateMsg.msg}
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {/* Edit membership */}
       {memberId && (
