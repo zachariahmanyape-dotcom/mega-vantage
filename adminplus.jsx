@@ -333,6 +333,11 @@ function AdminMemberDetail({ member, onBack, onViewAs }) {
           <div className="eyebrow">Admin · Member detail</div>
           <h1 className="page-title">{name}</h1>
           <div className="page-sub" style={{ marginTop:4, color:'var(--text-2)' }}>{plan} · Last active {lastActive}</div>
+          {member.email &&
+            <div style={{ marginTop:6, fontSize:13, color:'var(--text-3)', display:'flex', alignItems:'center', gap:6 }}>
+              <span className="material-symbols-outlined" style={{fontSize:14,lineHeight:1}}>mail</span>
+              <a href={'mailto:'+member.email} style={{ color:'var(--text-2)', textDecoration:'none' }}>{member.email}</a>
+            </div>}
         </div>
         <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:8 }}>
           <div style={{ display:'flex', gap:8 }}>

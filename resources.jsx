@@ -97,6 +97,74 @@ async function resResolve(r) {
   return r;
 }
 
+// ---------- Cover-page thumbnails (render PDF page 1 as the book cover) ----------
+// pdf.js is heavy, so it's injected lazily the first time a PDF cover is needed.
+const PDFJS_VER = '3.11.174';
+let _pdfjsPromise = null;
+function ensurePdfJs() {
+  if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+  if (_pdfjsPromise) return _pdfjsPromise;
+  _pdfjsPromise = new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${PDFJS_VER}/build/pdf.min.js`;
+    s.onload = () => {
+      const lib = window.pdfjsLib;
+      if (!lib) { reject(new Error('pdfjsLib missing')); return; }
+      lib.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${PDFJS_VER}/build/pdf.worker.min.js`;
+      resolve(lib);
+    };
+    s.onerror = () => reject(new Error('pdf.js failed to load'));
+    document.head.appendChild(s);
+  });
+  return _pdfjsPromise;
+}
+// Render the first page of a PDF at `url` to a JPEG data URL (cover thumbnail).
+async function resRenderFirstPage(url, targetW = 460) {
+  const lib = await ensurePdfJs();
+  const pdf = await lib.getDocument({ url }).promise;
+  try {
+    const page = await pdf.getPage(1);
+    const base = page.getViewport({ scale: 1 });
+    const vp = page.getViewport({ scale: targetW / base.width });
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.ceil(vp.width);
+    canvas.height = Math.ceil(vp.height);
+    await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
+    return canvas.toDataURL('image/jpeg', 0.82);
+  } finally {
+    pdf.destroy();
+  }
+}
+// Resource id → rendered cover data URL (avoids re-rendering across views/tilts).
+const _resCoverCache = new Map();
+function resIsPdf(r) {
+  return !!(r && (r.storage_path || r.content_type === 'pdf' || /\.pdf($|\?)/i.test(r.url || '')));
+}
+// Hook: resolve a cover image for a resource. Order: explicit thumbnail_url →
+// rendered PDF first page (uploaded/PDF only) → null (caller draws the book).
+function useResourceCover(r) {
+  const [src, setSrc] = useState(() =>
+    (r && r.thumbnail_url) || (r && _resCoverCache.get(r.id)) || null);
+  useEffect(() => {
+    let alive = true;
+    if (!r) return;
+    if (r.thumbnail_url) { setSrc(r.thumbnail_url); return; }
+    if (_resCoverCache.has(r.id)) { setSrc(_resCoverCache.get(r.id)); return; }
+    if (!resIsPdf(r)) return;
+    (async () => {
+      try {
+        const url = r.storage_path ? await resSignedUrl(r.storage_path) : r.url;
+        if (!url) return;
+        const dataUrl = await resRenderFirstPage(url);
+        _resCoverCache.set(r.id, dataUrl);
+        if (alive) setSrc(dataUrl);
+      } catch (e) { console.warn('resource cover render failed', r.id, e); }
+    })();
+    return () => { alive = false; };
+  }, [r && r.id, r && r.thumbnail_url, r && r.storage_path]);
+  return src;
+}
+
 // Member tier → resource user type.
 function resUserType(member) {
   const t = member && member.membershipTier || 'foundations';
@@ -157,14 +225,24 @@ function ResourceViewer({ resource: r, onClose }) {
       </div>;
 
   } else if (r.content_type === 'pdf') {
+    // Uploaded (private) files: hide the native PDF toolbar (download/print) and
+    // omit the open-in-new-tab button so access stays inside the platform.
+    // Note: this deters casual export but is not true DRM (see note to admin).
+    const isStored = !!r.storage_path;
+    const pdfSrc = resPdfEmbed(r.url) + (isStored ? '#toolbar=0&navpanes=0&scrollbar=0' : '');
     body =
     <div className="stack" style={{ gap: 10 }}>
         <div style={{ position: 'relative', width: '100%', height: '64vh', background: 'var(--bg-sunken)', borderRadius: 10, overflow: 'hidden', border: '1px solid var(--border)' }}>
-          <iframe src={resPdfEmbed(r.url)} title={r.title} style={{ width: '100%', height: '100%', border: 'none' }} />
+          <iframe src={pdfSrc} title={r.title} style={{ width: '100%', height: '100%', border: 'none' }} />
         </div>
+        {!isStored &&
         <a className="btn" href={r.url} target="_blank" rel="noopener noreferrer" style={{ alignSelf: 'flex-start' }}>
           <span className="material-symbols-outlined" style={{fontSize:13,lineHeight:1}}>open_in_new</span> Open PDF
-        </a>
+        </a>}
+        {isStored &&
+        <div style={{ fontSize: 11, color: 'var(--text-3)', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span className="material-symbols-outlined" style={{fontSize:13,lineHeight:1}}>lock</span> Shared privately — view only
+        </div>}
       </div>;
 
   } else {
@@ -254,6 +332,7 @@ function resBookColor(r) {
 function ResourceCover({ r, state, onOpen, onLocked }) {
   const locked = state === 'locked';
   const color = resBookColor(r);
+  const coverImg = useResourceCover(r);
   const ref = React.useRef(null);
   const click = () => { if (locked) { onLocked(r); return; } onOpen(r); };
   const typeIcon = r.content_type === 'video' ? 'videocam' : r.content_type === 'pdf' ? 'picture_as_pdf' : r.content_type === 'template' ? 'description' : 'article';
@@ -274,16 +353,22 @@ function ResourceCover({ r, state, onOpen, onLocked }) {
   return (
     <div className="rb-cover-wrap">
       <div ref={ref} className={"rb-cover" + (locked ? " locked" : "")} onClick={click} onMouseMove={onMove} onMouseLeave={onLeave}
-        style={{ backgroundColor: color, backgroundImage: 'linear-gradient(155deg, rgba(255,255,255,0.18), rgba(0,0,0,0.55))' }}>
-        <span className="material-symbols-outlined rb-cover-watermark" style={{ fontSize: 120, lineHeight: 1 }}>{typeIcon}</span>
-        <div className="rb-cover-inner">
-          <div className="rb-cover-top">
-            <span className="rb-cover-type"><span className="material-symbols-outlined" style={{ fontSize: 12, lineHeight: 1 }}>{typeIcon}</span>{r.content_type === 'video' && r.duration_minutes ? r.duration_minutes + ' min' : RES_TYPE_META[r.content_type].label}</span>
-            <span className="rb-cover-mark">V</span>
+        style={{ backgroundColor: color, backgroundImage: coverImg ? 'none' : 'linear-gradient(155deg, rgba(255,255,255,0.18), rgba(0,0,0,0.55))' }}>
+        {coverImg ?
+        <img className="rb-cover-img" src={coverImg} alt={r.title} loading="lazy" /> :
+
+        <>
+          <span className="material-symbols-outlined rb-cover-watermark" style={{ fontSize: 120, lineHeight: 1 }}>{typeIcon}</span>
+          <div className="rb-cover-inner">
+            <div className="rb-cover-top">
+              <span className="rb-cover-type"><span className="material-symbols-outlined" style={{ fontSize: 12, lineHeight: 1 }}>{typeIcon}</span>{r.content_type === 'video' && r.duration_minutes ? r.duration_minutes + ' min' : RES_TYPE_META[r.content_type].label}</span>
+              <span className="rb-cover-mark">V</span>
+            </div>
+            <div className="rb-cover-byline">{resByline(r)}</div>
+            <div className="rb-cover-title">{r.title}</div>
           </div>
-          <div className="rb-cover-byline">{resByline(r)}</div>
-          <div className="rb-cover-title">{r.title}</div>
-        </div>
+        </>
+        }
         {locked &&
         <div className="rb-cover-lock"><span className="material-symbols-outlined" style={{ fontSize: 30, lineHeight: 1 }}>lock</span></div>
         }
@@ -296,13 +381,20 @@ function ResourceCover({ r, state, onOpen, onLocked }) {
 // ---------- Standing 3D book (cover + spine + page edges) for the detail view ----------
 function ResourceBook3D({ r, w = 300, h = 420, d = 46 }) {
   const color = resBookColor(r);
+  const coverImg = useResourceCover(r);
   return (
     <div className="rb-book" style={{ '--bw': w + 'px', '--bh': h + 'px', '--bd': d + 'px' }}>
       <div className="rb-book__inner">
-        <div className="rb-book__cover" style={{ backgroundColor: color, backgroundImage: 'linear-gradient(160deg, rgba(255,255,255,0.16), rgba(0,0,0,0.55))' }}>
-          <div className="rb-book__mark">V</div>
-          <div className="rb-book__title">{r.title}</div>
-          <div className="rb-book__byline">{resByline(r)}</div>
+        <div className="rb-book__cover" style={{ backgroundColor: color, backgroundImage: coverImg ? 'none' : 'linear-gradient(160deg, rgba(255,255,255,0.16), rgba(0,0,0,0.55))' }}>
+          {coverImg ?
+          <img className="rb-book__img" src={coverImg} alt={r.title} /> :
+
+          <>
+            <div className="rb-book__mark">V</div>
+            <div className="rb-book__title">{r.title}</div>
+            <div className="rb-book__byline">{resByline(r)}</div>
+          </>
+          }
         </div>
       </div>
     </div>);
