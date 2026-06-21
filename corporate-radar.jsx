@@ -3,7 +3,7 @@ const { useState, useEffect, useRef, useCallback, useMemo } = React;
 
 /* ── Pre-defined tag lists (brief §Your Interests) ── */
 const CR_INTEREST_TAGS = {
-  Industries: ['Tech', 'Finance', 'Consulting', 'Real Estate', 'Media', 'Healthcare', 'Logistics', 'Retail', 'Gov / Semi-Gov', 'Hospitality', 'Energy', 'Legal', 'Education', 'Non-Profit', 'Conglomerate'],
+  Industries: ['Tech', 'Cyber Security', 'Telecommunications', 'Finance', 'Insurance', 'Crypto / Web3', 'Consulting', 'Real Estate', 'Construction & Engineering', 'Media', 'Healthcare', 'Logistics', 'Retail', 'E-commerce', 'FMCG / Consumer Goods', 'Manufacturing & Industrial', 'Aviation & Aerospace', 'Gov / Semi-Gov', 'Hospitality', 'Tourism & Travel', 'Energy', 'Renewables / CleanTech', 'Legal', 'Education', 'Non-Profit', 'Conglomerate'],
   Functions: ['Operations', 'Business Development', 'Marketing', 'Product', 'Finance', 'Human Resources', 'Engineering', 'Design', 'Sales', 'Strategy', 'Communications', 'Legal', 'Research'],
   'Company Types': ['Startup', 'Scale-up', 'Enterprise', 'Government Entity', 'Family Business', 'Holding Group', 'NGO']
 };
@@ -299,7 +299,7 @@ function CRPrefsPanel({ interests, roleTargets, onToggleInterest, onToggleRole,
   const panelRef = useRef(null);
 
   return (
-    <div className={'cr-prefs' + (isOverlay ? ' cr-prefs-overlay' : '')} ref={panelRef}>
+    <div className={'cr-prefs' + (isOverlay ? ' cr-prefs-inmodal' : '')} ref={panelRef}>
       {isOverlay && (
         <div className="cr-prefs-overlay-header">
           <span className="cr-prefs-head" style={{ margin: 0 }}>
@@ -471,7 +471,6 @@ function CorporateRadarScreen({ member }) {
   const [visibleCount, setVisibleCount] = useState(CR_PAGE);
   /* Collapse back to the first page whenever the result set changes. */
   useEffect(() => { setVisibleCount(CR_PAGE); }, [search, sort, filters]);
-  const prefsRef = useRef(null);
   const toastTimer = useRef(null);
 
   const showToast = (msg) => {
@@ -665,23 +664,7 @@ function CorporateRadarScreen({ member }) {
   const statsHiring = filtered.filter(c => c.hiring_detected && c.hiring_last_checked &&
     (now - new Date(c.hiring_last_checked).getTime()) <= CR_SEVEN_DAYS).length;
 
-  /* ── Desktop prefs visibility check ── */
-  const [isWide, setIsWide] = useState(window.innerWidth >= 1100);
-  useEffect(() => {
-    const onResize = () => setIsWide(window.innerWidth >= 1100);
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
-  }, []);
-
-  const handlePrefsClick = () => {
-    if (isWide && prefsRef.current) {
-      prefsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      prefsRef.current.classList.add('cr-prefs-highlight');
-      setTimeout(() => prefsRef.current && prefsRef.current.classList.remove('cr-prefs-highlight'), 1500);
-    } else {
-      setPrefsOverlay(true);
-    }
-  };
+  const handlePrefsClick = () => setPrefsOverlay(true);
 
   if (loading) {
     return (
@@ -780,20 +763,15 @@ function CorporateRadarScreen({ member }) {
           )}
         </div>
 
-        {/* Desktop inline prefs */}
-        {isWide && (
-          <div ref={prefsRef}>
-            <CRPrefsPanel {...prefsProps} isOverlay={false} />
-          </div>
-        )}
       </div>
 
-      {/* Mobile/tablet slide-in overlay */}
+      {/* Centered preferences modal */}
       {prefsOverlay && (
-        <>
-          <div className="cr-overlay-bg" onClick={() => setPrefsOverlay(false)} />
-          <CRPrefsPanel {...prefsProps} isOverlay={true} onClose={() => setPrefsOverlay(false)} />
-        </>
+        <div className="cr-prefs-modal-bg" onClick={() => setPrefsOverlay(false)}>
+          <div className="cr-prefs-modal" onClick={e => e.stopPropagation()}>
+            <CRPrefsPanel {...prefsProps} isOverlay={true} onClose={() => setPrefsOverlay(false)} />
+          </div>
+        </div>
       )}
 
       <CRToast message={toast} onClose={() => setToast(null)} />
