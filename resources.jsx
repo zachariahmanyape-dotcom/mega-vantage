@@ -78,6 +78,24 @@ function resPdfEmbed(url) {
 function resDomain(url) {
   try {return new URL(url).hostname.replace(/^www\./, '');} catch (e) {return url || '';}
 }
+// Mint a short-lived signed URL for a directly-uploaded file in the private
+// `resource-files` bucket. Returns null on failure (caller falls back to url).
+async function resSignedUrl(path) {
+  if (!path) return null;
+  const { data, error } = await window._supabase.storage
+    .from('resource-files').createSignedUrl(path, 60 * 60);
+  if (error) { console.error('resource signed url', error); return null; }
+  return data ? data.signedUrl : null;
+}
+// Resolve the effective URL to render/open: signed URL for uploaded files,
+// otherwise the external link. Returns a shallow copy with `url` filled in.
+async function resResolve(r) {
+  if (r && r.storage_path) {
+    const signed = await resSignedUrl(r.storage_path);
+    if (signed) return { ...r, url: signed };
+  }
+  return r;
+}
 
 // Member tier → resource user type.
 function resUserType(member) {
@@ -103,7 +121,8 @@ function resCardState(resource, userType) {
 Object.assign(window, {
   logResourceView, fetchResourceViewCount,
   RES_FOLDERS, RES_FOLDER_LABEL, RES_ACCESS_LABEL, RES_ACCESS_CHIP, RES_TYPES, RES_TYPE_META, RES_SUBJECTS,
-  resRelTime, resVideoEmbed, resPdfEmbed, resDomain, resUserType, resVisibleFolders, resCardState });
+  resRelTime, resVideoEmbed, resPdfEmbed, resDomain, resUserType, resVisibleFolders, resCardState,
+  resSignedUrl, resResolve });
 
 // ============================================================
 // DEMO FALLBACK — preview-only sample library.
@@ -349,43 +368,62 @@ function ResourcesScreen({ member, adminAll, onStartTour, tourCompleted }) {
   const [viewing, setViewing] = useState(null);
   const [upgrading, setUpgrading] = useState(null);
   const [selected, setSelected] = useState(null);
+  const [sharedIds, setSharedIds] = useState(() => new Set());
 
   useEffect(() => {
     let alive = true;
     (async () => {
       setLoading(true);
-      const { data, error } = await window._supabase.
-      from('resources').select('*').
-      eq('published', true).
-      order('created_at', { ascending: false });
+      const uid = await window.getActiveUserId();
+      const [{ data, error }, asg] = await Promise.all([
+        window._supabase.from('resources').select('*').
+          eq('published', true).
+          order('created_at', { ascending: false }),
+        window._supabase.from('resource_assignments').select('resource_id').eq('member_id', uid)]);
       if (!alive) return;
+      // Resources assigned directly to this member (bespoke, tier-independent).
+      const shared = new Set((asg.data || []).map((a) => a.resource_id));
+      setSharedIds(shared);
       if (error) {console.error('resources load', error);setRows([]);} else
       {
-        // RLS already excludes hidden mega_management rows; filter again for safety.
-        setRows((data || []).filter((r) => resCardState(r, userType) !== 'hidden'));
+        // A shared row is always shown; otherwise apply the tier card-state.
+        setRows((data || []).filter((r) => shared.has(r.id) || resCardState(r, userType) !== 'hidden'));
       }
       setLoading(false);
     })();
     return () => {alive = false;};
   }, [userType]);
 
+  // First time bespoke resources appear, open that folder so the member sees them.
+  const autoSharedRef = React.useRef(false);
+  useEffect(() => {
+    if (!autoSharedRef.current && sharedIds.size > 0) { autoSharedRef.current = true; setFolder('shared'); }
+  }, [sharedIds]);
+
   // DEMO FALLBACK: if the live table is empty, preview with sample books.
   const baseRows = (!loading && rows.length === 0 && RES_DEMO_FALLBACK)
     ? RES_DEMO.filter((r) => resCardState(r, userType) !== 'hidden')
     : rows;
 
-  const withState = baseRows.map((r) => ({ r, state: resCardState(r, userType) }));
-  const recent = withState.slice(0, 3);
+  // Shared (bespoke) resources are surfaced in their own folder and excluded
+  // from the tier folders so they don't double-count.
+  const withState = baseRows.map((r) => ({ r, state: sharedIds.has(r.id) ? 'open' : resCardState(r, userType), shared: sharedIds.has(r.id) }));
+  const hasShared = withState.some(({ shared }) => shared);
+  const recent = withState.filter(({ shared }) => !shared).slice(0, 3);
   const subjects = [...new Set(baseRows.map((r) => r.subject_area).filter(Boolean))];
 
-  const filtered = withState.filter(({ r }) =>
-  r.folder === folder && (
+  const isSharedFolder = folder === 'shared';
+  const filtered = withState.filter(({ r, shared }) =>
+  (isSharedFolder ? shared : r.folder === folder && !shared) && (
   !subjectFilter || r.subject_area === subjectFilter) && (
   q === '' || r.title.toLowerCase().includes(q.toLowerCase()) || (r.subject_area || '').toLowerCase().includes(q.toLowerCase()))
   );
-  const folderCount = (key) => withState.filter(({ r }) => r.folder === key).length;
+  const folderCount = (key) => key === 'shared'
+    ? withState.filter(({ shared }) => shared).length
+    : withState.filter(({ r, shared }) => r.folder === key && !shared).length;
 
-  const openCard = (r) => setSelected(r);           // spine click → detail sub-page
+  // Uploaded files need a signed URL minted before the detail/viewer can render.
+  const openCard = async (r) => setSelected(await resResolve(r)); // spine click → detail sub-page
   const lockCard = (r) => setUpgrading(r);
   const openContent = (r) => { window.logResourceView(r.id); setViewing(r); }; // detail CTA → player
 
@@ -453,6 +491,15 @@ function ResourcesScreen({ member, adminAll, onStartTour, tourCompleted }) {
         <div>
           <div className="eyebrow" style={{ marginBottom: 10 }}>Folders</div>
           <div className="stack" style={{ gap: 2 }}>
+            {hasShared &&
+            <button className={"sb-item" + (folder === 'shared' ? " active" : "")}
+            onClick={() => setFolder('shared')}
+            style={{ padding: '9px 12px', fontSize: 13 }}>
+                <span className="sb-icon"><span className="material-symbols-outlined" style={{fontSize:15,lineHeight:1,color:'var(--coral)'}}>workspace_premium</span></span>
+                <span style={{ flex: 1, textAlign: 'left', fontWeight: 600 }}>Shared with you</span>
+                <span style={{ fontSize: 11, color: 'var(--text-3)' }}>{folderCount('shared')}</span>
+              </button>
+            }
             {visibleFolders.map((key) =>
             <button key={key} className={"sb-item" + (folder === key ? " active" : "")}
             onClick={() => setFolder(key)}
@@ -485,7 +532,7 @@ function ResourcesScreen({ member, adminAll, onStartTour, tourCompleted }) {
 
         <div>
           <div className="eyebrow" style={{ marginBottom: 12 }}>
-            {RES_FOLDER_LABEL[folder]} · <span style={{ color: 'var(--text-3)' }}>{filtered.length}</span>
+            {isSharedFolder ? 'Shared with you' : RES_FOLDER_LABEL[folder]} · <span style={{ color: 'var(--text-3)' }}>{filtered.length}</span>
             {subjectFilter && <span style={{ color: 'var(--text-3)' }}> · {subjectFilter} <button onClick={() => setSubjectFilter(null)} style={{ background: 'none', border: 'none', color: 'var(--coral)', cursor: 'pointer', fontSize: 11 }}>clear</button></span>}
           </div>
           <div className="rb-grid">

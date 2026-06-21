@@ -820,6 +820,9 @@ function AdminSessions() {
 // Upload / edit panel for a single resource.
 function ResourceFormModal({ resource, onClose, onSaved }) {
   const editing = !!(resource && resource.id);
+  // Source: an external link, or a file uploaded straight to private storage.
+  const [source, setSource] = React.useState(resource && resource.storage_path ? 'upload' : 'link');
+  const [file, setFile] = React.useState(null);
   const [title, setTitle] = React.useState(resource ? resource.title || '' : '');
   const [description, setDescription] = React.useState(resource ? resource.description || '' : '');
   const [contentType, setContentType] = React.useState(resource ? resource.content_type || 'video' : 'video');
@@ -833,29 +836,79 @@ function ResourceFormModal({ resource, onClose, onSaved }) {
   const [saving, setSaving] = React.useState(false);
   const [err, setErr] = React.useState('');
 
+  // Member assignment (bespoke resources).
+  const [members, setMembers] = React.useState([]);
+  const [assigned, setAssigned] = React.useState(() => new Set());
+  const [memberQ, setMemberQ] = React.useState('');
+  const initialAssigned = React.useRef(new Set());
+
+  React.useEffect(() => {
+    (async () => {
+      const { data } = await window._supabase.rpc('list_members');
+      setMembers((data || []).filter((m) => m.role !== 'admin'));
+      if (editing) {
+        const { data: a } = await window._supabase.from('resource_assignments').select('member_id').eq('resource_id', resource.id);
+        const ids = new Set((a || []).map((r) => r.member_id));
+        initialAssigned.current = ids;
+        setAssigned(new Set(ids));
+      }
+    })();
+  }, []);
+
+  const toggleMember = (id) => setAssigned((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  const isUpload = source === 'upload';
+  const effType = isUpload ? 'pdf' : contentType; // direct uploads are PDFs
+  const memberList = members.filter((m) => !memberQ || (m.full_name || '').toLowerCase().includes(memberQ.toLowerCase()));
+
   const submit = async () => {
     setErr('');
     if (!title.trim()) {setErr('Please enter a title.');return;}
-    if (!url.trim()) {setErr('Please enter a resource URL.');return;}
+    if (isUpload) {
+      if (!file && !(resource && resource.storage_path)) {setErr('Please choose a PDF file to upload.');return;}
+    } else if (!url.trim()) {setErr('Please enter a resource URL.');return;}
     setSaving(true);
+
+    // Upload the file first (if a new one was picked) so we have its storage path.
+    let storagePath = resource && resource.storage_path || null;
+    if (isUpload && file) {
+      const safe = file.name.replace(/[^\w.\-]+/g, '_');
+      const path = (window.crypto && crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2)) + '/' + safe;
+      const up = await window._supabase.storage.from('resource-files').upload(path, file, { upsert: false, contentType: file.type || 'application/pdf' });
+      if (up.error) {setSaving(false);setErr('Upload failed: ' + up.error.message);return;}
+      storagePath = up.data.path;
+    }
+
     const payload = {
       title: title.trim(),
       description: description.trim() || null,
-      content_type: contentType,
+      content_type: effType,
       folder,
       subject_area: subjectArea || null,
       access_tier: accessTier,
-      url: url.trim(),
+      url: isUpload ? null : url.trim(),
+      storage_path: isUpload ? storagePath : null,
       thumbnail_url: thumbnailUrl.trim() || null,
-      duration_minutes: contentType === 'video' && duration ? parseInt(duration, 10) : null,
+      duration_minutes: effType === 'video' && duration ? parseInt(duration, 10) : null,
       published };
 
-    const q = editing ?
-    window._supabase.from('resources').update(payload).eq('id', resource.id) :
-    window._supabase.from('resources').insert(payload);
-    const { error } = await q;
+    let resourceId = resource && resource.id;
+    if (editing) {
+      const { error } = await window._supabase.from('resources').update(payload).eq('id', resource.id);
+      if (error) {setSaving(false);setErr(error.message);return;}
+    } else {
+      const { data, error } = await window._supabase.from('resources').insert(payload).select('id').single();
+      if (error) {setSaving(false);setErr(error.message);return;}
+      resourceId = data.id;
+    }
+
+    // Sync member assignments (diff against what was loaded).
+    const cur = initialAssigned.current;
+    const toDel = [...cur].filter((id) => !assigned.has(id));
+    const toAdd = [...assigned].filter((id) => !cur.has(id));
+    if (toDel.length) await window._supabase.from('resource_assignments').delete().eq('resource_id', resourceId).in('member_id', toDel);
+    if (toAdd.length) await window._supabase.from('resource_assignments').insert(toAdd.map((m) => ({ resource_id: resourceId, member_id: m })));
+
     setSaving(false);
-    if (error) {setErr(error.message);return;}
     onSaved();
     onClose();
   };
@@ -879,8 +932,23 @@ function ResourceFormModal({ resource, onClose, onSaved }) {
           <div className="stack" style={{ gap: 12 }}>
             {field('Title', <input className="input" value={title} onChange={(e) => setTitle(e.target.value)} autoFocus />)}
             {field('Description', <textarea className="input" rows={3} placeholder="Optional" value={description} onChange={(e) => setDescription(e.target.value)} style={{ resize: 'none', lineHeight: 1.5 }} />)}
+
+            {field('Source',
+            <div style={{ display: 'flex', gap: 6 }}>
+                {[['link', 'link', 'External link'], ['upload', 'upload', 'Upload PDF']].map(([key, icon, label]) =>
+                <button key={key} onClick={() => setSource(key)} type="button"
+                style={{ flex: 1, padding: '9px 10px', fontSize: 12, fontWeight: 600, borderRadius: 8, cursor: 'pointer',
+                  border: '1px solid ' + (source === key ? 'var(--accent)' : 'var(--border)'),
+                  background: source === key ? 'var(--accent)' : 'var(--bg-elev)',
+                  color: source === key ? '#fff' : 'var(--text-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: 14, lineHeight: 1 }}>{icon === 'upload' ? 'upload_file' : 'link'}</span>{label}
+                  </button>)}
+              </div>)}
+
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-              {field('Content type',
+              {isUpload ?
+              field('Content type', <input className="input" value="PDF (uploaded file)" disabled style={{ fontSize: 13, opacity: 0.7 }} />) :
+              field('Content type',
               <select className="input" style={{ fontSize: 13 }} value={contentType} onChange={(e) => setContentType(e.target.value)}>
                   {RES_TYPES.map((t) => <option key={t.key} value={t.key}>{t.label}</option>)}
                 </select>)}
@@ -902,10 +970,38 @@ function ResourceFormModal({ resource, onClose, onSaved }) {
                   <option value="mega_management">MEGA Management only</option>
                 </select>)}
             </div>
-            {field('Resource URL', <input className="input" placeholder="https://…" value={url} onChange={(e) => setUrl(e.target.value)} />)}
+            {isUpload ?
+            field('PDF file',
+            <div>
+                <input type="file" accept=".pdf,application/pdf" onChange={(e) => setFile(e.target.files && e.target.files[0] || null)}
+                style={{ fontSize: 12, color: 'var(--text-2)' }} />
+                {editing && resource.storage_path && !file &&
+                <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 4 }}>A file is already uploaded. Choose a new one to replace it.</div>}
+              </div>) :
+            field('Resource URL', <input className="input" placeholder="https://…" value={url} onChange={(e) => setUrl(e.target.value)} />)}
             {field('Thumbnail URL', <input className="input" placeholder="Optional" value={thumbnailUrl} onChange={(e) => setThumbnailUrl(e.target.value)} />)}
-            {contentType === 'video' && field('Duration (minutes)',
+            {effType === 'video' && field('Duration (minutes)',
             <input className="input" type="number" min="0" placeholder="Optional" value={duration} onChange={(e) => setDuration(e.target.value)} />)}
+
+            {field('Assign to members (optional)',
+            <div style={{ border: '1px solid var(--border)', borderRadius: 8, overflow: 'hidden' }}>
+                <input className="input" placeholder="Search members…" value={memberQ} onChange={(e) => setMemberQ(e.target.value)}
+                style={{ border: 'none', borderBottom: '1px solid var(--border)', borderRadius: 0, fontSize: 12 }} />
+                <div style={{ maxHeight: 132, overflow: 'auto' }}>
+                  {memberList.length === 0 && <div style={{ padding: '10px 12px', fontSize: 12, color: 'var(--text-3)' }}>No members found.</div>}
+                  {memberList.map((m) =>
+                  <label key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 12px', fontSize: 12, cursor: 'pointer' }}>
+                      <input type="checkbox" checked={assigned.has(m.id)} onChange={() => toggleMember(m.id)} />
+                      <span style={{ flex: 1 }}>{m.full_name || 'Member'}</span>
+                      <span style={{ fontSize: 10, color: 'var(--text-3)' }}>{m.membership_tier || ''}</span>
+                    </label>)}
+                </div>
+              </div>)}
+            <div style={{ fontSize: 11, color: assigned.size > 0 ? 'var(--coral)' : 'var(--text-3)', lineHeight: 1.5, marginTop: -4 }}>
+              {assigned.size > 0
+                ? `Private to ${assigned.size} selected member${assigned.size > 1 ? 's' : ''}. The access tier and folder are ignored — only these members will see it.`
+                : 'Leave empty to share by tier/folder as usual. Select members to make this a private, bespoke resource.'}
+            </div>
 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
@@ -922,7 +1018,7 @@ function ResourceFormModal({ resource, onClose, onSaved }) {
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 4 }}>
               <button className="btn" onClick={onClose}>Cancel</button>
-              <button className="btn primary" disabled={!title.trim() || !url.trim() || saving} onClick={submit}>{saving ? 'Saving…' : editing ? 'Save changes' : 'Upload'}</button>
+              <button className="btn primary" disabled={!title.trim() || saving || (isUpload ? !file && !(editing && resource.storage_path) : !url.trim())} onClick={submit}>{saving ? 'Saving…' : editing ? 'Save changes' : 'Upload'}</button>
             </div>
           </div>
         </div>
@@ -941,14 +1037,15 @@ function AdminResources() {
   const load = React.useCallback(async () => {
     setLoading(true);
     const { data, error } = await window._supabase.
-    from('resources').select('*').order('created_at', { ascending: false });
-    if (error) setErr(error.message); else setRows(data || []);
+    from('resources').select('*, resource_assignments(member_id)').order('created_at', { ascending: false });
+    if (error) setErr(error.message); else setRows((data || []).map((r) => ({ ...r, _assignedCount: (r.resource_assignments || []).length })));
     setLoading(false);
   }, []);
 
   React.useEffect(() => {load();}, [load]);
 
   const copyLink = (r) => {
+    if (!r.url) return; // uploaded files have no shareable permanent link
     navigator.clipboard.writeText(r.url);
     setCopiedId(r.id);
     setTimeout(() => setCopiedId((c) => c === r.id ? null : c), 1500);
@@ -958,6 +1055,7 @@ function AdminResources() {
     if (!window.confirm(`Delete "${r.title}"? This cannot be undone.`)) return;
     const { error } = await window._supabase.from('resources').delete().eq('id', r.id);
     if (error) {setErr(error.message);return;}
+    if (r.storage_path) await window._supabase.storage.from('resource-files').remove([r.storage_path]);
     load();
   };
 
@@ -987,20 +1085,24 @@ function AdminResources() {
             <tr key={r.id} style={{ borderTop: '1px solid var(--border)' }}>
                 <td style={{ padding: '12px 16px', fontWeight: 600 }}>
                   {r.title}
+                  {r.storage_path && <span className="chip" style={{ marginLeft: 8, fontSize: 9 }}><span className="material-symbols-outlined" style={{fontSize:10,lineHeight:1}}>upload_file</span> File</span>}
                   {r.published === false && <span className="chip coral" style={{ marginLeft: 8, fontSize: 9 }}>Draft</span>}
                 </td>
                 <td style={{ padding: '12px 16px', color: 'var(--text-2)' }}>{RES_FOLDER_LABEL[r.folder] || r.folder}</td>
                 <td style={{ padding: '12px 16px' }}>
                   <span className="chip"><span className="material-symbols-outlined" style={{fontSize:11,lineHeight:1}}>{({'video':'videocam','pdf':'picture_as_pdf','template':'description','article':'article'}[(RES_TYPE_META[r.content_type] || {}).icon] || 'link')}</span> {(RES_TYPE_META[r.content_type] || {}).label || r.content_type}</span>
                 </td>
-                <td style={{ padding: '12px 16px' }}><span className={'chip ' + (RES_ACCESS_CHIP[r.access_tier] || '')}>{RES_ACCESS_LABEL[r.access_tier] || r.access_tier}</span></td>
+                <td style={{ padding: '12px 16px' }}>{r._assignedCount > 0
+                  ? <span className="chip coral"><span className="material-symbols-outlined" style={{fontSize:10,lineHeight:1}}>person</span> Private · {r._assignedCount}</span>
+                  : <span className={'chip ' + (RES_ACCESS_CHIP[r.access_tier] || '')}>{RES_ACCESS_LABEL[r.access_tier] || r.access_tier}</span>}</td>
                 <td style={{ padding: '12px 16px' }}>{r.subject_area ? <SubjectTag subject={r.subject_area} /> : <span style={{ color: 'var(--text-3)' }}>—</span>}</td>
                 <td style={{ padding: '12px 16px', color: 'var(--text-3)' }}>{resRelTime(r.created_at)}</td>
                 <td style={{ padding: '12px 16px' }}>
                   <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
+                    {r.url &&
                     <button className="btn ghost sm" onClick={() => copyLink(r)}>
                       <span className="material-symbols-outlined" style={{fontSize:11,lineHeight:1}}>{copiedId === r.id ? 'check' : 'content_copy'}</span> {copiedId === r.id ? 'Copied' : 'Copy link'}
-                    </button>
+                    </button>}
                     <button className="btn ghost sm" onClick={() => setModal(r)}><span className="material-symbols-outlined" style={{fontSize:11,lineHeight:1}}>edit</span> Edit</button>
                     <button className="btn ghost sm" onClick={() => del(r)} style={{ color: 'var(--coral)' }}><span className="material-symbols-outlined" style={{fontSize:11,lineHeight:1}}>delete</span></button>
                   </div>
