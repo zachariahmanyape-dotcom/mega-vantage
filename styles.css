@@ -1768,6 +1768,13 @@ body[data-game="loud"] .level-badge { animation: levelPulse 2.4s ease-in-out inf
   mix-blend-mode: screen;
 }
 .rb-cover:hover .rb-cover-glare { opacity: 1; }
+/* Rendered cover page (PDF first page / thumbnail) — fills the book face */
+.rb-cover-img {
+  position: absolute; inset: 0; z-index: 1;
+  width: 100%; height: 100%;
+  object-fit: cover; object-position: center;
+  display: block;
+}
 .rb-cover-inner {
   position: absolute; inset: 0; z-index: 1;
   display: flex; flex-direction: column;
@@ -1848,6 +1855,12 @@ body[data-game="loud"] .level-badge { animation: levelPulse 2.4s ease-in-out inf
   display: flex;
   flex-direction: column;
 }
+.rb-book__img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover; object-position: center;
+  display: block;
+}
 .rb-book__mark {
   width: 34px; height: 34px; border-radius: 8px;
   border: 1px solid rgba(255,255,255,.5);
@@ -1870,6 +1883,33 @@ body[data-game="loud"] .level-badge { animation: levelPulse 2.4s ease-in-out inf
   letter-spacing: .04em;
   opacity: .85;
   margin-top: 10px;
+}
+
+/* Clean flat document cover (detail view) — replaces the old 3D book */
+.rb-flatcover {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  color: #F4EFE3;
+  display: flex;
+  flex-direction: column;
+  padding: 22px;
+  border: 1px solid rgba(0,0,0,.06);
+  box-shadow: 0 16px 34px -20px rgba(0,0,0,.40),
+              0 6px 14px -8px rgba(0,0,0,.20);
+  transition: transform .5s cubic-bezier(.2,.8,.2,1), box-shadow .5s cubic-bezier(.2,.8,.2,1);
+}
+.rb-flatcover:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 24px 46px -22px rgba(0,0,0,.46),
+              0 8px 18px -10px rgba(0,0,0,.24);
+}
+[data-theme="dark"] .rb-flatcover { border-color: rgba(255,255,255,.08); }
+.rb-flatcover__img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover; object-position: top center;
+  display: block;
 }
 
 .rb-detail {

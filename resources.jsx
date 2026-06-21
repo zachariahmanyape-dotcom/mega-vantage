@@ -229,10 +229,10 @@ function ResourceViewer({ resource: r, onClose }) {
     // omit the open-in-new-tab button so access stays inside the platform.
     // Note: this deters casual export but is not true DRM (see note to admin).
     const isStored = !!r.storage_path;
-    const pdfSrc = resPdfEmbed(r.url) + (isStored ? '#toolbar=0&navpanes=0&scrollbar=0' : '');
+    const pdfSrc = resPdfEmbed(r.url) + (isStored ? '#toolbar=0&navpanes=0&scrollbar=0&view=FitH' : '');
     body =
     <div className="stack" style={{ gap: 10 }}>
-        <div style={{ position: 'relative', width: '100%', height: '64vh', background: 'var(--bg-sunken)', borderRadius: 10, overflow: 'hidden', border: '1px solid var(--border)' }}>
+        <div style={{ position: 'relative', width: '100%', height: '82vh', background: 'var(--bg-sunken)', borderRadius: 10, overflow: 'hidden', border: '1px solid var(--border)' }}>
           <iframe src={pdfSrc} title={r.title} style={{ width: '100%', height: '100%', border: 'none' }} />
         </div>
         {!isStored &&
@@ -271,7 +271,7 @@ function ResourceViewer({ resource: r, onClose }) {
   return (
     <>
       <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(10,10,10,0.6)', zIndex: 200, backdropFilter: 'blur(3px)' }} />
-      <div className="card" style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 'min(880px, 94vw)', maxHeight: '92vh', overflow: 'auto', zIndex: 201, padding: 0, boxShadow: 'var(--shadow-3)' }}>
+      <div className="card" style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: r.content_type === 'pdf' ? 'min(1040px, 96vw)' : 'min(880px, 94vw)', maxHeight: '95vh', overflow: 'auto', zIndex: 201, padding: 0, boxShadow: 'var(--shadow-3)' }}>
         <div style={{ padding: '16px 22px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16 }}>
           <div style={{ minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
@@ -378,25 +378,23 @@ function ResourceCover({ r, state, onOpen, onLocked }) {
 
 }
 
-// ---------- Standing 3D book (cover + spine + page edges) for the detail view ----------
-function ResourceBook3D({ r, w = 300, h = 420, d = 46 }) {
+// ---------- Clean document cover for the detail view ----------
+function ResourceBook3D({ r, w = 320, h = 452 }) {
   const color = resBookColor(r);
   const coverImg = useResourceCover(r);
   return (
-    <div className="rb-book" style={{ '--bw': w + 'px', '--bh': h + 'px', '--bd': d + 'px' }}>
-      <div className="rb-book__inner">
-        <div className="rb-book__cover" style={{ backgroundColor: color, backgroundImage: coverImg ? 'none' : 'linear-gradient(160deg, rgba(255,255,255,0.16), rgba(0,0,0,0.55))' }}>
-          {coverImg ?
-          <img className="rb-book__img" src={coverImg} alt={r.title} /> :
+    <div className="rb-flatcover" style={{ width: w, height: h,
+      backgroundColor: coverImg ? 'var(--bg-sunken)' : color,
+      backgroundImage: coverImg ? 'none' : 'linear-gradient(160deg, rgba(255,255,255,0.16), rgba(0,0,0,0.45))' }}>
+      {coverImg ?
+      <img className="rb-flatcover__img" src={coverImg} alt={r.title} /> :
 
-          <>
-            <div className="rb-book__mark">V</div>
-            <div className="rb-book__title">{r.title}</div>
-            <div className="rb-book__byline">{resByline(r)}</div>
-          </>
-          }
-        </div>
-      </div>
+      <>
+        <div className="rb-book__mark">V</div>
+        <div className="rb-book__title">{r.title}</div>
+        <div className="rb-book__byline">{resByline(r)}</div>
+      </>
+      }
     </div>);
 
 }
