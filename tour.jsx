@@ -41,7 +41,7 @@ const TOUR_STEPS = [
     nav:    'resources',
     title:  'Resources',
     icon:   'menu_book',
-    desc:   'Your mentor\'s library — videos, worksheets, templates — organised by subject area and plan tier. Everything is searchable.',
+    desc:   'Your mentor\'s library — videos, worksheets, templates — organised by subject area and plan tier. Anything shared just for you lands in "Shared with you," and everything is searchable.',
   },
   {
     route:  'chat',
@@ -58,6 +58,13 @@ const TOUR_STEPS = [
     desc:   'Your XP tier, streak history, and the full badge wall. Every action you take in Vantage unlocks something new — climb 8 tiers from Rookie to Icon.',
   },
   {
+    route:  'corporate-radar',
+    nav:    'corporate-radar',
+    title:  'Corporate Radar',
+    icon:   'radar',
+    desc:   'A live database of UAE companies, matched to your interests. Set your industries and roles, save the ones you like, and get notified when a match starts hiring.',
+  },
+  {
     route:   'tasks',
     nav:     'tasks',
     title:   'Your first task',
@@ -70,7 +77,12 @@ const TOUR_STEPS = [
 // ─── Nav item order in sidebar (member view, 0-indexed) ───────────────────────
 // Matches the memberItems array order in SidebarWithWins:
 // 0: dashboard, 1: tasks, 2: sessions, 3: roadmap, 4: wins, 5: resources, 6: chat, 7: profile
-const NAV_ORDER = ['dashboard','tasks','sessions','roadmap','wins','resources','chat','profile'];
+// Then a divider + "Career" section label, then corporate-radar.
+const NAV_ORDER = ['dashboard','tasks','sessions','roadmap','wins','resources','chat','profile','corporate-radar'];
+// Items rendered below the "Career" divider + section label (extra vertical offset).
+const CAREER_KEYS = ['corporate-radar'];
+// Height of the divider block + "Career" section label between Workspace and Career.
+const CAREER_SECTION_OFFSET = 46;
 
 // ─── Tour bubble ──────────────────────────────────────────────────────────────
 function TourBubble({ onStart, onDismiss }) {
@@ -153,7 +165,8 @@ function SidebarNavHighlight({ navKey }) {
   const idx = NAV_ORDER.indexOf(navKey);
   if (idx < 0) return null;
 
-  const top = SB_ITEMS_TOP + idx * (SB_ITEM_H + SB_ITEM_GAP);
+  const careerOffset = CAREER_KEYS.includes(navKey) ? CAREER_SECTION_OFFSET : 0;
+  const top = SB_ITEMS_TOP + idx * (SB_ITEM_H + SB_ITEM_GAP) + careerOffset;
 
   return (
     <div style={{
