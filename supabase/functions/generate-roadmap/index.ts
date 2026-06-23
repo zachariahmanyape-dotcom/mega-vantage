@@ -27,27 +27,57 @@ Deno.serve(async (req) => {
     if (!prompt || typeof prompt !== 'string') return json({ error: 'Missing prompt' }, 400);
 
     const apiKey = Deno.env.get('ANTHROPIC_API_KEY');
-    if (!apiKey) return json({ error: 'ANTHROPIC_API_KEY not configured' }, 500);
+    if (!apiKey) {
+      return json({ code: 'AI-CONFIG', error: 'AI service is not configured. Please contact support.', detail: 'ANTHROPIC_API_KEY not set' }, 500);
+    }
 
-    const aiRes = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 2000,
-        messages: [{ role: 'user', content: prompt }],
-      }),
-    });
-    const data = await aiRes.json();
-    if (!aiRes.ok) return json({ error: 'Anthropic API error', detail: data?.error ?? data }, 400);
+    let aiRes: Response;
+    try {
+      aiRes = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-6',
+          max_tokens: 2000,
+          messages: [{ role: 'user', content: prompt }],
+        }),
+      });
+    } catch (netErr) {
+      // Couldn't even reach the provider (network/DNS/timeout)
+      return json({
+        code: 'AI-503',
+        error: 'AI service temporarily unavailable — your inputs are saved, please try again in a few minutes.',
+        detail: String((netErr as Error)?.message ?? netErr),
+      }, 503);
+    }
+
+    const data = await aiRes.json().catch(() => null);
+    if (!aiRes.ok) {
+      // Map the upstream provider error to a friendly, white-labelled message + code.
+      // The real upstream status/detail is preserved for server-side debugging only.
+      const upstream = aiRes.status;
+      let code = 'AI-ERR';
+      let message = 'Roadmap generation failed due to an AI service error. Please try again.';
+      if (upstream >= 500) {
+        code = 'AI-503';
+        message = 'AI service temporarily unavailable — your inputs are saved, please try again in a few minutes.';
+      } else if (upstream === 429) {
+        code = 'AI-429';
+        message = 'The AI service is busy right now — your inputs are saved, please try again in a moment.';
+      } else if (upstream === 401 || upstream === 403) {
+        code = 'AI-AUTH';
+        message = 'AI service authorization issue. Please contact support.';
+      }
+      return json({ code, error: message, upstream_status: upstream, detail: data?.error ?? data }, 502);
+    }
 
     const text = data?.content?.[0]?.text ?? '';
     return json({ text });
   } catch (e) {
-    return json({ error: String((e as Error)?.message ?? e) }, 500);
+    return json({ code: 'AI-UNKNOWN', error: 'Something went wrong generating the roadmap. Please try again.', detail: String((e as Error)?.message ?? e) }, 500);
   }
 });
