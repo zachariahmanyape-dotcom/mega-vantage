@@ -3,6 +3,12 @@
 // generate a roadmap via the secure `generate-roadmap` Edge Function, review &
 // edit it on screen, then save it to that member's Vantage profile.
 
+// Carries a user-facing message + a short support code from the generate flow,
+// so the catch block can show our white-labelled copy instead of a raw error.
+class RoadmapGenError extends Error {
+  constructor(message, code) { super(message); this.name = 'RoadmapGenError'; this.code = code; }
+}
+
 const RB_TIMELINES = ['30 days', '60 days', '90 days', '6 months', '12 months'];
 const RB_HOURS = [
   '1-2 hrs (very limited)',
@@ -256,8 +262,18 @@ RULES:
       const { data, error } = await window._supabase.functions.invoke('generate-roadmap', {
         body: { prompt: buildPrompt() },
       });
-      if (error) throw new Error(error.message || 'Edge function error');
-      if (data?.error) throw new Error(data.error);
+      if (error) {
+        // supabase-js puts the function's JSON body on error.context (a Response)
+        // for non-2xx responses — read our structured { code, error } from it.
+        let body = null;
+        try { body = await error.context.json(); } catch (_) { /* not JSON */ }
+        const friendly = body?.error
+          || 'AI service temporarily unavailable — your inputs are saved, please try again in a few minutes.';
+        const code = body?.code || 'AI-503';
+        if (body?.detail) console.error('[RoadmapBuilder] AI provider detail:', body.detail);
+        throw new RoadmapGenError(friendly, code);
+      }
+      if (data?.error) throw new RoadmapGenError(data.error, data.code || 'AI-ERR');
       const raw = (data?.text || '').trim();
       const clean = raw.replace(/^```json\n?/, '').replace(/^```\n?/, '').replace(/\n?```$/, '');
       const parsed = JSON.parse(clean);
@@ -273,7 +289,13 @@ RULES:
       setStage('review');
     } catch (e) {
       console.error('Roadmap generation failed:', e);
-      showToast('Generation failed — ' + (e.message || 'check console'), 'error');
+      if (e instanceof RoadmapGenError) {
+        // White-labelled, reassuring message for AI-provider / upstream failures.
+        showToast(e.message + ' (' + e.code + ')', 'error');
+      } else {
+        // Anything else (e.g. malformed JSON back from the model) — generic but calm.
+        showToast('Couldn’t build the roadmap from the AI response — please try again. (AI-PARSE)', 'error');
+      }
       setStage('intake');
     }
   };
