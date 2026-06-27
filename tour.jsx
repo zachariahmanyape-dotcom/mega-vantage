@@ -193,7 +193,7 @@ function CongratsOverlay({ onClose }) {
       <div style={{ position:'fixed', inset:0, background:'rgba(10,10,10,0.5)', zIndex:400, backdropFilter:'blur(4px)' }} />
       <div style={{
         position:'fixed', top:'50%', left:'50%', transform:'translate(-50%,-50%)',
-        width:420, background:'var(--bg-elev)', border:'1px solid var(--border)',
+        width:'min(420px, 92vw)', background:'var(--bg-elev)', border:'1px solid var(--border)',
         borderRadius:24, padding:'40px 36px', textAlign:'center', zIndex:401,
         boxShadow:'var(--shadow-3)'
       }}>

@@ -88,7 +88,7 @@ function EngagementTab({ stats, loading }) {
   return (
     <div>
       <AtRiskBanner members={members} />
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16, marginBottom: 20 }}>
+      <div className="m-2col" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16, marginBottom: 20 }}>
         <AnStat loading={loading} label="Active members" value={stats?.active_members ?? 0} sub={`of ${stats?.total_members ?? 0} total`} />
         <AnStat loading={loading} label="Avg. focus time / week" value={`${stats?.avg_focus_hours_week ?? 0}h`} sub="Per active member (last 4 weeks)" color="var(--accent)" />
         <AnStat loading={loading} label="Task completion rate" value={`${stats?.completion_rate ?? 0}%`} sub="Across all members" color="var(--teal-600)" />
@@ -104,7 +104,7 @@ function EngagementTab({ stats, loading }) {
         ) : sorted.length === 0 ? (
           <AnEmpty title="No member activity yet" note="Engagement metrics will appear here as members complete tasks and log focus time." />
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+          <table className="m-table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
             <thead>
               <tr style={{ background: 'var(--bg-sunken)' }}>
                 {['Member', 'Plan', 'Focus / wk', 'Streak', 'Tasks done', 'Last active'].map((h) =>
@@ -155,14 +155,14 @@ function TasksGoalsTab({ stats, loading }) {
   ];
   return (
     <div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 20 }}>
+      <div className="m-2col" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 20 }}>
         <AnStat loading={loading} label="Completion rate" value={`${stats?.completion_rate ?? 0}%`} sub={`${stats?.done_tasks ?? 0} of ${stats?.total_tasks ?? 0} tasks`} color="var(--teal-600)" />
         <AnStat loading={loading} label="Avg. time to complete" value={`${stats?.avg_days_to_complete ?? 0}d`} sub="From created to done" color="var(--accent)" />
         <AnStat loading={loading} label="Goals in progress" value={stats?.goals_active ?? 0} sub="Across all members" />
         <AnStat loading={loading} label="Goals stalled" value={stats?.goals_stalled ?? 0} sub=">7 days no completion" color="var(--coral)" />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 20 }}>
+      <div className="m-stack" style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 20 }}>
         <div className="bento-card" style={{ padding: 22 }}>
           <div className="eyebrow" style={{ marginBottom: 14 }}>Subject area completion</div>
           {loading ? (
@@ -239,7 +239,7 @@ function SessionMetricsTab({ stats, loading }) {
   const oto = stats?.onetoone_attendance ?? 0;
   return (
     <div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 20 }}>
+      <div className="m-2col" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 20 }}>
         <AnStat loading={loading} label="1:1 attendances" value={oto} sub="Confirmed all-time" color="var(--accent)" />
         <AnStat loading={loading} label="Town hall attendances" value={th} sub="Confirmed all-time" color="var(--coral)" />
         <AnStat loading={loading} label="Reschedule requests" value="—" sub="Not tracked yet" />

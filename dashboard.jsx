@@ -88,7 +88,7 @@ function FocusTimerModal({ tasks, goals, setTasks, onStart, onClose }) {
   return (
     <>
       <div onClick={onClose} style={{ position:'fixed', inset:0, background:'rgba(10,10,10,0.45)', zIndex:200, backdropFilter:'blur(3px)' }} />
-      <div className="card" style={{ position:'fixed', top:'50%', left:'50%', transform:'translate(-50%,-50%)', width:460, maxHeight:'78vh', overflow:'auto', zIndex:201, padding:0, boxShadow:'var(--shadow-3)' }}>
+      <div className="card" style={{ position:'fixed', top:'50%', left:'50%', transform:'translate(-50%,-50%)', width:'min(460px, 92vw)', maxHeight:'78vh', overflow:'auto', zIndex:201, padding:0, boxShadow:'var(--shadow-3)' }}>
         <div style={{ padding:'22px 24px', borderBottom:'1px solid var(--border)' }}>
           <div className="display" style={{ fontSize:26, marginBottom:4 }}>Start a focus session</div>
           <div style={{ fontSize:13, color:'var(--text-2)' }}>Link this session to a task to track your time.</div>
@@ -682,7 +682,7 @@ const DashStats = ({ member, tasks, goals, focusRows, sessions, onOpenXp }) => {
   ];
 
   return (
-    <div style={{ display:'grid', gridTemplateColumns:'repeat(4, 1fr)', gap:16 }}>
+    <div className="m-2col" style={{ display:'grid', gridTemplateColumns:'repeat(4, 1fr)', gap:16 }}>
       {tiles.map((t) => {
         const clickable = t.label === 'XP Total';
         return (
@@ -889,10 +889,10 @@ function DashboardScreen({ member, onJoin, onGoto, gameMode, intention, onClearI
       <DashStats member={member} tasks={tasks} goals={goals} focusRows={focusRows} sessions={sessions} onOpenXp={() => setXpOpen(true)} />
 
       {/* Bento grid — left widgets column (8) + right feed column (4) */}
-      <div style={{ display:'grid', gridTemplateColumns:'minmax(0, 1.85fr) minmax(0, 1fr)', gap:22, minWidth:0, marginTop:22, alignItems:'start' }}>
+      <div className="m-stack" style={{ display:'grid', gridTemplateColumns:'minmax(0, 1.85fr) minmax(0, 1fr)', gap:22, minWidth:0, marginTop:22, alignItems:'start' }}>
         {/* Left column: Quick Tasks + Focus Timer, then Eisenhower */}
         <div className="stack" style={{ gap:22, minWidth:0 }}>
-          <div style={{ display:'grid', gridTemplateColumns:'minmax(0, 1fr) minmax(0, 1fr)', gap:22, minWidth:0 }}>
+          <div className="m-stack" style={{ display:'grid', gridTemplateColumns:'minmax(0, 1fr) minmax(0, 1fr)', gap:22, minWidth:0 }}>
             <DashTasksPeek tasks={tasks} onGoTasks={() => onGoto('tasks')} />
             <DashPomodoro gameMode={gameMode} tasks={tasks} goals={goals} setTasks={setTasks} focusRows={focusRows} focus={focus} />
           </div>

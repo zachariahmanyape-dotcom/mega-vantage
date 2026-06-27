@@ -21,7 +21,7 @@ function IntentionModal({ tasks, goals, onSet, onSkip }) {
       <ModalOverlay onClick={onSkip} />
       <div style={{
         position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)',
-        width: 480, maxHeight: '80vh', background: 'var(--bg-elev)',
+        width: 'min(480px, 92vw)', maxHeight: '80vh', background: 'var(--bg-elev)',
         border: '1px solid var(--border)', borderRadius: 24, overflow: 'hidden',
         boxShadow: 'var(--shadow-3)', zIndex: 301, display: 'flex', flexDirection: 'column'
       }}>
@@ -107,7 +107,7 @@ function ReflectionModal({ onSubmit, onLater }) {
       <ModalOverlay onClick={onLater} />
       <div style={{
         position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)',
-        width: 500, background: 'var(--bg-elev)', border: '1px solid var(--border)',
+        width: 'min(500px, 92vw)', background: 'var(--bg-elev)', border: '1px solid var(--border)',
         borderRadius: 24, overflow: 'hidden', boxShadow: 'var(--shadow-3)', zIndex: 301
       }}>
         {/* Header */}
@@ -286,7 +286,7 @@ function OnboardingWizard({ onComplete }) {
         <div>
             <div className="eyebrow" style={{ marginBottom: 4, textAlign: 'center' }}>Step 4 of 5</div>
             <div className="display" style={{ fontSize: 38, marginBottom: 24, textAlign: 'center' }}>How Vantage works</div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16, marginBottom: 28 }}>
+            <div className="m-stack" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16, marginBottom: 28 }}>
               {[
             { icon: 'star', color: 'var(--coral)', title: 'Points & levels', desc: 'Earn XP by completing tasks, attending sessions, hitting streak milestones, and unlocking badges. Climb 8 tiers from Rookie all the way to Icon — every action moves you up.' },
             { icon: 'local_fire_department', color: 'var(--coral)', title: 'Streaks', desc: 'Log in every weekday to build your streak. Weekends don\'t count. Streaks show consistency — one of the most reliable signals of growth.' },

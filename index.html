@@ -712,6 +712,10 @@ function App() {
     localStorage.setItem('vantage-nav-collapsed', nv ? '1' : '0');
     return nv;
   });
+  // Mobile off-canvas nav drawer (only active under the ~820px breakpoint).
+  // Always closes on navigation so a tap-through never leaves the drawer open.
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  useEffect(() => { setMobileNavOpen(false); }, [route]);
   const [notifOpen, setNotifOpen] = useState(false);
   const [tweaksOpen, setTweaksOpen] = useState(false);
   const [rewards, setRewards] = useState([]);
@@ -1336,7 +1340,9 @@ function App() {
   }
 
   return (
-    <div className={"app" + (navCollapsed ? " nav-collapsed" : "")} data-screen-label={isAdmin ? "Admin" : "Member"}>
+    <div className={"app" + (navCollapsed ? " nav-collapsed" : "") + (mobileNavOpen ? " mobile-nav-open" : "")} data-screen-label={isAdmin ? "Admin" : "Member"}>
+      {/* Off-canvas backdrop — tap to dismiss the mobile drawer (no-op on desktop) */}
+      <div className="sb-backdrop" onClick={() => setMobileNavOpen(false)} />
       <SidebarWithWins
         collapsed={navCollapsed}
         onToggleCollapse={toggleNav}
@@ -1361,6 +1367,7 @@ function App() {
             theme={tw.theme} setTheme={t => updateTweak({ theme: t })}
             onOpenTweaks={() => setTweaksOpen(true)}
             notifCount={upcomingSessions.length} onOpenNotifs={() => setNotifOpen(true)}
+            onOpenNav={() => setMobileNavOpen(true)}
             route={route} member={member} />
           {/* Keying on the effective user id forces screen remount on View As toggle,
               so every screen-level useEffect refetches with the impersonated user. */}
