@@ -34,7 +34,7 @@ function SessionsScreen({ onJoin, isAdmin }) {
     return (
       <>
         <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-          <div style={{ display: 'flex' }}>
+          <div className="ses-row" style={{ display: 'flex' }}>
             <div style={{
               width: 88, padding: '22px 16px', textAlign: 'center',
               borderRight: '1px solid var(--border)',
@@ -48,7 +48,7 @@ function SessionsScreen({ onJoin, isAdmin }) {
                 {new Date(s.dateISO).toLocaleString('en-US', { month: 'short' })}
               </div>
             </div>
-            <div style={{ flex: 1, padding: '18px 22px' }}>
+            <div className="ses-content" style={{ flex: 1, padding: '18px 22px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                 <span className={"chip " + (isTown ? "coral" : "sapphire")}><span className="dot" />{s.type}</span>
                 {past && <span className="chip teal"><span className="material-symbols-outlined" style={{ fontSize:10, lineHeight:1 }}>check</span>Completed</span>}
@@ -65,7 +65,7 @@ function SessionsScreen({ onJoin, isAdmin }) {
                 </div>
               }
             </div>
-            <div style={{ padding: '18px 22px', display: 'flex', flexDirection: 'column', gap: 8, justifyContent: 'center', borderLeft: '1px solid var(--border)', minWidth: 170 }}>
+            <div className="ses-actions" style={{ padding: '18px 22px', display: 'flex', flexDirection: 'column', gap: 8, justifyContent: 'center', borderLeft: '1px solid var(--border)', minWidth: 170 }}>
               <button className="btn" onClick={() => setOpen(true)} style={{ justifyContent: 'center' }}>
                 <span className="material-symbols-outlined" style={{ fontSize:13, lineHeight:1 }}>event</span> View agenda
               </button>
