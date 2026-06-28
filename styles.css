@@ -2040,6 +2040,24 @@ body[data-game="loud"] .level-badge { animation: levelPulse 2.4s ease-in-out inf
 
   /* Notification dropdown — pin to both edges instead of a fixed 360px width */
   .notif-panel { left: 12px !important; right: 12px !important; top: 56px !important; width: auto !important; }
+
+  /* Guarantee no page pans sideways — content always fits the viewport width.
+     .main stays the vertical scroll container (overflow-y:auto from base), so
+     the sticky topbar is unaffected; only stray horizontal overflow is clipped. */
+  .main { overflow-x: hidden; }
+
+  /* Session cards: drop the fixed 170px action column below the content,
+     full width, as a horizontal button row instead of a side rail. */
+  .ses-row { flex-wrap: wrap; }
+  .ses-content { min-width: 0; }
+  .ses-actions {
+    min-width: 100% !important;
+    border-left: none !important;
+    border-top: 1px solid var(--border);
+    flex-direction: row !important;
+    flex-wrap: wrap;
+  }
+  .ses-actions .btn { flex: 1; }
 }
 
 /* ------------------------------------------------------------
