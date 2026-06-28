@@ -8,7 +8,17 @@ const CR_INTEREST_TAGS = {
   'Company Types': ['Startup', 'Scale-up', 'Enterprise', 'Government Entity', 'Family Business', 'Holding Group', 'NGO']
 };
 
-const CR_ROLE_TAGS = CR_INTEREST_TAGS.Functions;
+/* Role Targets are a richer, career-target list (decoupled from the interest
+   Functions group so we can expand it without touching the interest picker). */
+const CR_ROLE_TAGS = [
+  'Operations', 'Business Development', 'Marketing', 'Product', 'Finance',
+  'Human Resources', 'Engineering', 'Design', 'Sales', 'Strategy',
+  'Communications', 'Legal', 'Research', 'Consulting', 'Data & Analytics',
+  'Project Management', 'Customer Success', 'Supply Chain', 'Procurement',
+  'Investment / M&A', 'Risk & Compliance', 'Cybersecurity', 'IT & Systems',
+  'Public Relations', 'Partnerships', 'Account Management', 'Growth',
+  'Content & Creative', 'Investor Relations', 'Corporate Development'
+];
 
 const CR_SECTORS = [
   'Tech', 'Finance', 'Healthcare', 'Real Estate', 'Media',
@@ -83,14 +93,21 @@ function calculateMatchScore(company, memberInterests) {
 }
 
 /* ── Filter panel (left column) ── */
-function CRFilterPanel({ filters, setFilters }) {
+function CRFilterPanel({ filters, setFilters, isOverlay, onClose }) {
   const toggle = (key, val) => setFilters(f => ({
     ...f, [key]: f[key].includes(val) ? f[key].filter(x => x !== val) : [...f[key], val]
   }));
   return (
-    <div className="cr-filters">
-      <div className="cr-filter-head">
-        <span className="material-symbols-outlined" style={{fontSize:15,lineHeight:1}}>tune</span> Filters
+    <div className={"cr-filters" + (isOverlay ? " cr-filters-inmodal" : "")}>
+      <div className={"cr-filter-head" + (isOverlay ? " cr-filter-head-overlay" : "")}>
+        <span style={{ display:'flex', alignItems:'center', gap:6 }}>
+          <span className="material-symbols-outlined" style={{fontSize:15,lineHeight:1}}>tune</span> Filters
+        </span>
+        {isOverlay && (
+          <button className="cr-filter-close" onClick={onClose} aria-label="Close filters">
+            <span className="material-symbols-outlined" style={{fontSize:18,lineHeight:1}}>close</span>
+          </button>
+        )}
       </div>
 
       <div className="cr-fg">
@@ -215,7 +232,7 @@ function CRCompanyCard({ company, matchScore, saved, onToggleSave }) {
         <div className="cr-card-acts">
           <button className={'cr-act' + (saved ? ' saved' : '')} onClick={() => onToggleSave(company.id)}
             title={saved ? 'Unsave' : 'Save'}>
-            <span className="material-symbols-outlined" style={saved ? {fontSize:16,lineHeight:1,color:'var(--coral)'} : {fontSize:16,lineHeight:1}}>{saved ? 'favorite' : 'favorite_border'}</span>
+            <span className="material-symbols-outlined" style={saved ? {fontSize:16,lineHeight:1,color:'var(--coral)',fontVariationSettings:"'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 20"} : {fontSize:16,lineHeight:1}}>{saved ? 'favorite' : 'favorite_border'}</span>
           </button>
           {company.website_url && (
             <a className="cr-act" href={company.website_url} target="_blank" rel="noopener noreferrer" title="Visit website">
@@ -464,6 +481,7 @@ function CorporateRadarScreen({ member }) {
     sectors: [], sizes: [], hiringWeek: false, hiringMonth: false, matchFilter: 'all'
   });
   const [prefsOverlay, setPrefsOverlay] = useState(false);
+  const [filtersOverlay, setFiltersOverlay] = useState(false); // mobile filter modal
   const [notifications, setNotifications] = useState({ hiring: true, newCompanies: false });
   const [toast, setToast] = useState(null);
   /* How many cards to show before the "See more" button (keeps initial scroll short). */
@@ -665,6 +683,9 @@ function CorporateRadarScreen({ member }) {
     (now - new Date(c.hiring_last_checked).getTime()) <= CR_SEVEN_DAYS).length;
 
   const handlePrefsClick = () => setPrefsOverlay(true);
+  const activeFilterCount = filters.sectors.length + filters.sizes.length
+    + (filters.hiringWeek ? 1 : 0) + (filters.hiringMonth ? 1 : 0)
+    + (filters.matchFilter !== 'all' ? 1 : 0);
 
   if (loading) {
     return (
@@ -723,11 +744,17 @@ function CorporateRadarScreen({ member }) {
                 ? `Showing ${visibleCount} of ${sorted.length} companies`
                 : `${sorted.length} ${sorted.length === 1 ? 'company' : 'companies'}`}
             </span>
-            <select className="cr-sort" value={sort} onChange={e => setSort(e.target.value)}>
-              <option value="match">Best match</option>
-              <option value="hiring">Recently hiring</option>
-              <option value="az">A–Z</option>
-            </select>
+            <div className="cr-toolbar-actions">
+              <button className="cr-mobile-filter-btn" onClick={() => setFiltersOverlay(true)}>
+                <span className="material-symbols-outlined" style={{fontSize:15,lineHeight:1}}>tune</span>
+                Filters{activeFilterCount > 0 ? <span className="cr-filter-badge">{activeFilterCount}</span> : null}
+              </button>
+              <select className="cr-sort" value={sort} onChange={e => setSort(e.target.value)}>
+                <option value="match">Best match</option>
+                <option value="hiring">Recently hiring</option>
+                <option value="az">A–Z</option>
+              </select>
+            </div>
           </div>
 
           <div className="cr-grid">
@@ -770,6 +797,15 @@ function CorporateRadarScreen({ member }) {
         <div className="cr-prefs-modal-bg" onClick={() => setPrefsOverlay(false)}>
           <div className="cr-prefs-modal" onClick={e => e.stopPropagation()}>
             <CRPrefsPanel {...prefsProps} isOverlay={true} onClose={() => setPrefsOverlay(false)} />
+          </div>
+        </div>
+      )}
+
+      {/* Mobile filters modal — the desktop rail is hidden < 768px */}
+      {filtersOverlay && (
+        <div className="cr-prefs-modal-bg" onClick={() => setFiltersOverlay(false)}>
+          <div className="cr-prefs-modal" onClick={e => e.stopPropagation()}>
+            <CRFilterPanel filters={filters} setFilters={setFilters} isOverlay={true} onClose={() => setFiltersOverlay(false)} />
           </div>
         </div>
       )}

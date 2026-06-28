@@ -130,7 +130,7 @@ function WinsComposer({ onClose, onPost }) {
   return (
     <>
       <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(10,10,10,0.4)', zIndex: 200, backdropFilter: 'blur(3px)' }} />
-      <div className="card" style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 480, zIndex: 201, padding: 0, boxShadow: 'var(--shadow-3)' }}>
+      <div className="card" style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 'min(480px, 92vw)', zIndex: 201, padding: 0, boxShadow: 'var(--shadow-3)' }}>
         <div style={{ padding: '18px 22px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ fontFamily: 'var(--ff-display)', fontSize: 22 }}>Share a win</div>
           <button onClick={onClose} style={{ color: 'var(--text-3)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex' }}><span className="material-symbols-outlined" style={{ fontSize:18, lineHeight:1 }}>close</span></button>
@@ -243,7 +243,7 @@ function WinsScreen() {
         </button>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 280px', gap: 24, alignItems: 'start' }}>
+      <div className="m-stack" style={{ display: 'grid', gridTemplateColumns: '1fr 280px', gap: 24, alignItems: 'start' }}>
         <div className="stack" style={{ gap: 12 }}>
           {loading ?
           <div className="card" style={{ padding: '28px 22px', color: 'var(--text-3)', fontSize: 13 }}>Loading wins…</div> :

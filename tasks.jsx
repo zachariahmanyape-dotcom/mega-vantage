@@ -102,7 +102,7 @@ function TaskFocusTimer({ task, focus }) {
           <div style={{ fontSize: 10, color: 'var(--text-3)', marginBottom: 8, lineHeight: 1.4 }}>A timer is running on another task — starting here replaces it.</div>
         }
         <div className="eyebrow" style={{ marginBottom: 8 }}>Duration</div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 8 }}>
+        <div className="m-stack" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 8 }}>
           {[15, 25, 45, 60].map((m) =>
           <button key={m} className="btn sm" onClick={() => setMins(m)}
             style={{ justifyContent: 'center', ...(mins === m ? { background: 'var(--accent)', color: 'var(--accent-contrast)', borderColor: 'var(--accent)' } : {}) }}>{m} min</button>
@@ -205,7 +205,7 @@ function TaskDetailPanel({ task, onTaskMetaChange, focus, focusTick, onEdit }) {
     : 'No focus time logged yet.';
 
   return (
-    <div style={{ padding: '18px 20px 20px', borderTop: '1px solid var(--border)', background: 'var(--bg-sunken)', display: 'grid', gridTemplateColumns: '1fr 180px', gap: 24 }}>
+    <div className="m-stack" style={{ padding: '18px 20px 20px', borderTop: '1px solid var(--border)', background: 'var(--bg-sunken)', display: 'grid', gridTemplateColumns: '1fr 180px', gap: 24 }}>
       {/* Left column — Details + Subtasks */}
       <div style={{ minWidth: 0 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
@@ -578,14 +578,14 @@ function FocusStats() {
 
   return (
     <div className="stack" style={{ gap:22 }}>
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:14 }}>
+      <div className="m-2col" style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:14 }}>
         {stat('Today', window.fmtMins(todayMin), `${todayRows.length} ${todayRows.length===1?'session':'sessions'}`)}
         {stat('This week', window.fmtMins(weekMin), `${weekRows.length} ${weekRows.length===1?'session':'sessions'}`)}
         {stat('Total focus', window.fmtMins(totalMin))}
         {stat('Sessions', String(rows.length), 'all time')}
       </div>
 
-      <div style={{ display:'grid', gridTemplateColumns:'1.3fr 1fr', gap:22, minWidth:0 }}>
+      <div className="m-stack" style={{ display:'grid', gridTemplateColumns:'1.3fr 1fr', gap:22, minWidth:0 }}>
         <div className="card" style={{ padding:22, minWidth:0 }}>
           <div className="eyebrow">Focus · last 7 days</div>
           <div style={{ fontSize:13, color:'var(--text-2)', marginTop:2 }}>Daily average <strong>{window.fmtMins(Math.round(weekMin/7))}</strong></div>
@@ -622,7 +622,7 @@ function FocusStats() {
         </div>
       </div>
 
-      <div style={{ display:'grid', gridTemplateColumns:'1.3fr 1fr', gap:22, minWidth:0 }}>
+      <div className="m-stack" style={{ display:'grid', gridTemplateColumns:'1.3fr 1fr', gap:22, minWidth:0 }}>
         <div className="card" style={{ padding:22, minWidth:0 }}>
           <div className="eyebrow">Most focused time of day</div>
           <div style={{ display:'grid', gridTemplateColumns:'repeat(24,1fr)', gap:2, height:120, marginTop:16, alignItems:'end' }}>
@@ -781,7 +781,7 @@ function CreateItemModal({ goals, defaultKind, onClose, onTaskCreated, onGoalCre
   return (
     <>
       <div onClick={onClose} style={{ position:'fixed', inset:0, background:'rgba(10,10,10,0.45)', zIndex:200, backdropFilter:'blur(3px)' }} />
-      <div className="card" style={{ position:'fixed', top:'50%', left:'50%', transform:'translate(-50%,-50%)', width:480, maxHeight:'86vh', overflow:'auto', zIndex:201, padding:0, boxShadow:'var(--shadow-3)' }}>
+      <div className="card" style={{ position:'fixed', top:'50%', left:'50%', transform:'translate(-50%,-50%)', width:'min(480px, 92vw)', maxHeight:'86vh', overflow:'auto', zIndex:201, padding:0, boxShadow:'var(--shadow-3)' }}>
         <div style={{ padding:'18px 22px', borderBottom:'1px solid var(--border)', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
           <div style={{ fontFamily:'var(--ff-display)', fontSize:22 }}>Create new</div>
           <button onClick={onClose} style={{ color:'var(--text-3)', background:'none', border:'none', cursor:'pointer', display:'flex' }}><span className="material-symbols-outlined" style={{ fontSize:18, lineHeight:1 }}>close</span></button>
@@ -804,7 +804,7 @@ function CreateItemModal({ goals, defaultKind, onClose, onTaskCreated, onGoalCre
 
             {kind==='task' ? (
               <>
-                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+                <div className="m-stack" style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
                   <div>
                     <div className="eyebrow" style={{ marginBottom:6 }}>Subject</div>
                     <select className="input" style={{ fontSize:13 }} value={subject} onChange={e=>setSubject(e.target.value)}>
@@ -819,7 +819,7 @@ function CreateItemModal({ goals, defaultKind, onClose, onTaskCreated, onGoalCre
                     </select>
                   </div>
                 </div>
-                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+                <div className="m-stack" style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
                   <div>
                     <div className="eyebrow" style={{ marginBottom:6 }}>Due date</div>
                     <input className="input" type="date" value={dueDate} onChange={e=>setDueDate(e.target.value)} />
@@ -901,7 +901,7 @@ function EditTaskModal({ task, goals, onClose, onSaved }) {
   return (
     <>
       <div onClick={onClose} style={{ position:'fixed', inset:0, background:'rgba(10,10,10,0.45)', zIndex:200, backdropFilter:'blur(3px)' }} />
-      <div className="card" style={{ position:'fixed', top:'50%', left:'50%', transform:'translate(-50%,-50%)', width:480, maxHeight:'86vh', overflow:'auto', zIndex:201, padding:0, boxShadow:'var(--shadow-3)' }}>
+      <div className="card" style={{ position:'fixed', top:'50%', left:'50%', transform:'translate(-50%,-50%)', width:'min(480px, 92vw)', maxHeight:'86vh', overflow:'auto', zIndex:201, padding:0, boxShadow:'var(--shadow-3)' }}>
         <div style={{ padding:'18px 22px', borderBottom:'1px solid var(--border)', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
           <div style={{ fontFamily:'var(--ff-display)', fontSize:22 }}>Edit task</div>
           <button onClick={onClose} style={{ color:'var(--text-3)', background:'none', border:'none', cursor:'pointer', display:'flex' }}><span className="material-symbols-outlined" style={{ fontSize:18, lineHeight:1 }}>close</span></button>
@@ -916,7 +916,7 @@ function EditTaskModal({ task, goals, onClose, onSaved }) {
               <div className="eyebrow" style={{ marginBottom:6 }}>Description</div>
               <textarea className="input" rows={3} placeholder="Optional details" value={description} onChange={e=>setDescription(e.target.value)} style={{ resize:'none', lineHeight:1.5 }} />
             </div>
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+            <div className="m-stack" style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
               <div>
                 <div className="eyebrow" style={{ marginBottom:6 }}>Subject</div>
                 <select className="input" style={{ fontSize:13 }} value={subject} onChange={e=>setSubject(e.target.value)}>
@@ -931,7 +931,7 @@ function EditTaskModal({ task, goals, onClose, onSaved }) {
                 </select>
               </div>
             </div>
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+            <div className="m-stack" style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
               <div>
                 <div className="eyebrow" style={{ marginBottom:6 }}>Due date</div>
                 <input className="input" type="date" value={dueDate} onChange={e=>setDueDate(e.target.value)} />
@@ -1109,7 +1109,7 @@ function TasksScreen({ tasks, setTasks, goals, setGoals, dataLoading, focus, foc
                       <div style={{ fontSize: 14 }}>{openTasks.length === 0 ? 'Create one with the + New button.' : 'No tasks match this date range.'}</div>
                     </div>
                   : taskView === 'board'
-                  ? <div style={{ display: 'grid', gridTemplateColumns: `repeat(${PRIORITIES.length}, minmax(0,1fr))`, gap: 14, alignItems: 'start' }}>
+                  ? <div className="m-stack" style={{ display: 'grid', gridTemplateColumns: `repeat(${PRIORITIES.length}, minmax(0,1fr))`, gap: 14, alignItems: 'start' }}>
                       {PRIORITIES.map((p) => {
                         const col = visibleOpen.filter((t) => (t.priority || 'Routine') === p);
                         const cfg = PRIORITY_CONFIG[p] || {};

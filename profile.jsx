@@ -191,7 +191,7 @@ function BadgeModal({ categories, earnedCount, total, theme, onClose }) {
                 <div className="eyebrow" style={{ margin:0 }}>{cat.name}</div>
                 <div style={{ fontSize:11, color:'var(--text-3)' }}>{cat.badges.filter((b) => b.earned).length}/{cat.badges.length}</div>
               </div>
-              <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12 }}>
+              <div className="m-2col" style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12 }}>
                 {cat.badges.map((b) => <BadgeTile key={b.id} badge={b} theme={theme} />)}
               </div>
             </div>
@@ -383,7 +383,7 @@ function ProfileScreen({ member, theme, setTheme, onSignOut, onProfileSaved }) {
               : 'Recently'}
           </div>
         </div>
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:24, textAlign:'right' }}>
+        <div className="m-2col" style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:24, textAlign:'right' }}>
           <div>
             <div className="display" style={{ fontSize:34, color:'var(--accent)', lineHeight:1 }}>{(member.xp || 0).toLocaleString()}</div>
             <div className="eyebrow" style={{ marginTop:4 }}>Total XP</div>
@@ -396,7 +396,7 @@ function ProfileScreen({ member, theme, setTheme, onSignOut, onProfileSaved }) {
       </div>
 
       {/* Stat overview tiles */}
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(3,minmax(0,1fr))', gap:16, marginBottom:20 }}>
+      <div className="m-2col" style={{ display:'grid', gridTemplateColumns:'repeat(3,minmax(0,1fr))', gap:16, marginBottom:20 }}>
         {[['Total learning', totalLearning, false],['Sessions', `${pastSessions.length} done`, false],['Upcoming', `${upcomingCount} scheduled`, true]].map(([l,v,accent]) => (
           <div key={l} className="bento-card" style={{ padding:'18px 20px', borderLeft: accent ? '3px solid var(--accent)' : undefined }}>
             <div className="eyebrow" style={{ fontSize:10, color: accent ? 'var(--accent)' : undefined }}>{l}</div>
@@ -410,7 +410,7 @@ function ProfileScreen({ member, theme, setTheme, onSignOut, onProfileSaved }) {
         <MilestoneTimeline milestones={milestones} />
       </div>
 
-      <div style={{ display:'grid', gridTemplateColumns:'1.4fr 1fr', gap:20 }}>
+      <div className="m-stack" style={{ display:'grid', gridTemplateColumns:'1.4fr 1fr', gap:20 }}>
         {/* Badge wall */}
         <div className="bento-card" style={{ padding:22 }}>
           <div className="row-between">
@@ -425,7 +425,7 @@ function ProfileScreen({ member, theme, setTheme, onSignOut, onProfileSaved }) {
               </button>
             </div>
           </div>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12, marginTop:16 }}>
+          <div className="m-2col" style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12, marginTop:16 }}>
             {compact.map((b) => <BadgeTile key={b.id} badge={b} theme={theme} />)}
           </div>
         </div>
@@ -439,7 +439,7 @@ function ProfileScreen({ member, theme, setTheme, onSignOut, onProfileSaved }) {
                 <span className="material-symbols-outlined" style={{fontSize:12,lineHeight:1}}>edit</span> Edit
               </button>
             </div>
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'14px 18px' }}>
+            <div className="m-2col" style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'14px 18px' }}>
               {[['Current role',member.role],['Employment status',member.status],['Industry / field',member.field],['Growth focus',member.focus]].map(([l,v]) => (
                 <div key={l}>
                   <div className="eyebrow" style={{ fontSize:10 }}>{l}</div>

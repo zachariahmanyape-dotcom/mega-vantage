@@ -210,7 +210,7 @@ function SessionDetailModal({ session, onClose, isAdmin }) {
   return (
     <>
       <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(10,10,10,0.45)', zIndex: 200, backdropFilter: 'blur(3px)' }} />
-      <div className="card" style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 520, maxHeight: '86vh', overflow: 'auto', zIndex: 201, padding: 0, boxShadow: 'var(--shadow-3)' }}>
+      <div className="card" style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 'min(520px, 92vw)', maxHeight: '86vh', overflow: 'auto', zIndex: 201, padding: 0, boxShadow: 'var(--shadow-3)' }}>
 
         {/* Header */}
         <div className={isTH ? 'coral-header' : 'sapphire-header'} style={{
@@ -233,7 +233,7 @@ function SessionDetailModal({ session, onClose, isAdmin }) {
 
         {/* Meta */}
         <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border)' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          <div className="m-stack" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
             <div>
               <div className="eyebrow" style={{ marginBottom: 4 }}>Date & time</div>
               <div style={{ fontSize: 13, fontWeight: 600 }}>{session.date || ymd(new Date(session.date + 'T12:00'))}</div>

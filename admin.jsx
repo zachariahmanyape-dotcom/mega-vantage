@@ -54,7 +54,7 @@ function AdminOverview({ onPick }) {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
+      <div className="m-2col" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
         {tiles.map((t, i) => {
           const ICONS = [{ mat: 'group', cls: 'primary' }, { mat: 'task_alt', cls: 'teal' }, { mat: 'event', cls: 'primary' }, { mat: 'warning', cls: 'coral' }];
           return (
@@ -72,7 +72,7 @@ function AdminOverview({ onPick }) {
         })}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 20 }}>
+      <div className="m-stack" style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 20 }}>
         <div className="bento-card" style={{ padding: 0, overflow: 'hidden' }}>
           <div className="row-between" style={{ padding: '16px 22px', borderBottom: '1px solid var(--border)' }}>
             <div className="page-eyebrow" style={{ marginBottom: 0 }}>Members · recent activity</div>
@@ -170,7 +170,7 @@ function MembersTable({ compact, onViewAs, onOpenDetail, members = [], loading =
 
   return (
     <>
-    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+    <table className="m-table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
       <thead>
         <tr style={{ background: 'var(--bg-sunken)' }}>
           {['Member', 'Plan', 'Last active', 'Points', 'Streak', 'Trial Expires', 'Status', ''].map((h) =>
@@ -257,7 +257,7 @@ function MembersTable({ compact, onViewAs, onOpenDetail, members = [], loading =
     {blockedMember && (
       <>
         <div onClick={() => setBlockedMember(null)} style={{ position:'fixed', inset:0, background:'rgba(10,10,10,0.45)', zIndex:200, backdropFilter:'blur(3px)' }} />
-        <div className="card" style={{ position:'fixed', top:'50%', left:'50%', transform:'translate(-50%,-50%)', width:400, zIndex:201, padding:0, boxShadow:'var(--shadow-3)' }}>
+        <div className="card" style={{ position:'fixed', top:'50%', left:'50%', transform:'translate(-50%,-50%)', width:'min(400px, 92vw)', zIndex:201, padding:0, boxShadow:'var(--shadow-3)' }}>
           <div style={{ padding:'24px 24px 20px' }}>
             <div className="display" style={{ fontSize:22, marginBottom:10 }}>Member not yet active</div>
             <div style={{ fontSize:13, color:'var(--text-2)', lineHeight:1.65 }}>
@@ -355,7 +355,7 @@ function InviteMemberModal({ onClose, onInvited }) {
   return (
     <>
       <div onClick={onClose} style={{ position:'fixed', inset:0, background:'rgba(10,10,10,0.45)', zIndex:200, backdropFilter:'blur(3px)' }} />
-      <div className="card" style={{ position:'fixed', top:'50%', left:'50%', transform:'translate(-50%,-50%)', width:480, maxHeight:'88vh', overflow:'auto', zIndex:201, padding:0, boxShadow:'var(--shadow-3)' }}>
+      <div className="card" style={{ position:'fixed', top:'50%', left:'50%', transform:'translate(-50%,-50%)', width:'min(480px, 92vw)', maxHeight:'88vh', overflow:'auto', zIndex:201, padding:0, boxShadow:'var(--shadow-3)' }}>
         <div style={{ padding:'22px 24px', borderBottom:'1px solid var(--border)' }}>
           <div className="display" style={{ fontSize:26, marginBottom:4 }}>Invite member</div>
           <div style={{ fontSize:13, color:'var(--text-2)' }}>Send an invite link and pre-configure their account.</div>
@@ -502,7 +502,7 @@ function AdminTasks() {
           <h1 className="page-title" style={{ fontSize: 42, margin: '6px 0 0' }}>Assign the next move</h1>
         </div>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 20 }}>
+      <div className="m-stack" style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 20 }}>
         <div className="card" style={{ padding: 22 }}>
           <div className="eyebrow" style={{ marginBottom: 14 }}>Create task</div>
           <div className="stack" style={{ gap: 12 }}>
@@ -735,7 +735,7 @@ function AdminSessions() {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 24 }}>
+      <div className="m-stack" style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 24 }}>
         {/* Calendar */}
         <div className="bento-card" style={{ padding: 24 }}>
           <Calendar isAdmin={true} reloadKey={reloadKey} />
@@ -938,7 +938,7 @@ function ResourceFormModal({ resource, onClose, onSaved }) {
   return (
     <>
       <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(10,10,10,0.45)', zIndex: 200, backdropFilter: 'blur(3px)' }} />
-      <div className="card" style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 520, maxHeight: '88vh', overflow: 'auto', zIndex: 201, padding: 0, boxShadow: 'var(--shadow-3)' }}>
+      <div className="card" style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 'min(520px, 92vw)', maxHeight: '88vh', overflow: 'auto', zIndex: 201, padding: 0, boxShadow: 'var(--shadow-3)' }}>
         <div style={{ padding: '18px 22px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ fontFamily: 'var(--ff-display)', fontSize: 22 }}>{editing ? 'Edit resource' : 'Upload resource'}</div>
           <button onClick={onClose} style={{ color: 'var(--text-3)', fontSize: 14, background: 'none', border: 'none', cursor: 'pointer' }}>✕</button>
@@ -1087,7 +1087,7 @@ function AdminResources() {
       {err && <div style={{ fontSize: 12, color: 'var(--coral)', background: 'var(--coral-100)', borderRadius: 8, padding: '8px 12px', marginBottom: 12 }}>{err}</div>}
 
       <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+        <table className="m-table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
           <thead>
             <tr style={{ background: 'var(--bg-sunken)' }}>
               {['Title', 'Folder', 'Type', 'Access', 'Subject', 'Added', ''].map((h) =>

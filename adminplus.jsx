@@ -66,7 +66,7 @@ function _BulkMessagingArchived() {
         </div>
       </div>
 
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1.2fr', gap:24, alignItems:'start' }}>
+      <div className="m-stack" style={{ display:'grid', gridTemplateColumns:'1fr 1.2fr', gap:24, alignItems:'start' }}>
         {/* Left: Audience filter */}
         <div>
           <div className="card" style={{ padding:22, marginBottom:16 }}>
@@ -426,7 +426,7 @@ function AdminMemberDetail({ member, onBack, onViewAs }) {
 
       {/* Summary stats */}
       <div className="card" style={{ padding:0, marginBottom:20 }}>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)' }}>
+        <div className="m-2col" style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)' }}>
           {[
             ['Points', points.toLocaleString(), null],
             ['Streak', streak + ' days', null],

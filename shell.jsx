@@ -123,7 +123,7 @@ function Sidebar({ route, setRoute, admin, isRealAdmin, unread, member, onOpenPr
   );
 }
 
-function Topbar({ theme, setTheme, onOpenTweaks, notifCount, onOpenNotifs, route, member }) {
+function Topbar({ theme, setTheme, onOpenTweaks, notifCount, onOpenNotifs, route, member, onOpenNav }) {
   const ROUTE_LABELS = {
     dashboard: 'Dashboard',
     tasks: 'Tasks & Goals',
@@ -155,6 +155,11 @@ function Topbar({ theme, setTheme, onOpenTweaks, notifCount, onOpenNotifs, route
 
   return (
     <header className="topbar">
+      {/* Mobile-only hamburger — opens the off-canvas nav drawer (hidden on desktop via CSS) */}
+      <button className="topbar-hamburger" onClick={onOpenNav} title="Menu" aria-label="Open navigation">
+        <span className="material-symbols-outlined" style={{ fontSize: 22, lineHeight: 1 }}>menu</span>
+      </button>
+
       {/* Left: pill search bar (Tasks & Goals only) or a breadcrumb label */}
       {showSearch ? (
         <div className="topbar-search">
@@ -206,7 +211,7 @@ function NotifPanel({ open, onClose, sessions, onGoToSettings }) {
   return (
     <>
       <div onClick={onClose} style={{ position:'fixed', inset:0, zIndex:40 }} />
-      <div className="card" style={{
+      <div className="card notif-panel" style={{
         position:'fixed', top:60, right:40, width:360, zIndex:45,
         padding:0, overflow:'hidden', boxShadow:'var(--shadow-3)'
       }}>

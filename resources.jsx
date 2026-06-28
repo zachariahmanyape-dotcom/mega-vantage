@@ -577,7 +577,7 @@ function ResourcesScreen({ member, adminAll, onStartTour, tourCompleted }) {
         </div>
       }
 
-      <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: 24 }}>
+      <div className="m-stack" style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: 24 }}>
         <div>
           <div className="eyebrow" style={{ marginBottom: 10 }}>Folders</div>
           <div className="stack" style={{ gap: 2 }}>
