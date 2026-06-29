@@ -1068,6 +1068,20 @@ function CrmInteractionsView({ interactions, contactMap, onOpenContact, onAdd })
   );
 }
 
+// Supabase/PostgREST caps a single select at 1,000 rows. Page through with a
+// stable (unique) order so the full dataset loads regardless of size.
+async function crmFetchAll(table) {
+  const PAGE = 1000;
+  let from = 0, all = [];
+  for (;;) {
+    const { data, error } = await window._supabase.from(table).select('*').order('id', { ascending: true }).range(from, from + PAGE - 1);
+    if (error) return { data: all, error };
+    all = all.concat(data || []);
+    if (!data || data.length < PAGE) return { data: all, error: null };
+    from += PAGE;
+  }
+}
+
 // ── Root screen ───────────────────────────────────────────────
 function CRMScreen() {
   const [contacts, setContacts] = useState([]);
@@ -1085,8 +1099,8 @@ function CRMScreen() {
     (async () => {
       setLoading(true); setErr('');
       const [cs, is] = await Promise.all([
-        window._supabase.from('crm_contacts').select('*'),
-        window._supabase.from('crm_interactions').select('*'),
+        crmFetchAll('crm_contacts'),
+        crmFetchAll('crm_interactions'),
       ]);
       if (cs.error) setErr(cs.error.message); else setContacts(cs.data || []);
       if (!cs.error && is.error) setErr(is.error.message); else if (!is.error) setInteractions(is.data || []);
