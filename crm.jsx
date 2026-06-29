@@ -662,6 +662,9 @@ const CRM_PRESETS = {
   replied: { label: 'Replies received', pred: crmIsReplied },
   overdue: { label: 'Overdue', pred: crmIsOverdue },
   hot: { label: 'Hot leads', pred: crmIsHot },
+  outreach_initial: { label: 'Outreach: Initial Message Sent', pred: (c) => c.outreach_status === 'Initial Message Sent' },
+  outreach_fu1: { label: 'Outreach: Follow Up 1 Sent', pred: (c) => c.outreach_status === 'Follow Up 1 Sent' },
+  outreach_fu2: { label: 'Outreach: Follow Up 2 Sent', pred: (c) => c.outreach_status === 'Follow Up 2 Sent' },
 };
 
 function CrmContactsView({ contacts, preset, onClearPreset, onEdit, onLog, onAdd, onImport }) {
@@ -889,9 +892,9 @@ function CrmAnalytics({ contacts, interactions, onMetric }) {
     const pct = (x, y) => (y ? Math.round(x / y * 100) : 0);
     const funnel = CRM_PIPELINE_STAGES.map((s) => ({ stage: s, count: cs.filter((c) => crmStageRank(c.stage) >= crmStageRank(s) && CRM_PIPELINE_STAGES.includes(c.stage)).length }));
     const seq = [
-      { label: 'Initial Message Sent', count: n((c) => c.outreach_status === 'Initial Message Sent') },
-      { label: 'Follow Up 1 Sent', count: n((c) => c.outreach_status === 'Follow Up 1 Sent') },
-      { label: 'Follow Up 2 Sent', count: n((c) => c.outreach_status === 'Follow Up 2 Sent') },
+      { label: 'Initial Message Sent', count: n((c) => c.outreach_status === 'Initial Message Sent'), key: 'outreach_initial' },
+      { label: 'Follow Up 1 Sent', count: n((c) => c.outreach_status === 'Follow Up 1 Sent'), key: 'outreach_fu1' },
+      { label: 'Follow Up 2 Sent', count: n((c) => c.outreach_status === 'Follow Up 2 Sent'), key: 'outreach_fu2' },
     ];
     const resp = [
       { name: 'Interested / positive', val: n((c) => ['Interested', 'Discovery Scheduled', 'Proposal Sent', 'Closed Won'].includes(c.stage)), color: 'var(--teal-600)' },
@@ -959,7 +962,7 @@ function CrmAnalytics({ contacts, interactions, onMetric }) {
         <div className="card" style={{ padding: 20 }}>
           <div className="crm-card-head"><h3 className="crm-h3">Sequence distribution</h3><span className="eyebrow">current counts</span></div>
           {a.seq.map((s, i) => (
-            <button key={s.label} className="crm-bd-row crm-bd-click" onClick={() => onMetric(['contacted', 'replied', 'overdue'][0]) /* placeholder */}>
+            <button key={s.label} className="crm-bd-row crm-bd-click" title={`View contacts: ${s.label}`} onClick={() => onMetric(s.key)}>
               <div className="crm-bd-top"><span className="crm-bd-name">{s.label}</span><span style={{ fontWeight: 700 }}>{s.count}</span></div>
               <div className="crm-bd-track"><span style={{ width: s.count / seqMax * 100 + '%', background: ['var(--sapphire)', 'var(--teal-600)', 'var(--coral)'][i] }} /></div>
             </button>
