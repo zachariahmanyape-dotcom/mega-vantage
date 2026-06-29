@@ -370,6 +370,7 @@
 <script type="text/babel" src="adminchat.jsx"></script>
 <script type="text/babel" src="analytics.jsx"></script>
 <script type="text/babel" src="roadmapbuilder.jsx"></script>
+<script type="text/babel" src="crm.jsx"></script>
 
 <script type="text/babel">
 
@@ -590,7 +591,8 @@ function SidebarWithWins({ route, setRoute, admin, isRealAdmin, unread, member, 
     { k: 'admin-messaging', label: 'Chat', icon: 'chat' },
     { k: 'admin-wins', label: 'Wins Board', icon: 'trophy' },
     { k: 'admin-resources', label: 'Resources', icon: 'resources' },
-    { k: 'admin-analytics', label: 'Analytics', icon: 'chart' }
+    { k: 'admin-analytics', label: 'Analytics', icon: 'chart' },
+    { k: 'admin-crm', label: 'CRM', icon: 'crm' }
   ];
 
   const MAT = {
@@ -598,6 +600,7 @@ function SidebarWithWins({ route, setRoute, admin, isRealAdmin, unread, member, 
     roadmap: 'timeline', trophy: 'military_tech', resources: 'menu_book',
     chat: 'chat', profile: 'person', radar: 'radar', users: 'group',
     chart: 'bar_chart', logout: 'logout', admin: 'admin_panel_settings',
+    crm: 'contacts',
   };
 
   const navItems = admin ? adminItems : memberItems;
@@ -1333,6 +1336,7 @@ function App() {
     case 'admin-wins': screen = <WinsScreen />; break;
     case 'admin-resources': screen = <AdminResources />; break;
     case 'admin-analytics': screen = <AdminAnalytics />; break;
+    case 'admin-crm': screen = <CRMScreen />; break;
     default:
       screen = <DashboardScreen member={member} onJoin={onJoin} onGoto={setRoute} gameMode={tw.gameMode}
         intention={intention} onClearIntention={() => setIntention(null)} tasks={liveTasks} goals={liveGoals} setTasks={setLiveTasks}

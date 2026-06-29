@@ -143,6 +143,7 @@ function Topbar({ theme, setTheme, onOpenTweaks, notifCount, onOpenNotifs, route
     'admin-roadmap': 'Roadmap Builder',
     'admin-analytics': 'Analytics',
     'admin-wins': 'Wins Board',
+    'admin-crm': 'CRM',
   };
 
   const isAdmin = route && route.startsWith('admin-');
